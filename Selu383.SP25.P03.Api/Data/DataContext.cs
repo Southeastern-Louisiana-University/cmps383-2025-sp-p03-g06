@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Features.Users;
 using Selu383.SP25.P03.Api.Features.Theaters;
+using Selu383.SP25.P03.Api.Features.Movies;
 
 namespace Selu383.SP25.P03.Api.Data
 {
@@ -13,6 +14,8 @@ namespace Selu383.SP25.P03.Api.Data
         }
 
         public DbSet<Theater> Theaters { get; set; }
+
+        public DbSet<Movie> Movies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
