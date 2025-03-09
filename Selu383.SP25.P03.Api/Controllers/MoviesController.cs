@@ -5,7 +5,7 @@ using Selu383.SP25.P03.Api.Features.Movies;
 
 namespace Selu383.SP25.P03.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/movies")]
     [ApiController]
     public class MoviesController : ControllerBase
     {
