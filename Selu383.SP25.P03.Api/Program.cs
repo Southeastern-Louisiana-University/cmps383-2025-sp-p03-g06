@@ -21,6 +21,9 @@ namespace Selu383.SP25.P03.Api
             builder.Services.AddOpenApi();
             builder.Services.AddRazorPages();
 
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
             builder.Services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DataContext>()
                 .AddDefaultTokenProviders();
@@ -81,6 +84,13 @@ namespace Selu383.SP25.P03.Api
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
+
+                // Add the Swashbuckle middlewares
+                app.UseSwagger();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Lions Den Cinemas v1");
+                });
             }
 
             app.UseHttpsRedirection();
