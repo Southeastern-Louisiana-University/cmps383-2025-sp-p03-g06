@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Users;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace Selu383.SP25.P03.Api
 {
@@ -18,7 +20,7 @@ namespace Selu383.SP25.P03.Api
 
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
+            //builder.Services.AddOpenApi();
             builder.Services.AddRazorPages();
 
             builder.Services.AddEndpointsApiExplorer();
@@ -83,7 +85,7 @@ namespace Selu383.SP25.P03.Api
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                //app.MapOpenApi();
 
                 // Add the Swashbuckle middlewares
                 app.UseSwagger();
