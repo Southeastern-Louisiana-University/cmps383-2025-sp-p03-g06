@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Selu383-SP25-P02-Mobile-g0m",
-    "slug": "Selu383-SP25-P02-Mobile-g0m",
+    "name": "Selu383-SP25-P03-Mobile-g06",
+    "slug": "Selu383-SP25-P03-Mobile-g06",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.selu383.sp25.p02.g0m"
+      "package": "com.selu383.sp25.p03.g06"
     },
     "web": {
       "bundler": "metro",
@@ -43,9 +43,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "a61893b1-bc13-421d-b719-e44f3e9fc180"
+        "projectId": "e1b37909-6432-4e0d-bfbb-e42328254c1c"
       }
     },
-    "owner": "kuro11"
+    "owner": "vanna_moore"
   }
 }
