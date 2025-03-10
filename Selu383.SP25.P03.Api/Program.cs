@@ -1,8 +1,9 @@
-
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Users;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace Selu383.SP25.P03.Api
 {
@@ -12,14 +13,30 @@ namespace Selu383.SP25.P03.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Add CORS policy with the correct port for your React app
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("DevelopmentPolicy", policy =>
+                {
+                    policy.WithOrigins(
+                            "http://localhost:5185",  // Your React app's actual port
+                            "http://localhost:5173"   // Default Vite port as fallback
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            });
+
             // Add services to the container.
             builder.Services.AddDbContext<DataContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DataContext") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
 
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
             builder.Services.AddRazorPages();
+
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
 
             builder.Services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DataContext>()
@@ -50,7 +67,9 @@ namespace Selu383.SP25.P03.Api
             {
                 // Cookie settings
                 options.Cookie.HttpOnly = true;
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None;
+                options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.None; // Use None for development
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
                 options.Events.OnRedirectToLogin = context =>
                 {
                     context.Response.StatusCode = 401;
@@ -80,10 +99,20 @@ namespace Selu383.SP25.P03.Api
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                // Apply CORS policy - make sure this comes BEFORE other middleware
+                app.UseCors("DevelopmentPolicy");
+
+                app.UseSwagger();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Lions Den Cinemas v1");
+                });
+            }
+            else
+            {
+                app.UseHttpsRedirection();
             }
 
-            app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseRouting()
                .UseAuthorization()
@@ -97,7 +126,7 @@ namespace Selu383.SP25.P03.Api
             {
                 app.UseSpa(x =>
                 {
-                    x.UseProxyToSpaDevelopmentServer("http://localhost:5173");
+                    x.UseProxyToSpaDevelopmentServer("http://localhost:5185"); // Updated to your React app's port
                 });
             }
             else
