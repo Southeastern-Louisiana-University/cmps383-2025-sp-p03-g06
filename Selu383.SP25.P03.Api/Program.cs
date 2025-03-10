@@ -33,6 +33,10 @@ namespace Selu383.SP25.P03.Api
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DataContext") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
 
             builder.Services.AddControllers();
+
+            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+            //builder.Services.AddOpenApi();
+
             builder.Services.AddRazorPages();
 
             builder.Services.AddEndpointsApiExplorer();
@@ -99,14 +103,21 @@ namespace Selu383.SP25.P03.Api
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+
+                //app.MapOpenApi();
+
+                // Add the Swashbuckle middlewares
+
                 // Apply CORS policy - make sure this comes BEFORE other middleware
                 app.UseCors("DevelopmentPolicy");
+
 
                 app.UseSwagger();
                 app.UseSwaggerUI(options =>
                 {
                     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Lions Den Cinemas v1");
                 });
+
             }
             else
             {
