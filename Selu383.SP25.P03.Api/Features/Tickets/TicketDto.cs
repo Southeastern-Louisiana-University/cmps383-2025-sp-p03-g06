@@ -8,8 +8,8 @@
         public bool IsPurchased { get; set; }
         public DateTime PurchaseDate { get; set; }
 
-        public required string ShowtimeTime { get; set; } 
-        public required string MovieTitle { get; set; }
+        public string ShowtimeTime { get; set; }
+        public string MovieTitle { get; set; }
     }
 }
 
