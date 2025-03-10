@@ -10,8 +10,8 @@ namespace Selu383.SP25.P03.Api.Features.Showtimes
         public int TheaterId { get; set; }
         public DateTime ShowtimeTime { get; set; }
 
-        public Movie Movie { get; set; }
-        public Theater Theater { get; set; }
+        public Movie? Movie { get; set; }
+        public Theater? Theater { get; set; }
     }
 }
     

@@ -11,7 +11,7 @@ namespace Selu383.SP25.P03.Api.Features.Tickets
         public bool IsPurchased { get; set; }
         public DateTime PurchaseDate { get; set; }
 
-        public Showtime Showtime { get; set; }
-        public User User { get; set; }
+        public Showtime? Showtime { get; set; }
+        public User? User { get; set; }
     }
 }
