@@ -20,7 +20,7 @@ name: Deploy DotNet project to Azure Function App
 
 on:
   push:
-    branches: ["master"]
+    branches: ["dev"]
 
 env:
   AZURE_FUNCTIONAPP_NAME: 'cmps383-2025-sp-p03-g06'   # set this to your function app name on Azure
