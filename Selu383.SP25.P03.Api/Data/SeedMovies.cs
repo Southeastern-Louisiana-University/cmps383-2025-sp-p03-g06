@@ -9,9 +9,9 @@ namespace Selu383.SP25.P03.Api.Data
         {
             using (var context = new DataContext(serviceProvider.GetRequiredService<DbContextOptions<DataContext>>()))
             {
-                
+
                 if (context.Movies.Any())
-                    return;   
+                    return;
 
                 context.Movies.AddRange(
                     new Movie
