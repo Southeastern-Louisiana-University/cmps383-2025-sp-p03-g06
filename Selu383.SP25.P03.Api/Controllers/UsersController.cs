@@ -31,36 +31,25 @@ namespace Selu383.SP25.P03.Api.Controllers
         [Authorize]
         public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserDto dto)
         {
-            if (dto.Roles == null || !dto.Roles.Any() || !dto.Roles.All(x => roles.Any(y => x == y.Name)))
+            if (!dto.Roles.Any() || !dto.Roles.All(x => roles.Any(y => x == y.Name)))
             {
                 return BadRequest();
             }
 
-            var createResult = await userManager.CreateAsync(new User { UserName = dto.Username }, dto.Password);
-            if (!createResult.Succeeded)
+            var result = await userManager.CreateAsync(new User { UserName = dto.Username }, dto.Password);
+            if (result.Succeeded)
             {
-                return BadRequest();
+                await userManager.AddToRolesAsync(await userManager.FindByNameAsync(dto.Username), dto.Roles);
 
+                var user = await userManager.FindByNameAsync(dto.Username);
+                return new UserDto
+                {
+                    Id = user.Id,
+                    UserName = dto.Username,
+                    Roles = dto.Roles
+                };
             }
-
-            var existingUser = await userManager.FindByNameAsync(dto.Username);
-            if (existingUser == null)
-            {
-                return BadRequest();
-            }
-
-            var rolesResult = await userManager.AddToRolesAsync(existingUser, dto.Roles);
-            if (!rolesResult.Succeeded)
-            {
-                return BadRequest();
-            }
-
-            return new UserDto
-            {
-                Id = existingUser.Id,
-                UserName = existingUser.UserName,
-                Roles = dto.Roles
-            };
+            return BadRequest();
         }
     }
 }
