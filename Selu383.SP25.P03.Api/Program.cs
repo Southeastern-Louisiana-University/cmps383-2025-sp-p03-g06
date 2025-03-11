@@ -13,21 +13,6 @@ namespace Selu383.SP25.P03.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add CORS policy with the correct port for your React app
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("DevelopmentPolicy", policy =>
-                {
-                    policy.WithOrigins(
-                            "http://localhost:5185",  // Your React app's actual port
-                            "http://localhost:5173"   // Default Vite port as fallback
-                        )
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
-                });
-            });
-
             // Add services to the container.
             builder.Services.AddDbContext<DataContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DataContext") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
@@ -88,6 +73,21 @@ namespace Selu383.SP25.P03.Api
 
                 options.SlidingExpiration = true;
             });
+
+            // Add CORS policy with the correct port for your React app
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("DevelopmentPolicy", policy =>
+                {
+                    policy.WithOrigins(
+                            "http://localhost:5185",  // Your React app's actual port
+                            "http://localhost:5173"   // Default Vite port as fallback
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            }); 
 
             var app = builder.Build();
 
