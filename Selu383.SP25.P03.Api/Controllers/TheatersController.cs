@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Theaters;
 using Selu383.SP25.P03.Api.Features.Users;
-
+//commit
 namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/theaters")]
