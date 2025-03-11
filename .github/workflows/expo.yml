@@ -30,16 +30,9 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-          project: Selu383.SP25.P03.Mobile
-          packager: npm
 
       - name: 📦 Install dependencies
         run: npm install ./Selu383.SP25.P03.Mobile
-
-      - name: set environment variables
-        uses: allenevans/set-env@v3.0.0
-        with:
-          EAS_LOCAL_BUILD_ARTIFACTS_DIR: ${{ runner.temp }}
 
       - name: 🚀 Build app
         run: cd ./Selu383.SP25.P03.Mobile/ && eas build -p android --non-interactive --local
