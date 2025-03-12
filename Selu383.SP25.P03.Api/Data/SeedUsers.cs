@@ -10,26 +10,49 @@ namespace Selu383.SP25.P03.Api.Data
         {
             using (var context = new DataContext(serviceProvider.GetRequiredService<DbContextOptions<DataContext>>()))
             {
-                // Look for any roles.
+                // Look for any users
                 if (context.Users.Any())
                 {
                     return;   // DB has been seeded
                 }
+
                 var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
 
-                var galkadi = new User { UserName = "galkadi", };
-                await userManager.CreateAsync(galkadi, "Password123!");
-                await userManager.AddToRoleAsync(galkadi, "Admin");
-
-                var bob = new User { UserName = "bob", };
-                await userManager.CreateAsync(bob, "Password123!");
-                await userManager.AddToRoleAsync(bob, "User");
-
-                var sue = new User { UserName = "sue", };
-                await userManager.CreateAsync(sue, "Password123!");
-                await userManager.AddToRoleAsync(sue, "User");
+                await CreateAdminUser(userManager, "galkadi", "Password123!");
+                await CreateRegularUser(userManager, "bob", "Password123!");
+                await CreateRegularUser(userManager, "sue", "Password123!");
 
                 context.SaveChanges();
+            }
+        }
+
+        private static async Task CreateAdminUser(UserManager<User> userManager, string username, string password)
+        {
+            var user = new User { UserName = username };
+            var createResult = await userManager.CreateAsync(user, password);
+            if (createResult.Succeeded)
+            {
+                await userManager.AddToRoleAsync(user, UserRoleNames.Admin);
+            }
+            else
+            {
+                // Log the error or handle it appropriately
+                Console.WriteLine($"Failed to create admin user {username}: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+            }
+        }
+
+        private static async Task CreateRegularUser(UserManager<User> userManager, string username, string password)
+        {
+            var user = new User { UserName = username };
+            var createResult = await userManager.CreateAsync(user, password);
+            if (createResult.Succeeded)
+            {
+                await userManager.AddToRoleAsync(user, UserRoleNames.User);
+            }
+            else
+            {
+                // Log the error or handle it appropriately
+                Console.WriteLine($"Failed to create regular user {username}: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
             }
         }
     }

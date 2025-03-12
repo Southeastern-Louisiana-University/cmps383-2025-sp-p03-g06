@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Users;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace Selu383.SP25.P03.Api
 {
@@ -20,11 +18,8 @@ namespace Selu383.SP25.P03.Api
 
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            //builder.Services.AddOpenApi();
+            builder.Services.AddOpenApi();
             builder.Services.AddRazorPages();
-
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
 
             builder.Services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DataContext>()
@@ -71,6 +66,22 @@ namespace Selu383.SP25.P03.Api
                 options.SlidingExpiration = true;
             });
 
+            // Add CORS policy with the correct port for your React app
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("DevelopmentPolicy", policy =>
+                {
+                    policy.WithOrigins(
+                            "http://localhost:5185",  // Your React app's actual port
+                            "http://localhost:5173"   // Default Vite port as fallback
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            });
+
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
@@ -85,14 +96,7 @@ namespace Selu383.SP25.P03.Api
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                //app.MapOpenApi();
-
-                // Add the Swashbuckle middlewares
-                app.UseSwagger();
-                app.UseSwaggerUI(options =>
-                {
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Lions Den Cinemas v1");
-                });
+                app.MapOpenApi();
             }
 
             app.UseHttpsRedirection();
@@ -104,6 +108,9 @@ namespace Selu383.SP25.P03.Api
                    x.MapControllers();
                });
             app.UseStaticFiles();
+
+            // Apply CORS policy - make sure this comes BEFORE other middleware
+            app.UseCors("DevelopmentPolicy");
 
             if (app.Environment.IsDevelopment())
             {

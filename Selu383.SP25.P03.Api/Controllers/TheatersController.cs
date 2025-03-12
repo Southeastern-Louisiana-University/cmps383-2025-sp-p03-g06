@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Theaters;
 using Selu383.SP25.P03.Api.Features.Users;
-
+//commit
 namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/theaters")]
@@ -74,14 +74,19 @@ namespace Selu383.SP25.P03.Api.Controllers
         [Authorize]
         public async Task<ActionResult<TheaterDto>> UpdateTheater(int id, TheaterDto dto)
         {
-            if (IsInvalid(dto))
+            if (dto == null || IsInvalid(dto))
             {
-                return BadRequest();
+                return BadRequest("Invalid theater data");
             }
 
             var currentUser = await userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                return BadRequest("User not found");
+            }
 
-            if (!User.IsInRole(UserRoleNames.Admin) && currentUser.Id != dto.ManagerId)
+            bool isManager = dto.ManagerId.HasValue && currentUser.Id == dto.ManagerId.Value;
+            if (!User.IsInRole(UserRoleNames.Admin) && !isManager)
             {
                 return Forbid();
             }
