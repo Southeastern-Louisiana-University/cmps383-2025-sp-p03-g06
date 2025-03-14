@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
@@ -17,9 +16,10 @@ namespace Selu383.SP25.P03.Api
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DataContext") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
 
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
-            builder.Services.AddRazorPages();
+
+            // Configure OpenAPI/Swagger - standard configuration
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
 
             builder.Services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DataContext>()
@@ -81,7 +81,6 @@ namespace Selu383.SP25.P03.Api
                 });
             });
 
-
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
@@ -91,39 +90,46 @@ namespace Selu383.SP25.P03.Api
                 SeedTheaters.Initialize(scope.ServiceProvider);
                 await SeedRoles.Initialize(scope.ServiceProvider);
                 await SeedUsers.Initialize(scope.ServiceProvider);
+
+                // Initialize new seed data
+                SeedTheaterRooms.Initialize(scope.ServiceProvider);
+                SeedSeats.Initialize(scope.ServiceProvider);
+                SeedMovies.Initialize(scope.ServiceProvider);
+                SeedConcessions.Initialize(scope.ServiceProvider);
             }
 
-            // Configure the HTTP request pipeline.
+            // Apply CORS policy - uncommented
+            app.UseCors("DevelopmentPolicy");
+
+            // Configure Swagger - standard way
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();
-            app.UseAuthentication();
-            app.UseRouting()
-               .UseAuthorization()
-               .UseEndpoints(x =>
-               {
-                   x.MapControllers();
-               });
             app.UseStaticFiles();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
-            // Apply CORS policy - make sure this comes BEFORE other middleware
-            app.UseCors("DevelopmentPolicy");
+            // Map controllers
+            app.MapControllers();
 
+            //while testing API comment this out to access Swagger "https://localhost:7027/swagger/index.html"
             if (app.Environment.IsDevelopment())
-            {
-                app.UseSpa(x =>
-                {
-                    x.UseProxyToSpaDevelopmentServer("http://localhost:5173");
-                });
-            }
-            else
-            {
-                app.MapFallbackToFile("/index.html");
-            }
-
+             {
+                 // SPA middleware for development
+                 app.UseSpa(spa =>
+                 {
+                     spa.UseProxyToSpaDevelopmentServer("http://localhost:5173");
+                 });
+             }
+             else
+             {
+                 app.MapFallbackToFile("/index.html");
+             } 
+            //END COMMENT HERE FOR SWAGGER
             app.Run();
         }
     }
