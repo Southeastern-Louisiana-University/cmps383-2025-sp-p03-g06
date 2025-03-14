@@ -98,38 +98,41 @@ namespace Selu383.SP25.P03.Api
                 SeedConcessions.Initialize(scope.ServiceProvider);
             }
 
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.MapOpenApi();
+            }
+
             // Apply CORS policy - uncommented
             app.UseCors("DevelopmentPolicy");
 
-            // Configure Swagger - standard way
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            //Swagger UI
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
             app.UseAuthentication();
-            app.UseAuthorization();
+            app.UseRouting()
+               .UseAuthorization()
+               .UseEndpoints(x =>
+               {
+                   x.MapControllers();
+               });
+            app.UseStaticFiles();
 
-            // Map controllers
-            app.MapControllers();
-
-            //while testing API comment this out to access Swagger "https://localhost:7027/swagger/index.html"
             if (app.Environment.IsDevelopment())
-             {
-                 // SPA middleware for development
-                 app.UseSpa(spa =>
-                 {
-                     spa.UseProxyToSpaDevelopmentServer("http://localhost:5173");
-                 });
-             }
-             else
-             {
-                 app.MapFallbackToFile("/index.html");
-             } 
-            //END COMMENT HERE FOR SWAGGER
+            {
+                app.UseSpa(x =>
+                {
+                    x.UseProxyToSpaDevelopmentServer("http://localhost:5173");
+                });
+            }
+            else
+            {
+                app.MapFallbackToFile("/index.html");
+            }
+
             app.Run();
         }
     }
