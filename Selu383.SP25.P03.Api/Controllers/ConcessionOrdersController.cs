@@ -13,22 +13,13 @@ namespace Selu383.SP25.P03.Api.Controllers
     [Route("api/concession-orders")]
     [ApiController]
     [Authorize]
-    public class ConcessionOrdersController : ControllerBase
+    public class ConcessionOrdersController(DataContext context, UserManager<User> userManager) : ControllerBase
     {
-        private readonly DataContext _context;
-        private readonly DbSet<ConcessionOrder> _orders;
-        private readonly DbSet<ConcessionItem> _items;
-        private readonly DbSet<Reservation> _reservations;
-        private readonly UserManager<User> _userManager;
-
-        public ConcessionOrdersController(DataContext context, UserManager<User> userManager)
-        {
-            _context = context;
-            _orders = context.Set<ConcessionOrder>();
-            _items = context.Set<ConcessionItem>();
-            _reservations = context.Set<Reservation>();
-            _userManager = userManager;
-        }
+        private readonly DataContext _context = context;
+        private readonly DbSet<ConcessionOrder> _orders = context.Set<ConcessionOrder>();
+        private readonly DbSet<ConcessionItem> _items = context.Set<ConcessionItem>();
+        private readonly DbSet<Reservation> _reservations = context.Set<Reservation>();
+        private readonly UserManager<User> _userManager = userManager;
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ConcessionOrderDTO>>> GetMyOrders()
@@ -50,7 +41,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     ReservationId = o.ReservationId,
                     OrderTime = o.OrderTime,
                     TotalPrice = o.TotalPrice,
-                    Status = o.Status == null ? "Unknown" : o.Status,
+                    Status = o.Status ?? "Unknown",
                     Items = o.OrderItems.Select(oi => new OrderItemDTO
                     {
                         Id = oi.Id,
@@ -58,7 +49,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                         ItemName = oi.ConcessionItem == null ? string.Empty : oi.ConcessionItem.Name,
                         Quantity = oi.Quantity,
                         UnitPrice = oi.UnitPrice,
-                        SpecialInstructions = oi.SpecialInstructions == null ? string.Empty : oi.SpecialInstructions
+                        SpecialInstructions = oi.SpecialInstructions ?? string.Empty
                     }).ToList()
                 })
                 .ToListAsync();
@@ -132,7 +123,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     ReservationId = o.ReservationId,
                     OrderTime = o.OrderTime,
                     TotalPrice = o.TotalPrice,
-                    Status = o.Status == null ? "Unknown" : o.Status,
+                    Status = o.Status ?? "Unknown",
                     Items = o.OrderItems.Select(oi => new OrderItemDTO
                     {
                         Id = oi.Id,
@@ -140,7 +131,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                         ItemName = oi.ConcessionItem == null ? string.Empty : oi.ConcessionItem.Name,
                         Quantity = oi.Quantity,
                         UnitPrice = oi.UnitPrice,
-                        SpecialInstructions = oi.SpecialInstructions == null ? string.Empty : oi.SpecialInstructions
+                        SpecialInstructions = oi.SpecialInstructions ?? string.Empty
                     }).ToList()
                 })
                 .ToListAsync();
@@ -168,7 +159,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     ReservationId = o.ReservationId,
                     OrderTime = o.OrderTime,
                     TotalPrice = o.TotalPrice,
-                    Status = o.Status == null ? "Unknown" : o.Status,
+                    Status = o.Status ?? "Unknown",
                     Items = o.OrderItems.Select(oi => new OrderItemDTO
                     {
                         Id = oi.Id,
@@ -176,7 +167,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                         ItemName = oi.ConcessionItem == null ? string.Empty : oi.ConcessionItem.Name,
                         Quantity = oi.Quantity,
                         UnitPrice = oi.UnitPrice,
-                        SpecialInstructions = oi.SpecialInstructions == null ? string.Empty : oi.SpecialInstructions
+                        SpecialInstructions = oi.SpecialInstructions ?? string.Empty
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
@@ -227,7 +218,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             }
 
             // Verify reservation status
-            if (reservation.Status == null || reservation.Status != "Confirmed")
+            if (reservation.Status != "Confirmed")
             {
                 return BadRequest("Cannot place orders for non-confirmed reservations");
             }
@@ -249,7 +240,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             }
 
             // Validate order items
-            if (orderDto.Items == null || !orderDto.Items.Any())
+            if (orderDto.Items == null || orderDto.Items.Count == 0)
             {
                 return BadRequest("Order must contain at least one item");
             }
@@ -323,7 +314,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             }
 
             // Validate status
-            var validStatuses = new[] { "Pending", "Preparing", "Ready", "Delivered", "Cancelled" };
+            string[] validStatuses = ["Pending", "Preparing", "Ready", "Delivered", "Cancelled"];
             if (!validStatuses.Contains(statusDto.Status))
             {
                 return BadRequest($"Status must be one of: {string.Join(", ", validStatuses)}");
@@ -381,7 +372,7 @@ namespace Selu383.SP25.P03.Api.Controllers
     public class CreateConcessionOrderDTO
     {
         public int ReservationId { get; set; }
-        public List<CreateOrderItemDTO> Items { get; set; } = new List<CreateOrderItemDTO>();
+        public List<CreateOrderItemDTO> Items { get; set; } = [];
     }
 
     public class CreateOrderItemDTO

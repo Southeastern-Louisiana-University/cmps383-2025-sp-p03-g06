@@ -10,18 +10,11 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/theater-rooms")]
     [ApiController]
-    public class TheaterRoomsController : ControllerBase
+    public class TheaterRoomsController(DataContext context) : ControllerBase
     {
-        private readonly DataContext _context;
-        private readonly DbSet<TheaterRoom> _theaterRooms;
-        private readonly DbSet<Theater> _theaters;
-
-        public TheaterRoomsController(DataContext context)
-        {
-            _context = context;
-            _theaterRooms = context.Set<TheaterRoom>();
-            _theaters = context.Set<Theater>();
-        }
+        private readonly DataContext _context = context;
+        private readonly DbSet<TheaterRoom> _theaterRooms = context.Set<TheaterRoom>();
+        private readonly DbSet<Theater> _theaters = context.Set<Theater>();
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TheaterRoomDTO>>> GetTheaterRooms()
@@ -115,7 +108,6 @@ namespace Selu383.SP25.P03.Api.Controllers
             _theaterRooms.Add(theaterRoom);
             await _context.SaveChangesAsync();
 
-            // Update the theater's total seat count
             theater.SeatCount += theaterRoom.SeatCount;
             await _context.SaveChangesAsync();
 
@@ -155,7 +147,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Theater not found");
             }
 
-            // Update theater's total seat count
             var oldSeatCount = theaterRoom.SeatCount;
             var currentTheater = await _theaters.FindAsync(theaterRoom.TheaterId);
             if (currentTheater != null)
@@ -204,7 +195,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return NotFound();
             }
 
-            // Update theater's total seat count
             var theater = await _theaters.FindAsync(theaterRoom.TheaterId);
             if (theater != null)
             {

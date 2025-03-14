@@ -10,18 +10,11 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/seats")]
     [ApiController]
-    public class SeatsController : ControllerBase
+    public class SeatsController(DataContext context) : ControllerBase
     {
-        private readonly DataContext _context;
-        private readonly DbSet<Seat> _seats;
-        private readonly DbSet<TheaterRoom> _theaterRooms;
-
-        public SeatsController(DataContext context)
-        {
-            _context = context;
-            _seats = context.Set<Seat>();
-            _theaterRooms = context.Set<TheaterRoom>();
-        }
+        private readonly DataContext _context = context;
+        private readonly DbSet<Seat> _seats = context.Set<Seat>();
+        private readonly DbSet<TheaterRoom> _theaterRooms = context.Set<TheaterRoom>();
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SeatDTO>>> GetSeats()
@@ -107,7 +100,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Theater room not found");
             }
 
-            // Check if seat already exists in this room
             var seatExists = await _seats.AnyAsync(s =>
                 s.TheaterRoomId == seatDto.TheaterRoomId &&
                 s.Row == seatDto.Row &&
@@ -160,7 +152,6 @@ namespace Selu383.SP25.P03.Api.Controllers
             {
                 for (int number = request.StartNumber; number <= request.EndNumber; number++)
                 {
-                    // Check if seat already exists
                     var seatExists = await _seats.AnyAsync(s =>
                         s.TheaterRoomId == request.TheaterRoomId &&
                         s.Row == row &&
@@ -221,7 +212,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Theater room not found");
             }
 
-            // Check if updating would create a duplicate
             var seatExists = await _seats.AnyAsync(s =>
                 s.TheaterRoomId == seatDto.TheaterRoomId &&
                 s.Row == seatDto.Row &&
@@ -283,14 +273,14 @@ namespace Selu383.SP25.P03.Api.Controllers
 
         private bool SeatExists(int id)
         {
-            return _seats.Any(e => e.Id == id);
+            return _seats.FirstOrDefault(e => e.Id == id) != null;
         }
     }
 
     public class BulkSeatCreationDTO
     {
         public int TheaterRoomId { get; set; }
-        public List<string> Rows { get; set; } = new List<string>();
+        public List<string> Rows { get; init; } = [];
         public int StartNumber { get; set; }
         public int EndNumber { get; set; }
         public string? SeatType { get; set; }

@@ -14,20 +14,12 @@ namespace Selu383.SP25.P03.Api.Controllers
     [Route("api/reservations")]
     [ApiController]
     [Authorize]
-    public class ReservationsController : ControllerBase
+    public class ReservationsController(DataContext context, UserManager<User> userManager) : ControllerBase
     {
-        private readonly DataContext _context;
-        private readonly DbSet<Reservation> _reservations;
-        private readonly DbSet<Showtime> _showtimes;
-        private readonly UserManager<User> _userManager;
-
-        public ReservationsController(DataContext context, UserManager<User> userManager)
-        {
-            _context = context;
-            _reservations = context.Set<Reservation>();
-            _showtimes = context.Set<Showtime>();
-            _userManager = userManager;
-        }
+        private readonly DataContext _context = context;
+        private readonly DbSet<Reservation> _reservations = context.Set<Reservation>();
+        private readonly DbSet<Showtime> _showtimes = context.Set<Showtime>();
+        private readonly UserManager<User> _userManager = userManager;
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ReservationDTO>>> GetMyReservations()
@@ -219,7 +211,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return NotFound("Invalid ticket code");
             }
 
-            // Check if showtime is valid (not expired)
             if (reservation.ShowtimeStartTime < DateTime.UtcNow.AddMinutes(-30))
             {
                 return BadRequest("Ticket has expired");
@@ -237,7 +228,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return Unauthorized();
             }
 
-            // Validate showtime
             var showtime = await _showtimes
                 .Include(s => s.Movie)
                 .Include(s => s.TheaterRoom)
@@ -254,14 +244,12 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Cannot book tickets for past showtimes");
             }
 
-            // Validate seat availability
             var selectedSeatIds = reservationDto.SeatIds;
-            if (selectedSeatIds == null || !selectedSeatIds.Any())
+            if (selectedSeatIds.Count == 0)
             {
                 return BadRequest("At least one seat must be selected");
             }
 
-            // Check if seats exist and are available
             var seats = await _context.Seats
                 .Where(s => selectedSeatIds.Contains(s.Id) && s.TheaterRoomId == showtime.TheaterRoomId)
                 .ToListAsync();
@@ -271,22 +259,19 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("One or more selected seats are invalid");
             }
 
-            // Check if seats are already booked
             var bookedSeatIds = await _context.ReservationSeats
                 .Where(rs => rs.Reservation!.ShowtimeId == reservationDto.ShowtimeId && selectedSeatIds.Contains(rs.SeatId))
                 .Select(rs => rs.SeatId)
                 .ToListAsync();
 
-            if (bookedSeatIds.Any())
+            if (bookedSeatIds.Count > 0)
             {
                 return BadRequest("One or more selected seats are already booked");
             }
 
-            // Calculate total price
             decimal totalPrice = 0;
             foreach (var seat in seats)
             {
-                // Apply seat type price modifier
                 decimal seatPrice = showtime.BaseTicketPrice;
                 if (seat.SeatType == "Premium")
                 {
@@ -299,10 +284,8 @@ namespace Selu383.SP25.P03.Api.Controllers
                 totalPrice += seatPrice;
             }
 
-            // Generate ticket code
             string ticketCode = GenerateTicketCode();
 
-            // Create reservation
             var reservation = new Reservation
             {
                 UserId = currentUser.Id,
@@ -316,7 +299,6 @@ namespace Selu383.SP25.P03.Api.Controllers
             _reservations.Add(reservation);
             await _context.SaveChangesAsync();
 
-            // Add reservation seats
             foreach (var seat in seats)
             {
                 decimal seatPrice = showtime.BaseTicketPrice;
@@ -339,7 +321,6 @@ namespace Selu383.SP25.P03.Api.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Return the completed reservation
             return await GetReservation(reservation.Id);
         }
 
@@ -358,41 +339,35 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return NotFound();
             }
 
-            // Only the owner or an admin can cancel
             if (reservation.UserId != currentUser.Id && !User.IsInRole(UserRoleNames.Admin) && !User.IsInRole(UserRoleNames.Manager))
             {
                 return Forbid();
             }
 
-            // Check if it's too late to cancel
             var showtime = await _showtimes.FindAsync(reservation.ShowtimeId);
             if (showtime != null && showtime.StartTime <= DateTime.UtcNow.AddHours(1))
             {
                 return BadRequest("Cannot cancel reservation less than 1 hour before showtime");
             }
 
-            // Mark as cancelled instead of deleting
             reservation.Status = "Cancelled";
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private string GenerateTicketCode()
+        private static string GenerateTicketCode()
         {
-            // Generate a random, unique ticket code
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                var bytes = new byte[8];
-                rng.GetBytes(bytes);
-                return Convert.ToBase64String(bytes).Replace("/", "_").Replace("+", "-").Substring(0, 12);
-            }
+            using RandomNumberGenerator rng = RandomNumberGenerator.Create();
+            var bytes = new byte[8];
+            rng.GetBytes(bytes);
+            return Convert.ToBase64String(bytes).Replace("/", "_").Replace("+", "-")[..12];
         }
     }
 
     public class CreateReservationDTO
     {
         public int ShowtimeId { get; set; }
-        public List<int> SeatIds { get; set; } = new List<int>();
+        public List<int> SeatIds { get; init; } = [];
     }
 }

@@ -10,18 +10,11 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/concession-items")]
     [ApiController]
-    public class ConcessionItemsController : ControllerBase
+    public class ConcessionItemsController(DataContext context) : ControllerBase
     {
-        private readonly DataContext _context;
-        private readonly DbSet<ConcessionItem> _items;
-        private readonly DbSet<ConcessionCategory> _categories;
-
-        public ConcessionItemsController(DataContext context)
-        {
-            _context = context;
-            _items = context.Set<ConcessionItem>();
-            _categories = context.Set<ConcessionCategory>();
-        }
+        private readonly DataContext _context = context;
+        private readonly DbSet<ConcessionItem> _items = context.Set<ConcessionItem>();
+        private readonly DbSet<ConcessionCategory> _categories = context.Set<ConcessionCategory>();
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ConcessionItemDTO>>> GetItems()
@@ -234,11 +227,9 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return NotFound();
             }
 
-            // Check if item is used in any orders
             var isUsedInOrders = await _context.OrderItems.AnyAsync(oi => oi.ConcessionItemId == id);
             if (isUsedInOrders)
             {
-                // Instead of deleting, just mark as unavailable
                 item.IsAvailable = false;
             }
             else

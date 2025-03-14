@@ -10,16 +10,10 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/concession-categories")]
     [ApiController]
-    public class ConcessionCategoriesController : ControllerBase
+    public class ConcessionCategoriesController(DataContext context) : ControllerBase
     {
-        private readonly DataContext _context;
-        private readonly DbSet<ConcessionCategory> _categories;
-
-        public ConcessionCategoriesController(DataContext context)
-        {
-            _context = context;
-            _categories = context.Set<ConcessionCategory>();
-        }
+        private readonly DataContext _context = context;
+        private readonly DbSet<ConcessionCategory> _categories = context.Set<ConcessionCategory>();
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ConcessionCategoryDTO>>> GetCategories()
@@ -64,7 +58,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Name is required");
             }
 
-            // Check if category already exists
             if (await _categories.AnyAsync(c => c.Name == categoryDto.Name))
             {
                 return BadRequest("Category with this name already exists");
@@ -105,7 +98,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return NotFound();
             }
 
-            // Check if name is already taken by another category
             if (await _categories.AnyAsync(c => c.Name == categoryDto.Name && c.Id != id))
             {
                 return BadRequest("Category with this name already exists");
@@ -146,7 +138,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return NotFound();
             }
 
-            // Check if category has items
             var hasItems = await _context.ConcessionItems.AnyAsync(i => i.CategoryId == id);
             if (hasItems)
             {

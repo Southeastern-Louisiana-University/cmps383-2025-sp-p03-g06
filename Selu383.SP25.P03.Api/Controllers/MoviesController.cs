@@ -10,25 +10,16 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/movies")]
     [ApiController]
-    public class MoviesController : ControllerBase
+    public class MoviesController(DataContext context) : ControllerBase
     {
-        private readonly DataContext _context;
-        private readonly DbSet<Movie> _movies;
-        private readonly DbSet<Genre> _genres;
-        private readonly DbSet<MovieGenre> _movieGenres;
-
-        public MoviesController(DataContext context)
-        {
-            _context = context;
-            _movies = context.Set<Movie>();
-            _genres = context.Set<Genre>();
-            _movieGenres = context.Set<MovieGenre>();
-        }
+        private readonly DataContext _context = context;
+        private readonly DbSet<Movie> _movies = context.Set<Movie>();
+        private readonly DbSet<Genre> _genres = context.Set<Genre>();
+        private readonly DbSet<MovieGenre> _movieGenres = context.Set<MovieGenre>();
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MovieDTO>>> GetMovies()
         {
-            // Ensure MovieGenres and Genre are properly loaded
             var movies = await _movies
                 .Select(m => new MovieDTO
                 {
@@ -39,19 +30,16 @@ namespace Selu383.SP25.P03.Api.Controllers
                     Rating = m.Rating,
                     PosterImageUrl = m.PosterImageUrl,
                     ReleaseDate = m.ReleaseDate,
-                    // Create an empty list by default
                     Genres = new List<string>()
                 })
                 .ToListAsync();
 
-            // Then load the genres separately to avoid null reference issues
             var movieIds = movies.Select(m => m.Id).ToList();
             var movieGenres = await _context.Set<MovieGenre>()
                 .Include(mg => mg.Genre)
                 .Where(mg => movieIds.Contains(mg.MovieId))
                 .ToListAsync();
 
-            // Group and assign genres to movies
             var genresByMovieId = movieGenres
                 .GroupBy(mg => mg.MovieId)
                 .ToDictionary(
@@ -59,7 +47,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                     g => g.Select(mg => mg.Genre?.Name ?? string.Empty).Where(name => !string.IsNullOrEmpty(name)).ToList()
                 );
 
-            // Update each movie with its genres
             foreach (var movie in movies)
             {
                 if (genresByMovieId.TryGetValue(movie.Id, out var genres))
@@ -74,14 +61,12 @@ namespace Selu383.SP25.P03.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<MovieDTO>> GetMovie(int id)
         {
-            // First check if movie exists
             var movieExists = await _movies.AnyAsync(m => m.Id == id);
             if (!movieExists)
             {
                 return NotFound();
             }
 
-            // Get movie base information
             var movie = await _movies
                 .Where(m => m.Id == id)
                 .Select(m => new MovieDTO
@@ -97,7 +82,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 })
                 .FirstOrDefaultAsync();
 
-            // Get genres separately
             var genres = await _movieGenres
                 .Include(mg => mg.Genre)
                 .Where(mg => mg.MovieId == id)
@@ -135,8 +119,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             _movies.Add(movie);
             await _context.SaveChangesAsync();
 
-            // Add genres
-            if (movieDto.Genres != null && movieDto.Genres.Any())
+            if (movieDto.Genres != null && movieDto.Genres.Count > 0)
             {
                 foreach (var genreName in movieDto.Genres)
                 {
@@ -166,8 +149,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 Rating = movie.Rating,
                 PosterImageUrl = movie.PosterImageUrl,
                 ReleaseDate = movie.ReleaseDate,
-                // Fix 3: Ensure we're not assigning null
-                Genres = movieDto.Genres ?? new List<string>()
+                Genres = movieDto.Genres ?? []
             });
         }
 
@@ -196,17 +178,13 @@ namespace Selu383.SP25.P03.Api.Controllers
             movie.PosterImageUrl = movieDto.PosterImageUrl;
             movie.ReleaseDate = movieDto.ReleaseDate;
 
-            // Update genres
             if (movieDto.Genres != null)
             {
-                // Remove existing genres
-                // Fix for Line 240: Add null check before accessing
                 if (movie.MovieGenres != null)
                 {
                     _movieGenres.RemoveRange(movie.MovieGenres);
                 }
 
-                // Add new genres
                 foreach (var genreName in movieDto.Genres)
                 {
                     var genre = await _genres.FirstOrDefaultAsync(g => g.Name == genreName);
@@ -242,7 +220,6 @@ namespace Selu383.SP25.P03.Api.Controllers
             }
 
             var updatedMovie = await GetMovieDto(id);
-            // Fix 4: Add null check before returning
             if (updatedMovie == null)
             {
                 return NotFound();
@@ -274,14 +251,12 @@ namespace Selu383.SP25.P03.Api.Controllers
 
         private async Task<MovieDTO?> GetMovieDto(int id)
         {
-            // Check if the movie exists
             var movieExists = await _movies.AnyAsync(m => m.Id == id);
             if (!movieExists)
             {
                 return null;
             }
 
-            // Get the movie details
             var movie = await _movies
                 .Where(m => m.Id == id)
                 .Select(m => new MovieDTO
@@ -302,7 +277,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return null;
             }
 
-            // Get genres separately
             var genres = await _movieGenres
                 .Include(mg => mg.Genre)
                 .Where(mg => mg.MovieId == id)

@@ -10,16 +10,10 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/genres")]
     [ApiController]
-    public class GenresController : ControllerBase
+    public class GenresController(DataContext context) : ControllerBase
     {
-        private readonly DataContext _context;
-        private readonly DbSet<Genre> _genres;
-
-        public GenresController(DataContext context)
-        {
-            _context = context;
-            _genres = context.Set<Genre>();
-        }
+        private readonly DataContext _context = context;
+        private readonly DbSet<Genre> _genres = context.Set<Genre>();
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GenreDTO>>> GetGenres()

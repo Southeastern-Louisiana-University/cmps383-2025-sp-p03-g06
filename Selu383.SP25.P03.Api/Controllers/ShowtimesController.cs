@@ -12,20 +12,12 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/showtimes")]
     [ApiController]
-    public class ShowtimesController : ControllerBase
+    public class ShowtimesController(DataContext context) : ControllerBase
     {
-        private readonly DataContext _context;
-        private readonly DbSet<Showtime> _showtimes;
-        private readonly DbSet<Movie> _movies;
-        private readonly DbSet<TheaterRoom> _theaterRooms;
-
-        public ShowtimesController(DataContext context)
-        {
-            _context = context;
-            _showtimes = context.Set<Showtime>();
-            _movies = context.Set<Movie>();
-            _theaterRooms = context.Set<TheaterRoom>();
-        }
+        private readonly DataContext _context = context;
+        private readonly DbSet<Showtime> _showtimes = context.Set<Showtime>();
+        private readonly DbSet<Movie> _movies = context.Set<Movie>();
+        private readonly DbSet<TheaterRoom> _theaterRooms = context.Set<TheaterRoom>();
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ShowtimeDTO>>> GetShowtimes()
@@ -190,16 +182,14 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Theater room not found");
             }
 
-            // Calculate end time based on movie duration
             var endTime = showtimeDto.StartTime.AddMinutes(movie.DurationMinutes);
 
-            // Check for time conflicts
             var hasConflict = await _showtimes
                 .Where(s => s.TheaterRoomId == showtimeDto.TheaterRoomId)
                 .AnyAsync(s =>
-                    (showtimeDto.StartTime >= s.StartTime && showtimeDto.StartTime < s.EndTime) || // New showtime starts during existing showtime
-                    (endTime > s.StartTime && endTime <= s.EndTime) || // New showtime ends during existing showtime
-                    (showtimeDto.StartTime <= s.StartTime && endTime >= s.EndTime)); // New showtime fully contains existing showtime
+                    (showtimeDto.StartTime >= s.StartTime && showtimeDto.StartTime < s.EndTime) ||
+                    (endTime > s.StartTime && endTime <= s.EndTime) ||
+                    (showtimeDto.StartTime <= s.StartTime && endTime >= s.EndTime));
 
             if (hasConflict)
             {
@@ -260,16 +250,14 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Theater room not found");
             }
 
-            // Calculate end time based on movie duration
             var endTime = showtimeDto.StartTime.AddMinutes(movie.DurationMinutes);
 
-            // Check for time conflicts
             var hasConflict = await _showtimes
                 .Where(s => s.TheaterRoomId == showtimeDto.TheaterRoomId && s.Id != id)
                 .AnyAsync(s =>
-                    (showtimeDto.StartTime >= s.StartTime && showtimeDto.StartTime < s.EndTime) || // New showtime starts during existing showtime
-                    (endTime > s.StartTime && endTime <= s.EndTime) || // New showtime ends during existing showtime
-                    (showtimeDto.StartTime <= s.StartTime && endTime >= s.EndTime)); // New showtime fully contains existing showtime
+                    (showtimeDto.StartTime >= s.StartTime && showtimeDto.StartTime < s.EndTime) ||
+                    (endTime > s.StartTime && endTime <= s.EndTime) ||
+                    (showtimeDto.StartTime <= s.StartTime && endTime >= s.EndTime));
 
             if (hasConflict)
             {
@@ -319,7 +307,7 @@ namespace Selu383.SP25.P03.Api.Controllers
 
         private bool ShowtimeExists(int id)
         {
-            return _showtimes.Any(e => e.Id == id);
+            return _showtimes.FirstOrDefault(e => e.Id == id) != null;
         }
 
         private async Task<ShowtimeDTO?> GetShowtimeDto(int id)

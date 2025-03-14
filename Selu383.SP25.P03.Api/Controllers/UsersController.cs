@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// Controllers/UsersController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,23 +10,12 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/users")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public class UsersController(RoleManager<Role> roleManager, UserManager<User> userManager, DataContext dataContext) : ControllerBase
     {
-        private readonly UserManager<User> userManager;
-        private readonly RoleManager<Role> roleManager;
-        private readonly DataContext dataContext;
-        private DbSet<Role> roles;
-
-        public UsersController(
-            RoleManager<Role> roleManager,
-            UserManager<User> userManager,
-            DataContext dataContext)
-        {
-            this.roleManager = roleManager;
-            this.userManager = userManager;
-            this.dataContext = dataContext;
-            roles = dataContext.Set<Role>();
-        }
+        private readonly UserManager<User> userManager = userManager;
+        private readonly RoleManager<Role> roleManager = roleManager;
+        private readonly DataContext dataContext = dataContext;
+        private readonly DbSet<Role> roles = dataContext.Set<Role>();
 
         [HttpPost]
         [Authorize]
@@ -46,7 +36,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Password is required");
             }
 
-            if (dto.Roles == null || !dto.Roles.Any())
+            if (dto.Roles == null || dto.Roles.Length == 0)
             {
                 return BadRequest("At least one role is required");
             }
@@ -82,7 +72,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             {
                 Id = existingUser.Id,
                 UserName = existingUser.UserName ?? string.Empty,
-                Roles = dto.Roles ?? Array.Empty<string>() 
+                Roles = dto.Roles ?? []
             };
         }
     }
