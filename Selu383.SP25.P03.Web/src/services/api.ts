@@ -1,4 +1,4 @@
-// src/services/api.ts - Optimized with shared error handling
+// src/services/api.ts - Updated with movie, showtime, and ticket API endpoints
 
 // Base URL for API requests
 const API_BASE_URL = "/api";
@@ -73,6 +73,68 @@ export interface CreateUserRequest {
   username: string;
   password: string;
   roles: string[];
+}
+
+export interface MovieDTO {
+  id: number;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  rating: string;
+  posterImageUrl: string;
+  releaseDate: string;
+  genres: string[];
+}
+
+export interface ShowtimeDTO {
+  id: number;
+  movieId: number;
+  movieTitle: string;
+  theaterRoomId: number;
+  theaterRoomName: string;
+  theaterId: number;
+  theaterName: string;
+  startTime: string;
+  endTime: string;
+  baseTicketPrice: number;
+}
+
+export interface SeatDTO {
+  id: number;
+  theaterRoomId: number;
+  row: string;
+  number: number;
+  seatType: string | null;
+  isAvailable: boolean;
+}
+
+export interface ReservationSeatDTO {
+  seatId: number;
+  row: string;
+  number: number;
+  seatType: string;
+  price: number;
+}
+
+export interface ReservationDTO {
+  id: number;
+  userId: number;
+  userName: string;
+  showtimeId: number;
+  showtimeStartTime: string;
+  movieTitle: string;
+  theaterName: string;
+  roomName: string;
+  reservationTime: string;
+  totalPrice: number;
+  status: string;
+  ticketCode: string;
+  seats: ReservationSeatDTO[];
+}
+
+export interface CreateReservationRequest {
+  showtimeId: number;
+  seatIds: number[];
 }
 
 // Custom error class for API errors
@@ -327,6 +389,196 @@ export const theaterApi = {
       return handleApiError(
         error,
         "Failed to delete theater. Please try again later."
+      );
+    }
+  },
+};
+
+// Movie API methods
+export const movieApi = {
+  getAllMovies: async (): Promise<MovieDTO[]> => {
+    const cachedMovies = apiCache.get<MovieDTO[]>("movies");
+    if (cachedMovies) return cachedMovies;
+
+    try {
+      const data = await fetchWithRetry<MovieDTO[]>(`${API_BASE_URL}/movies`, {
+        credentials: "include",
+      });
+
+      apiCache.set("movies", data, 5 * 60 * 1000); // Cache for 5 minutes
+      return data;
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch movies. Please try again later."
+      );
+    }
+  },
+
+  getMovieById: async (id: number): Promise<MovieDTO> => {
+    const cachedMovie = apiCache.get<MovieDTO>(`movie_${id}`);
+    if (cachedMovie) return cachedMovie;
+
+    try {
+      const data = await fetchWithRetry<MovieDTO>(
+        `${API_BASE_URL}/movies/${id}`,
+        { credentials: "include" }
+      );
+
+      apiCache.set(`movie_${id}`, data, 5 * 60 * 1000); // Cache for 5 minutes
+      return data;
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch movie details. Please try again later."
+      );
+    }
+  },
+};
+
+// Showtime API methods
+export const showtimeApi = {
+  getAllShowtimes: async (): Promise<ShowtimeDTO[]> => {
+    const cachedShowtimes = apiCache.get<ShowtimeDTO[]>("showtimes");
+    if (cachedShowtimes) return cachedShowtimes;
+
+    try {
+      const data = await fetchWithRetry<ShowtimeDTO[]>(
+        `${API_BASE_URL}/showtimes`,
+        { credentials: "include" }
+      );
+
+      apiCache.set("showtimes", data, 5 * 60 * 1000); // Cache for 5 minutes
+      return data;
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch showtimes. Please try again later."
+      );
+    }
+  },
+
+  getUpcomingShowtimes: async (): Promise<ShowtimeDTO[]> => {
+    try {
+      return await fetchWithRetry<ShowtimeDTO[]>(
+        `${API_BASE_URL}/showtimes/upcoming`,
+        { credentials: "include" }
+      );
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch upcoming showtimes. Please try again later."
+      );
+    }
+  },
+
+  getShowtimesByMovie: async (movieId: number): Promise<ShowtimeDTO[]> => {
+    try {
+      return await fetchWithRetry<ShowtimeDTO[]>(
+        `${API_BASE_URL}/showtimes/movie/${movieId}`,
+        { credentials: "include" }
+      );
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch movie showtimes. Please try again later."
+      );
+    }
+  },
+
+  getShowtimeById: async (id: number): Promise<ShowtimeDTO> => {
+    try {
+      return await fetchWithRetry<ShowtimeDTO>(
+        `${API_BASE_URL}/showtimes/${id}`,
+        { credentials: "include" }
+      );
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch showtime details. Please try again later."
+      );
+    }
+  },
+};
+
+// Seat API methods
+export const seatApi = {
+  getSeatsByRoomId: async (roomId: number): Promise<SeatDTO[]> => {
+    try {
+      return await fetchWithRetry<SeatDTO[]>(
+        `${API_BASE_URL}/seats/room/${roomId}`,
+        { credentials: "include" }
+      );
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch seats. Please try again later."
+      );
+    }
+  },
+};
+
+// Reservation API methods
+export const reservationApi = {
+  getMyReservations: async (): Promise<ReservationDTO[]> => {
+    try {
+      return await fetchWithRetry<ReservationDTO[]>(
+        `${API_BASE_URL}/reservations`,
+        { credentials: "include" }
+      );
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch your reservations. Please try again later."
+      );
+    }
+  },
+
+  getReservationById: async (id: number): Promise<ReservationDTO> => {
+    try {
+      return await fetchWithRetry<ReservationDTO>(
+        `${API_BASE_URL}/reservations/${id}`,
+        { credentials: "include" }
+      );
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch reservation details. Please try again later."
+      );
+    }
+  },
+
+  createReservation: async (
+    data: CreateReservationRequest
+  ): Promise<ReservationDTO> => {
+    try {
+      return await fetchWithRetry<ReservationDTO>(
+        `${API_BASE_URL}/reservations`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(data),
+        }
+      );
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to create reservation. Please try again later."
+      );
+    }
+  },
+
+  cancelReservation: async (id: number): Promise<void> => {
+    try {
+      await fetchWithRetry<void>(`${API_BASE_URL}/reservations/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to cancel reservation. Please try again later."
       );
     }
   },

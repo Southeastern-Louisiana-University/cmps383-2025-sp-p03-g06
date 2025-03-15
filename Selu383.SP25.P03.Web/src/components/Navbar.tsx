@@ -1,4 +1,4 @@
-// src/components/Navbar.tsx - Simplified design with better contrast
+// src/components/Navbar.tsx
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -8,21 +8,17 @@ import {
   Text,
   Button,
   Menu,
-  ActionIcon,
   Burger,
   Drawer,
   Stack,
   Divider,
   Avatar,
-  Tooltip,
   useMantineColorScheme,
 } from "@mantine/core";
 import {
   IconLogout,
   IconTheater,
   IconUser,
-  IconMoon,
-  IconSun,
   IconTicket,
   IconMovie,
   IconHome,
@@ -141,12 +137,34 @@ const Navbar = () => {
 
                   <Button
                     component={Link}
+                    to="/movies"
+                    variant={activeLink("/movies") ? "filled" : "subtle"}
+                    color={isDark ? "yellow" : "green"}
+                    leftSection={<IconMovie size={18} />}
+                  >
+                    Movies
+                  </Button>
+
+                  <Button
+                    component={Link}
                     to="/theaters"
                     variant={activeLink("/theaters") ? "filled" : "subtle"}
                     color={isDark ? "yellow" : "green"}
                     leftSection={<IconTheater size={18} />}
                   >
                     Theaters
+                  </Button>
+
+                  <Button
+                    component={Link}
+                    to="/my-reservations"
+                    variant={
+                      activeLink("/my-reservations") ? "filled" : "subtle"
+                    }
+                    color={isDark ? "yellow" : "green"}
+                    leftSection={<IconTicket size={18} />}
+                  >
+                    My Tickets
                   </Button>
 
                   <Menu
@@ -194,14 +212,26 @@ const Navbar = () => {
                   </Menu>
                 </>
               ) : (
-                <Button
-                  component={Link}
-                  to="/login"
-                  variant="filled"
-                  color={isDark ? "yellow" : "green"}
-                >
-                  Login
-                </Button>
+                <>
+                  <Button
+                    component={Link}
+                    to="/movies"
+                    variant={activeLink("/movies") ? "filled" : "subtle"}
+                    color={isDark ? "yellow" : "green"}
+                    leftSection={<IconMovie size={18} />}
+                  >
+                    Movies
+                  </Button>
+
+                  <Button
+                    component={Link}
+                    to="/login"
+                    variant="filled"
+                    color={isDark ? "yellow" : "green"}
+                  >
+                    Login
+                  </Button>
+                </>
               )}
             </Group>
           </Group>
@@ -268,6 +298,18 @@ const Navbar = () => {
 
               <Button
                 component={Link}
+                to="/movies"
+                variant="subtle"
+                color={isDark ? "yellow" : "green"}
+                fullWidth
+                leftSection={<IconMovie size={18} />}
+                onClick={close}
+              >
+                Movies
+              </Button>
+
+              <Button
+                component={Link}
                 to="/theaters"
                 variant="subtle"
                 color={isDark ? "yellow" : "green"}
@@ -279,23 +321,15 @@ const Navbar = () => {
               </Button>
 
               <Button
-                variant="subtle"
-                color={isDark ? "yellow" : "green"}
-                fullWidth
-                leftSection={<IconMovie size={18} />}
-                onClick={close}
-              >
-                Movies
-              </Button>
-
-              <Button
+                component={Link}
+                to="/my-reservations"
                 variant="subtle"
                 color={isDark ? "yellow" : "green"}
                 fullWidth
                 leftSection={<IconTicket size={18} />}
                 onClick={close}
               >
-                Tickets
+                My Tickets
               </Button>
 
               <Divider />
@@ -319,6 +353,19 @@ const Navbar = () => {
           ) : (
             <>
               <Text my="md">Please log in to access all features</Text>
+
+              <Button
+                component={Link}
+                to="/movies"
+                variant="subtle"
+                color={isDark ? "yellow" : "green"}
+                fullWidth
+                leftSection={<IconMovie size={18} />}
+                onClick={close}
+              >
+                Movies
+              </Button>
+
               <Button
                 component={Link}
                 to="/login"

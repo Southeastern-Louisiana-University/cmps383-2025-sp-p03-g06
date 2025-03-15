@@ -96,6 +96,7 @@ namespace Selu383.SP25.P03.Api
                 SeedTheaterRooms.Initialize(scope.ServiceProvider);
                 SeedSeats.Initialize(scope.ServiceProvider);
                 SeedMovies.Initialize(scope.ServiceProvider);
+                SeedShowtimes.Initialize(scope.ServiceProvider);
                 SeedConcessions.Initialize(scope.ServiceProvider);
             }
 

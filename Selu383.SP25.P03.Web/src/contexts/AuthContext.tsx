@@ -1,6 +1,12 @@
 // src/contexts/AuthContext.tsx
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, UserDTO } from '../services/api';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { authApi, UserDTO } from "../services/api";
 
 interface AuthContextType {
   user: UserDTO | null;
@@ -27,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(userData);
       } catch (error) {
         // User is not authenticated - this is not an error state
-        console.log('User not authenticated');
+        console.log("User not authenticated");
       } finally {
         setLoading(false);
       }
@@ -43,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userData = await authApi.login({ userName: username, password });
       setUser(userData);
     } catch (error) {
-      setError('Invalid username or password');
+      setError("Invalid username or password");
       throw error;
     } finally {
       setLoading(false);
@@ -56,8 +62,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await authApi.logout();
       setUser(null);
     } catch (error) {
-      setError('Logout failed');
-      throw error;
+      console.error("Logout failed:", error);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -65,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Compute isAuthenticated and isAdmin from the user object
   const isAuthenticated = !!user;
-  const isAdmin = user?.roles?.includes('Admin') ?? false;
+  const isAdmin = user?.roles?.includes("Admin") ?? false;
 
   return (
     <AuthContext.Provider
@@ -88,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

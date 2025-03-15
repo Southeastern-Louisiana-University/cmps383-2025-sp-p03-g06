@@ -14,6 +14,11 @@ import TheaterList from "./components/TheaterList";
 import TheaterForm from "./components/TheaterForm";
 import Navbar from "./components/Navbar";
 import LandingPage from "./components/LandingPage";
+import MovieList from "./components/MovieList";
+import MovieShowtimes from "./components/MovieShowtimes";
+import SeatSelection from "./components/SeatSelection";
+import MyReservations from "./components/MyReservations";
+import TicketView from "./components/TicketView";
 import {
   MantineProvider,
   createTheme,
@@ -47,6 +52,7 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   const [showLoader, setShowLoader] = useState(loading);
+  const location = useLocation();
 
   // Add a delay before showing the loader to prevent flicker
   useEffect(() => {
@@ -67,7 +73,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate to="/login" state={{ redirectTo: location.pathname }} replace />
+    );
   }
 
   return <>{children}</>;
@@ -194,6 +202,7 @@ const AppContent = () => {
                 {/* Landing page accessible by everyone */}
                 <Route path="/" element={<LandingPage />} />
 
+                {/* Theater routes */}
                 <Route
                   path="/theaters"
                   element={
@@ -218,6 +227,39 @@ const AppContent = () => {
                     <AdminRoute>
                       <TheaterForm mode="edit" />
                     </AdminRoute>
+                  }
+                />
+
+                {/* Movie and showtime routes */}
+                <Route path="/movies" element={<MovieList />} />
+                <Route
+                  path="/movies/:id/showtimes"
+                  element={<MovieShowtimes />}
+                />
+
+                {/* Reservation and ticket routes */}
+                <Route
+                  path="/reservations/create/:id"
+                  element={
+                    <ProtectedRoute>
+                      <SeatSelection />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my-reservations"
+                  element={
+                    <ProtectedRoute>
+                      <MyReservations />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/ticket/:id"
+                  element={
+                    <ProtectedRoute>
+                      <TicketView />
+                    </ProtectedRoute>
                   }
                 />
 
