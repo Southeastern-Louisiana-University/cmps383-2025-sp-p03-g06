@@ -13,6 +13,7 @@ import SignUp from "./components/SignUp";
 import TheaterList from "./components/TheaterList";
 import TheaterForm from "./components/TheaterForm";
 import Navbar from "./components/Navbar";
+import LandingPage from "./components/LandingPage";
 import {
   MantineProvider,
   createTheme,
@@ -191,14 +192,8 @@ const AppContent = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
 
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Navigate to="/theaters" replace />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Landing page accessible by everyone */}
+                <Route path="/" element={<LandingPage />} />
 
                 <Route
                   path="/theaters"
