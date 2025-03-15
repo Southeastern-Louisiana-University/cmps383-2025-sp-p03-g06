@@ -5,13 +5,9 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ColorSchemeProvider } from "./contexts/ColorSchemeContext";
-import Login from "./components/Login";
-import SignUp from "./components/SignUp";
-import TheaterList from "./components/TheaterList";
-import TheaterForm from "./components/TheaterForm";
 import Navbar from "./components/Navbar";
 import {
   MantineProvider,
@@ -21,8 +17,13 @@ import {
   Transition,
 } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
-import "./styles/animations.css";
 import "./App.css";
+
+// Lazy load components for better performance
+const Login = lazy(() => import("./components/Login"));
+const SignUp = lazy(() => import("./components/SignUp"));
+const TheaterList = lazy(() => import("./components/TheaterList"));
+const TheaterForm = lazy(() => import("./components/TheaterForm"));
 
 // Page transition component
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
@@ -33,15 +34,23 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (location.pathname !== displayLocation.pathname) {
       setTransitionStage("fadeOut");
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setDisplayLocation(location);
         setTransitionStage("fadeIn");
       }, 300);
+      return () => clearTimeout(timer);
     }
   }, [location, displayLocation]);
 
   return <div className={`page-transition ${transitionStage}`}>{children}</div>;
 };
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <Center style={{ height: "calc(100vh - 60px)" }}>
+    <Loader size="lg" variant="dots" />
+  </Center>
+);
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -59,11 +68,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, [loading]);
 
   if (showLoader) {
-    return (
-      <Center style={{ height: "calc(100vh - 60px)" }}>
-        <Loader size="lg" variant="dots" />
-      </Center>
-    );
+    return <LoadingFallback />;
   }
 
   if (!isAuthenticated) {
@@ -89,11 +94,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   }, [loading]);
 
   if (showLoader) {
-    return (
-      <Center style={{ height: "calc(100vh - 60px)" }}>
-        <Loader size="lg" variant="dots" />
-      </Center>
-    );
+    return <LoadingFallback />;
   }
 
   if (!isAdmin) {
@@ -187,48 +188,50 @@ const AppContent = () => {
         {(styles) => (
           <main className="content" style={styles}>
             <PageTransition>
-              <Routes location={location}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes location={location}>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
 
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Navigate to="/theaters" replace />
-                    </ProtectedRoute>
-                  }
-                />
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <Navigate to="/theaters" replace />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                <Route
-                  path="/theaters"
-                  element={
-                    <ProtectedRoute>
-                      <TheaterList />
-                    </ProtectedRoute>
-                  }
-                />
+                  <Route
+                    path="/theaters"
+                    element={
+                      <ProtectedRoute>
+                        <TheaterList />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                <Route
-                  path="/theaters/new"
-                  element={
-                    <AdminRoute>
-                      <TheaterForm mode="create" />
-                    </AdminRoute>
-                  }
-                />
+                  <Route
+                    path="/theaters/new"
+                    element={
+                      <AdminRoute>
+                        <TheaterForm mode="create" />
+                      </AdminRoute>
+                    }
+                  />
 
-                <Route
-                  path="/theaters/edit/:id"
-                  element={
-                    <AdminRoute>
-                      <TheaterForm mode="edit" />
-                    </AdminRoute>
-                  }
-                />
+                  <Route
+                    path="/theaters/edit/:id"
+                    element={
+                      <AdminRoute>
+                        <TheaterForm mode="edit" />
+                      </AdminRoute>
+                    }
+                  />
 
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
             </PageTransition>
           </main>
         )}

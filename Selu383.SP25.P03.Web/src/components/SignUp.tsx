@@ -1,4 +1,4 @@
-// src/components/SignUp.tsx - Simplified design with better form styling
+// src/components/SignUp.tsx - Updated with AnimatedLion
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { userApi } from "../services/api";
@@ -28,8 +28,8 @@ import {
   IconX,
   IconArrowLeft,
   IconUserCheck,
-  IconMovie,
 } from "@tabler/icons-react";
+import AnimatedLion from "./AnimatedLion"; // Import our new component
 
 function PasswordRequirement({
   meets,
@@ -174,10 +174,11 @@ const SignUp = () => {
         }}
       >
         <Group justify="center" mb={24}>
-          <IconMovie
-            size={40}
-            color={isDark ? "#d4af37" : "var(--mantine-color-primary-6)"}
-            stroke={1.5}
+          {/* Replace IconMovie with AnimatedLion */}
+          <AnimatedLion
+            size={80}
+            primaryColor={isDark ? "#d4af37" : "#0d6832"}
+            secondaryColor={isDark ? "#8B4513" : "#6B4226"}
           />
         </Group>
 

@@ -1,4 +1,5 @@
-// src/components/TheaterCard.tsx - Simplified design with better legibility
+// src/components/TheaterCard.tsx
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { TheaterDTO } from "../services/api";
 import {
@@ -31,7 +32,8 @@ interface TheaterCardProps {
   isAdmin: boolean;
 }
 
-const TheaterCard = ({ theater, onDelete, isAdmin }: TheaterCardProps) => {
+// Memoized component to prevent unnecessary re-renders
+const TheaterCard = memo(({ theater, onDelete, isAdmin }: TheaterCardProps) => {
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
   const theme = useMantineTheme();
@@ -174,6 +176,9 @@ const TheaterCard = ({ theater, onDelete, isAdmin }: TheaterCardProps) => {
       </Group>
     </Card>
   );
-};
+});
+
+// Add display name for debugging
+TheaterCard.displayName = "TheaterCard";
 
 export default TheaterCard;
