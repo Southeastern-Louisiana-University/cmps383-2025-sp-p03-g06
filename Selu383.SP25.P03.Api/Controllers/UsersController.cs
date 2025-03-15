@@ -17,9 +17,9 @@ namespace Selu383.SP25.P03.Api.Controllers
         private readonly DataContext dataContext = dataContext;
         private readonly DbSet<Role> roles = dataContext.Set<Role>();
 
-        [HttpPost]
-        [Authorize]
-        public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserDto dto)
+        [HttpPost("register")]
+        [AllowAnonymous] // Explicitly allow unauthenticated access
+        public async Task<ActionResult<UserDto>> Register([FromBody] CreateUserDto dto)
         {
             if (dto == null)
             {
@@ -36,16 +36,9 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Password is required");
             }
 
-            if (dto.Roles == null || dto.Roles.Length == 0)
-            {
-                return BadRequest("At least one role is required");
-            }
-
-            // Check if all specified roles exist
-            if (!dto.Roles.All(x => roles.Any(y => x == y.Name)))
-            {
-                return BadRequest("One or more roles do not exist");
-            }
+            // For security, override any roles provided and only assign the User role
+            // This prevents privilege escalation during registration
+            var userRoles = new string[] { UserRoleNames.User };
 
             var user = new User { UserName = dto.Username };
             var createResult = await userManager.CreateAsync(user, dto.Password);
@@ -60,7 +53,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Failed to create user");
             }
 
-            var rolesResult = await userManager.AddToRolesAsync(existingUser, dto.Roles);
+            var rolesResult = await userManager.AddToRolesAsync(existingUser, userRoles);
             if (!rolesResult.Succeeded)
             {
                 // Clean up by deleting the user since role assignment failed
@@ -72,7 +65,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             {
                 Id = existingUser.Id,
                 UserName = existingUser.UserName ?? string.Empty,
-                Roles = dto.Roles ?? []
+                Roles = userRoles
             };
         }
     }

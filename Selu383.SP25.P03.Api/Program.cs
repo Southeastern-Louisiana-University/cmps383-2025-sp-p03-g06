@@ -72,8 +72,9 @@ namespace Selu383.SP25.P03.Api
                 options.AddPolicy("DevelopmentPolicy", policy =>
                 {
                     policy.WithOrigins(
-                            "http://localhost:5185",  // Your React app's actual port
-                            "http://localhost:5173"   // Default Vite port as fallback
+                            "http://localhost:5249",    // HTTP Swagger UI
+                            "https://localhost:7027",    // HTTPS API
+                            "http://localhost:5173"      // Vite default port
                         )
                         .AllowAnyHeader()
                         .AllowAnyMethod()

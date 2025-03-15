@@ -1,50 +1,355 @@
-// src/components/Navbar.tsx
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+// src/components/Navbar.tsx - Simplified design with better contrast
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  Box,
+  Group,
+  Text,
+  Button,
+  Menu,
+  ActionIcon,
+  Burger,
+  Drawer,
+  Stack,
+  Divider,
+  Avatar,
+  Tooltip,
+  useMantineColorScheme,
+} from "@mantine/core";
+import {
+  IconLogout,
+  IconTheater,
+  IconUser,
+  IconMoon,
+  IconSun,
+  IconTicket,
+  IconMovie,
+  IconHome,
+} from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === "dark";
+  const [opened, { toggle, close }] = useDisclosure(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      const offset = window.scrollY;
+      if (offset > 50) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   };
 
+  const activeLink = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">
-        <Link to="/">Lions Den Cinemas</Link>
-      </div>
-      
-      <ul className="navbar-nav">
-        {isAuthenticated ? (
-          <>
-            <li className="nav-item">
-              <Link to="/theaters">Theaters</Link>
-            </li>
-            <li className="nav-item">
-              <span className="user-name">
-                Welcome, {user?.userName}
-              </span>
-            </li>
-            <li className="nav-item">
-              <button onClick={handleLogout} className="logout-button">
-                Logout
-              </button>
-            </li>
-          </>
-        ) : (
-          <li className="nav-item">
-            <Link to="/login">Login</Link>
-          </li>
-        )}
-      </ul>
-    </nav>
+    <>
+      <Box
+        component="header"
+        h={64}
+        px="md"
+        style={{
+          backgroundColor: isDark
+            ? `rgba(30, 30, 35, ${scrolled ? "0.95" : "1"})`
+            : `rgba(255, 255, 255, ${scrolled ? "0.95" : "1"})`,
+          color: isDark ? "white" : "#1a1b1e",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          borderBottom: `1px solid ${
+            isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"
+          }`,
+          boxShadow: scrolled
+            ? "0 4px 10px rgba(0, 0, 0, 0.1)"
+            : "0 1px 3px rgba(0, 0, 0, 0.05)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        <Group justify="space-between" h="100%" wrap="nowrap">
+          <Group>
+            <Link
+              to="/"
+              style={{
+                textDecoration: "none",
+                color: isDark ? "white" : "#1a1b1e",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+              }}
+            >
+              <IconMovie
+                size={32}
+                color={isDark ? "#d4af37" : "#0d6832"}
+                stroke={1.5}
+              />
+
+              <Text
+                fw={700}
+                style={{
+                  color: isDark ? "white" : "#1a1b1e",
+                  letterSpacing: "0.5px",
+                  fontFamily: "'Poppins', sans-serif",
+                  fontSize: "1.25rem",
+                }}
+              >
+                Lions Den Cinemas
+              </Text>
+            </Link>
+          </Group>
+
+          {/* Desktop menu */}
+          <Group visibleFrom="sm">
+            <Group gap="md">
+              <ThemeToggle />
+
+              {isAuthenticated ? (
+                <>
+                  <Button
+                    component={Link}
+                    to="/"
+                    variant={activeLink("/") ? "filled" : "subtle"}
+                    color={isDark ? "yellow" : "green"}
+                    leftSection={<IconHome size={18} />}
+                  >
+                    Home
+                  </Button>
+
+                  <Button
+                    component={Link}
+                    to="/theaters"
+                    variant={activeLink("/theaters") ? "filled" : "subtle"}
+                    color={isDark ? "yellow" : "green"}
+                    leftSection={<IconTheater size={18} />}
+                  >
+                    Theaters
+                  </Button>
+
+                  <Menu
+                    position="bottom-end"
+                    shadow="md"
+                    width={200}
+                    transitionProps={{
+                      transition: "pop",
+                      duration: 150,
+                    }}
+                  >
+                    <Menu.Target>
+                      <Button
+                        variant="subtle"
+                        color={isDark ? "gray" : "dark"}
+                        leftSection={
+                          <Avatar
+                            size="sm"
+                            color={isDark ? "yellow" : "green"}
+                            radius="xl"
+                          >
+                            {user?.userName.charAt(0).toUpperCase()}
+                          </Avatar>
+                        }
+                        rightSection={<IconUser size={18} />}
+                      >
+                        {user?.userName}
+                      </Button>
+                    </Menu.Target>
+
+                    <Menu.Dropdown>
+                      <Menu.Label>Account</Menu.Label>
+                      <Menu.Item leftSection={<IconUser size={14} />}>
+                        Profile
+                      </Menu.Item>
+                      <Menu.Divider />
+                      <Menu.Item
+                        color="red"
+                        leftSection={<IconLogout size={14} />}
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </>
+              ) : (
+                <Button
+                  component={Link}
+                  to="/login"
+                  variant="filled"
+                  color={isDark ? "yellow" : "green"}
+                >
+                  Login
+                </Button>
+              )}
+            </Group>
+          </Group>
+
+          {/* Mobile menu burger */}
+          <Burger
+            opened={opened}
+            onClick={toggle}
+            hiddenFrom="sm"
+            color={isDark ? "white" : "black"}
+            size="sm"
+          />
+        </Group>
+      </Box>
+
+      {/* Mobile drawer */}
+      <Drawer
+        opened={opened}
+        onClose={close}
+        size="xs"
+        padding="md"
+        title={
+          <Text fw={700} size="lg" c={isDark ? "yellow" : "green"}>
+            Lions Den Cinemas
+          </Text>
+        }
+        hiddenFrom="sm"
+        withCloseButton
+        position="right"
+      >
+        <Stack>
+          {isAuthenticated ? (
+            <>
+              <Group mb="md">
+                <Avatar
+                  size="md"
+                  color={isDark ? "yellow" : "green"}
+                  radius="xl"
+                >
+                  {user?.userName.charAt(0).toUpperCase()}
+                </Avatar>
+                <div>
+                  <Text fw={500}>{user?.userName}</Text>
+                  <Text size="xs" c="dimmed">
+                    {user?.roles?.includes("Admin")
+                      ? "Administrator"
+                      : "Member"}
+                  </Text>
+                </div>
+              </Group>
+              <Divider />
+
+              <Button
+                component={Link}
+                to="/"
+                variant="subtle"
+                color={isDark ? "yellow" : "green"}
+                fullWidth
+                leftSection={<IconHome size={18} />}
+                onClick={close}
+              >
+                Home
+              </Button>
+
+              <Button
+                component={Link}
+                to="/theaters"
+                variant="subtle"
+                color={isDark ? "yellow" : "green"}
+                fullWidth
+                leftSection={<IconTheater size={18} />}
+                onClick={close}
+              >
+                Theaters
+              </Button>
+
+              <Button
+                variant="subtle"
+                color={isDark ? "yellow" : "green"}
+                fullWidth
+                leftSection={<IconMovie size={18} />}
+                onClick={close}
+              >
+                Movies
+              </Button>
+
+              <Button
+                variant="subtle"
+                color={isDark ? "yellow" : "green"}
+                fullWidth
+                leftSection={<IconTicket size={18} />}
+                onClick={close}
+              >
+                Tickets
+              </Button>
+
+              <Divider />
+
+              <Group grow mt="md">
+                <ThemeToggle />
+
+                <Button
+                  variant="filled"
+                  color="red"
+                  leftSection={<IconLogout size={16} />}
+                  onClick={() => {
+                    handleLogout();
+                    close();
+                  }}
+                >
+                  Logout
+                </Button>
+              </Group>
+            </>
+          ) : (
+            <>
+              <Text my="md">Please log in to access all features</Text>
+              <Button
+                component={Link}
+                to="/login"
+                variant="filled"
+                color={isDark ? "yellow" : "green"}
+                fullWidth
+                onClick={close}
+              >
+                Login
+              </Button>
+
+              <Button
+                component={Link}
+                to="/signup"
+                variant="outline"
+                color={isDark ? "yellow" : "green"}
+                fullWidth
+                onClick={close}
+                mt="xs"
+              >
+                Sign Up
+              </Button>
+
+              <Divider my="md" />
+
+              <ThemeToggle fullWidth />
+            </>
+          )}
+        </Stack>
+      </Drawer>
+    </>
   );
 };
 
