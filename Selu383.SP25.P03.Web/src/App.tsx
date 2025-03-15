@@ -22,7 +22,6 @@ import {
   Transition,
 } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
-import "./styles/animations.css";
 import "./App.css";
 
 // Page transition component
