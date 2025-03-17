@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
   plugins: [react()],
   server: {
+    allowedHosts:["up-eagle-indirectly.ngrok-free.app"],
     proxy: {
       // Proxy API requests to the .NET backend during development
       '/api': {
