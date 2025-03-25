@@ -16,6 +16,7 @@ import {
   Avatar,
   Tooltip,
   useMantineColorScheme,
+  rgba,
 } from "@mantine/core";
 import {
   IconLogout,
@@ -74,10 +75,8 @@ const Navbar = () => {
         h={64}
         px="md"
         style={{
-          backgroundColor: isDark
-            ? `rgba(30, 30, 35, ${scrolled ? "0.95" : "1"})`
-            : `rgba(255, 255, 255, ${scrolled ? "0.95" : "1"})`,
-          color: isDark ? "white" : "#1a1b1e",
+          backgroundColor: "#121212", // Very dark black background
+          color: "white", // White text for better contrast
           position: "sticky",
           top: 0,
           zIndex: 100,
@@ -85,8 +84,8 @@ const Navbar = () => {
             isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"
           }`,
           boxShadow: scrolled
-            ? "0 4px 10px rgba(0, 0, 0, 0.1)"
-            : "0 1px 3px rgba(0, 0, 0, 0.05)",
+            ? "0 4px 10px rgba(0, 0, 0, 0.3)"
+            : "0 1px 3px rgba(0, 0, 0, 0.15)",
           backdropFilter: "blur(8px)",
         }}
       >
@@ -102,16 +101,12 @@ const Navbar = () => {
                 gap: "12px",
               }}
             >
-              <IconMovie
-                size={32}
-                color={isDark ? "#d4af37" : "#0d6832"}
-                stroke={1.5}
-              />
+              <IconMovie size={32} color="#c70036" stroke={1.5} />
 
               <Text
                 fw={700}
                 style={{
-                  color: isDark ? "white" : "#1a1b1e",
+                  color: "white",
                   letterSpacing: "0.5px",
                   fontFamily: "'Poppins', sans-serif",
                   fontSize: "1.25rem",
@@ -133,7 +128,7 @@ const Navbar = () => {
                     component={Link}
                     to="/"
                     variant={activeLink("/") ? "filled" : "subtle"}
-                    color={isDark ? "yellow" : "green"}
+                    color="white"
                     leftSection={<IconHome size={18} />}
                   >
                     Home
@@ -143,7 +138,7 @@ const Navbar = () => {
                     component={Link}
                     to="/theaters"
                     variant={activeLink("/theaters") ? "filled" : "subtle"}
-                    color={isDark ? "yellow" : "green"}
+                    color="brand"
                     leftSection={<IconTheater size={18} />}
                   >
                     Theaters
@@ -161,13 +156,9 @@ const Navbar = () => {
                     <Menu.Target>
                       <Button
                         variant="subtle"
-                        color={isDark ? "gray" : "dark"}
+                        color="brand"
                         leftSection={
-                          <Avatar
-                            size="sm"
-                            color={isDark ? "yellow" : "green"}
-                            radius="xl"
-                          >
+                          <Avatar size="sm" color="brand" radius="xl">
                             {user?.userName.charAt(0).toUpperCase()}
                           </Avatar>
                         }
@@ -198,7 +189,7 @@ const Navbar = () => {
                   component={Link}
                   to="/login"
                   variant="filled"
-                  color={isDark ? "yellow" : "green"}
+                  color="brand"
                 >
                   Login
                 </Button>
@@ -211,7 +202,7 @@ const Navbar = () => {
             opened={opened}
             onClick={toggle}
             hiddenFrom="sm"
-            color={isDark ? "white" : "black"}
+            color="brand"
             size="sm"
           />
         </Group>
@@ -224,7 +215,15 @@ const Navbar = () => {
         size="xs"
         padding="md"
         title={
-          <Text fw={700} size="lg" c={isDark ? "yellow" : "green"}>
+          <Text
+            fw={700}
+            style={{
+              color: "white", // Always white regardless of theme
+              letterSpacing: "0.5px",
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: "1.25rem",
+            }}
+          >
             Lions Den Cinemas
           </Text>
         }
@@ -236,11 +235,7 @@ const Navbar = () => {
           {isAuthenticated ? (
             <>
               <Group mb="md">
-                <Avatar
-                  size="md"
-                  color={isDark ? "yellow" : "green"}
-                  radius="xl"
-                >
+                <Avatar size="md" color="brand" radius="xl">
                   {user?.userName.charAt(0).toUpperCase()}
                 </Avatar>
                 <div>
@@ -258,7 +253,7 @@ const Navbar = () => {
                 component={Link}
                 to="/"
                 variant="subtle"
-                color={isDark ? "yellow" : "green"}
+                color="brand"
                 fullWidth
                 leftSection={<IconHome size={18} />}
                 onClick={close}
@@ -270,7 +265,7 @@ const Navbar = () => {
                 component={Link}
                 to="/theaters"
                 variant="subtle"
-                color={isDark ? "yellow" : "green"}
+                color="brand"
                 fullWidth
                 leftSection={<IconTheater size={18} />}
                 onClick={close}
@@ -280,7 +275,7 @@ const Navbar = () => {
 
               <Button
                 variant="subtle"
-                color={isDark ? "yellow" : "green"}
+                color="brand"
                 fullWidth
                 leftSection={<IconMovie size={18} />}
                 onClick={close}
@@ -290,7 +285,7 @@ const Navbar = () => {
 
               <Button
                 variant="subtle"
-                color={isDark ? "yellow" : "green"}
+                color="brand"
                 fullWidth
                 leftSection={<IconTicket size={18} />}
                 onClick={close}
@@ -305,7 +300,7 @@ const Navbar = () => {
 
                 <Button
                   variant="filled"
-                  color="red"
+                  color="brand"
                   leftSection={<IconLogout size={16} />}
                   onClick={() => {
                     handleLogout();
@@ -323,7 +318,7 @@ const Navbar = () => {
                 component={Link}
                 to="/login"
                 variant="filled"
-                color={isDark ? "yellow" : "green"}
+                color="brand"
                 fullWidth
                 onClick={close}
               >
@@ -334,7 +329,7 @@ const Navbar = () => {
                 component={Link}
                 to="/signup"
                 variant="outline"
-                color={isDark ? "yellow" : "green"}
+                color="brand"
                 fullWidth
                 onClick={close}
                 mt="xs"

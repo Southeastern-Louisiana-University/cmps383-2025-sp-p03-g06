@@ -1,4 +1,4 @@
-// src/components/ThemeToggle.tsx - Simplified design
+// src/components/ThemeToggle.tsx - Enhanced with brand color
 import { useState, useEffect } from "react";
 import {
   ActionIcon,
@@ -33,11 +33,12 @@ const ThemeToggle = ({ fullWidth = false }: ThemeToggleProps) => {
   if (fullWidth) {
     return (
       <Button
-        variant={isDark ? "filled" : "outline"}
-        color={isDark ? "yellow" : "blue"}
+        variant={isDark ? "filled" : "filled"}
+        color={isDark ? "yellow" : "brand"}
         leftSection={isDark ? <IconSun size={16} /> : <IconMoon size={16} />}
         onClick={toggleColorScheme}
         fullWidth
+        className="theme-toggle-button"
       >
         {isDark ? "Light mode" : "Dark mode"}
       </Button>
@@ -47,20 +48,22 @@ const ThemeToggle = ({ fullWidth = false }: ThemeToggleProps) => {
   return (
     <Tooltip label={isDark ? "Switch to light mode" : "Switch to dark mode"}>
       <ActionIcon
-        variant="outline"
-        color={isDark ? "yellow" : "blue"}
+        variant={isDark ? "outline" : "filled"}
+        color={isDark ? "#C49102" : "brand"}
         onClick={toggleColorScheme}
         aria-label="Toggle color scheme"
         size="lg"
         radius="md"
+        className="theme-toggle-button"
         style={{
-          borderWidth: "1px",
+          borderWidth: isDark ? "1px" : "0",
+          boxShadow: isDark ? "none" : "0 2px 5px rgba(199, 0, 54, 0.3)",
         }}
       >
         {isDark ? (
           <IconSun size={20} stroke={1.5} />
         ) : (
-          <IconMoon size={20} stroke={1.5} />
+          <IconMoon size={20} stroke={1.5} color="white" />
         )}
       </ActionIcon>
     </Tooltip>

@@ -55,55 +55,86 @@ const LandingPage = () => {
           textAlign: "center",
           color: "#ffffff",
           boxShadow: "inset 0 0 0 1000px rgba(0, 0, 0, 0.6)",
+          marginTop: "-16px", // This negative margin will pull the image up to meet the navbar
+          paddingTop: "116px", // Increased padding to compensate for the negative margin
+          width: "100vw",
+          position: "relative",
+          left: "50%",
+          right: "50%",
+          marginLeft: "-50vw",
+          marginRight: "-50vw",
         }}
       >
-        <Title order={1} size="48px" mb="md" style={{ color: "#fff" }}>
-          Welcome to Lion's Den Cinema
-        </Title>
-        <Text size="lg" mb="xl" style={{ color: "#ddd" }}>
-          Enjoy blockbuster movies, ultimate comfort, and unforgettable
-          experiences.
-        </Text>
-        <Button size="lg" color={isDark ? "yellow" : "green"}>
-          Get Tickets Now
-        </Button>
+        <Container size="lg">
+          {" "}
+          {/* Content container for proper alignment */}
+          <Title order={1} size="48px" mb="md" style={{ color: "#fff" }}>
+            Welcome to Lion's Den Cinema
+          </Title>
+          <Text size="lg" mb="xl" style={{ color: "#ddd" }}>
+            Enjoy blockbuster movies, ultimate comfort, and unforgettable
+            experiences.
+          </Text>
+          <Button size="lg">Get Tickets Now</Button>
+        </Container>
       </Box>
 
-      <Container py="xl">
-        <Title order={2} mb="lg" ta="center">
-          Now Showing
-        </Title>
+      {/* Full-width carousel section */}
+      <Box
+        py="xl"
+        style={{
+          width: "100vw",
+          position: "relative",
+          left: "50%",
+          right: "50%",
+          marginLeft: "-50vw",
+          marginRight: "-50vw",
+          backgroundColor: isDark ? "#1A1B1E" : "#f8f9fa",
+        }}
+      >
+        <Container size="xl" mb="xl">
+          <Title order={2} ta="center">
+            Now Showing
+          </Title>
+        </Container>
+
         <Carousel
           withIndicators
-          height={400}
-          slideSize={{ base: "100%", sm: "50%", md: "33.3333%" }}
+          height={450} // Increase height a bit
+          slideSize={{ base: "100%", sm: "40%", md: "25%", lg: "20%" }} // Show more slides on larger screens
           slideGap="md"
           align="start"
           loop
+          containScroll="trimSnaps"
+          px="xl"
         >
           {movies.map((movie, idx) => (
             <Carousel.Slide key={idx}>
-              <Image
-                src={movie.image}
-                radius="md"
-                height={300}
-                fit="cover"
-                mb="sm"
-              />
-              <Text fw={600} ta="center" mt="md">
-                {movie.title}
-              </Text>
-              <Button
-                mt="sm"
-                fullWidth
-                color={colorScheme === "dark" ? "yellow" : "green"}
+              <Box
+                style={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
               >
-                Buy Tickets
-              </Button>
+                <Image
+                  src={movie.image}
+                  radius="md"
+                  height={320}
+                  fit="cover" // Use 'cover' to maintain aspect ratio without stretching
+                  mb="sm"
+                />
+                <Text fw={600} ta="center" mt="sm">
+                  {movie.title}
+                </Text>
+                <Button className="location-button" mt="auto" mb="md">
+                  Buy Tickets
+                </Button>
+              </Box>
             </Carousel.Slide>
           ))}
         </Carousel>
-      </Container>
+      </Box>
 
       <Box py="xl" bg={isDark ? "dark.8" : "gray.0"}>
         <Container>
@@ -115,9 +146,17 @@ const LandingPage = () => {
             facilities.
           </Text>
           <Group justify="center">
-            <Button variant="outline" leftSection={<IconTheater size={18} />}>
-              View Locations
-            </Button>
+            <Box mt="xl" mb="xl" ta="center">
+              <Button
+                className="location-button"
+                size="md"
+                color="brand"
+                variant="filled"
+                leftSection={<IconTheater size={18} />}
+              >
+                View Locations
+              </Button>
+            </Box>
           </Group>
         </Container>
       </Box>
@@ -132,8 +171,8 @@ const LandingPage = () => {
             more.
           </Text>
           <Button
-            color={isDark ? "yellow" : "green"}
             leftSection={<IconTicket size={18} />}
+            className="location-button"
           >
             Join Now
           </Button>

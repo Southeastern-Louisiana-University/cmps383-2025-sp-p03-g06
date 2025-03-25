@@ -107,33 +107,21 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 // Enhanced theme
 const theme = createTheme({
   colors: {
-    primary: [
-      "#e8f5ed", // primary-light
-      "#c5e4d3",
-      "#a2d4b9",
-      "#7fc49f",
-      "#5cb485",
-      "#39a46b",
-      "#0d6832", // primary-color
-      "#064023", // primary-dark
-      "#043519",
-      "#02280f",
-    ],
-    secondary: [
-      "#fdf7e4", // secondary-light
-      "#f9eec9",
-      "#f5e4ae",
-      "#f1db93",
-      "#ecd178",
-      "#e8c85d",
-      "#d4af37", // secondary-color
-      "#b3901f", // secondary-dark
-      "#856b17",
-      "#57460f",
+    brand: [
+      "#fce4e8", // lightest shade
+      "#f9c9d1",
+      "#f6aeba",
+      "#f294a3",
+      "#ef798c",
+      "#eb5f75",
+      "#e7455e",
+      "#e42b47",
+      "#e11230",
+      "#c70036", // darkest shade - your primary brand color
     ],
   },
-  primaryColor: "primary",
-  primaryShade: 6,
+  primaryColor: "brand",
+  primaryShade: 9,
   fontFamily: "Poppins, sans-serif",
   headings: {
     fontFamily: "Poppins, sans-serif",
@@ -142,6 +130,7 @@ const theme = createTheme({
     Button: {
       defaultProps: {
         radius: "md",
+        color: "brand",
       },
     },
     Card: {
@@ -236,7 +225,19 @@ const AppContent = () => {
 function App() {
   return (
     <BrowserRouter>
-      <MantineProvider theme={theme} defaultColorScheme="auto">
+      <MantineProvider
+        theme={{
+          ...theme,
+          components: {
+            ActionIcon: {
+              defaultProps: {
+                color: "brand",
+              },
+            },
+          },
+        }}
+        defaultColorScheme="auto"
+      >
         <ModalsProvider>
           <ColorSchemeProvider>
             <AuthProvider>
