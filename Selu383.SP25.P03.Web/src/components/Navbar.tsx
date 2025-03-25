@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import LoginSignupModal from "./LoginSignupModal";
+
 import {
   Box,
   Group,
@@ -34,6 +36,9 @@ import ThemeToggle from "./ThemeToggle";
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [modalOpened, modalHandlers] = useDisclosure(false);
+  const openModal = modalHandlers.open;
+  const closeModal = modalHandlers.close;
   const location = useLocation();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
@@ -185,12 +190,7 @@ const Navbar = () => {
                   </Menu>
                 </>
               ) : (
-                <Button
-                  component={Link}
-                  to="/login"
-                  variant="filled"
-                  color="brand"
-                >
+                <Button onClick={openModal} variant="filled" color="brand">
                   Login
                 </Button>
               )}
@@ -206,6 +206,7 @@ const Navbar = () => {
             size="sm"
           />
         </Group>
+        <LoginSignupModal opened={modalOpened} onClose={closeModal} />
       </Box>
 
       {/* Mobile drawer */}
