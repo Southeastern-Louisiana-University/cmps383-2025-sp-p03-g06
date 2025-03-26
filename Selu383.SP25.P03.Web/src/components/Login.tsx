@@ -1,4 +1,4 @@
-// src/components/Login.tsx - Updated with AnimatedLion
+// src/components/Login.tsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, Link, useLocation } from "react-router-dom";
