@@ -14,11 +14,6 @@ import TheaterList from "./components/TheaterList";
 import TheaterForm from "./components/TheaterForm";
 import Navbar from "./components/Navbar";
 import LandingPage from "./components/LandingPage";
-import MovieList from "./components/MovieList";
-import MovieShowtimes from "./components/MovieShowtimes";
-import SeatSelection from "./components/SeatSelection";
-import MyReservations from "./components/MyReservations";
-import TicketView from "./components/TicketView";
 import {
   MantineProvider,
   createTheme,
@@ -27,6 +22,7 @@ import {
   Transition,
 } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
+import "./styles/animations.css";
 import "./App.css";
 
 // Page transition component
@@ -52,7 +48,6 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   const [showLoader, setShowLoader] = useState(loading);
-  const location = useLocation();
 
   // Add a delay before showing the loader to prevent flicker
   useEffect(() => {
@@ -73,9 +68,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!isAuthenticated) {
-    return (
-      <Navigate to="/login" state={{ redirectTo: location.pathname }} replace />
-    );
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -114,33 +107,21 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 // Enhanced theme
 const theme = createTheme({
   colors: {
-    primary: [
-      "#e8f5ed", // primary-light
-      "#c5e4d3",
-      "#a2d4b9",
-      "#7fc49f",
-      "#5cb485",
-      "#39a46b",
-      "#0d6832", // primary-color
-      "#064023", // primary-dark
-      "#043519",
-      "#02280f",
-    ],
-    secondary: [
-      "#fdf7e4", // secondary-light
-      "#f9eec9",
-      "#f5e4ae",
-      "#f1db93",
-      "#ecd178",
-      "#e8c85d",
-      "#d4af37", // secondary-color
-      "#b3901f", // secondary-dark
-      "#856b17",
-      "#57460f",
+    brand: [
+      "#fce4e8", // lightest shade
+      "#f9c9d1",
+      "#f6aeba",
+      "#f294a3",
+      "#ef798c",
+      "#eb5f75",
+      "#e7455e",
+      "#e42b47",
+      "#e11230",
+      "#c70036", // darkest shade - your primary brand color
     ],
   },
-  primaryColor: "primary",
-  primaryShade: 6,
+  primaryColor: "brand",
+  primaryShade: 9,
   fontFamily: "Poppins, sans-serif",
   headings: {
     fontFamily: "Poppins, sans-serif",
@@ -149,6 +130,7 @@ const theme = createTheme({
     Button: {
       defaultProps: {
         radius: "md",
+        color: "brand",
       },
     },
     Card: {
@@ -202,7 +184,6 @@ const AppContent = () => {
                 {/* Landing page accessible by everyone */}
                 <Route path="/" element={<LandingPage />} />
 
-                {/* Theater routes */}
                 <Route
                   path="/theaters"
                   element={
@@ -230,39 +211,6 @@ const AppContent = () => {
                   }
                 />
 
-                {/* Movie and showtime routes */}
-                <Route path="/movies" element={<MovieList />} />
-                <Route
-                  path="/movies/:id/showtimes"
-                  element={<MovieShowtimes />}
-                />
-
-                {/* Reservation and ticket routes */}
-                <Route
-                  path="/reservations/create/:id"
-                  element={
-                    <ProtectedRoute>
-                      <SeatSelection />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/my-reservations"
-                  element={
-                    <ProtectedRoute>
-                      <MyReservations />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/ticket/:id"
-                  element={
-                    <ProtectedRoute>
-                      <TicketView />
-                    </ProtectedRoute>
-                  }
-                />
-
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </PageTransition>
@@ -277,7 +225,19 @@ const AppContent = () => {
 function App() {
   return (
     <BrowserRouter>
-      <MantineProvider theme={theme} defaultColorScheme="auto">
+      <MantineProvider
+        theme={{
+          ...theme,
+          components: {
+            ActionIcon: {
+              defaultProps: {
+                color: "brand",
+              },
+            },
+          },
+        }}
+        defaultColorScheme="auto"
+      >
         <ModalsProvider>
           <ColorSchemeProvider>
             <AuthProvider>
