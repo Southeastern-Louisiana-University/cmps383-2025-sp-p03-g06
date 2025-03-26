@@ -1,4 +1,4 @@
-// src/components/Login.tsx - Updated with AnimatedLion
+// src/components/Login.tsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -14,7 +14,6 @@ import {
   Alert,
   Stack,
   Group,
-  Box,
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";
@@ -24,7 +23,6 @@ import {
   IconLock,
   IconArrowRight,
   IconUserPlus,
-  IconLogin,
 } from "@tabler/icons-react";
 import AnimatedLion from "./AnimatedLion"; // Import our new component
 

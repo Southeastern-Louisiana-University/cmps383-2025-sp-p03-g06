@@ -1,5 +1,5 @@
 // src/contexts/ColorSchemeContext.tsx
-import React, {
+import {
   createContext,
   useContext,
   useState,
