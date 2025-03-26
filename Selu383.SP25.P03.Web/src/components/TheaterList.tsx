@@ -18,7 +18,6 @@ import {
   TextInput,
   Select,
   useMantineColorScheme,
-  useMantineTheme,
 } from "@mantine/core";
 import {
   IconAlertCircle,
