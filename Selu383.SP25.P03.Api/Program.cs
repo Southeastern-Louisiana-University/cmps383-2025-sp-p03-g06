@@ -79,9 +79,9 @@ namespace Selu383.SP25.P03.Api
                         .AllowAnyHeader()
                         .AllowAnyMethod()
                         .AllowCredentials();
-                });
+                }); 
             });
-
+           
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
