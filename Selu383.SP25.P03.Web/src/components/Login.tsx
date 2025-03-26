@@ -1,4 +1,4 @@
-// src/components/Login.tsx - Simplified design with better readability
+// src/components/Login.tsx - Updated with AnimatedLion
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -24,9 +24,9 @@ import {
   IconLock,
   IconArrowRight,
   IconUserPlus,
-  IconMovie,
   IconLogin,
 } from "@tabler/icons-react";
+import AnimatedLion from "./AnimatedLion"; // Import our new component
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -77,25 +77,12 @@ const Login = () => {
         }}
       >
         <Group justify="center" mb={24}>
-          <Box
-            style={{
-              width: "60px",
-              height: "60px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: "50%",
-              background: isDark
-                ? "rgba(212, 175, 55, 0.1)"
-                : "rgba(13, 104, 50, 0.1)",
-            }}
-          >
-            <IconMovie
-              size={36}
-              color={isDark ? "#d4af37" : "#0d6832"}
-              stroke={1.5}
-            />
-          </Box>
+          {/* Replace IconMovie with AnimatedLion */}
+          <AnimatedLion
+            size={80}
+            primaryColor={isDark ? "#d4af37" : "#0d6832"}
+            secondaryColor={isDark ? "#8B4513" : "#6B4226"}
+          />
         </Group>
 
         <Title
@@ -208,7 +195,7 @@ const Login = () => {
               fullWidth
               type="submit"
               loading={loading}
-              leftSection={loading ? null : <IconLogin size={18} />}
+              leftSection={null}
               rightSection={loading ? null : <IconArrowRight size={18} />}
               mt={10}
               styles={{

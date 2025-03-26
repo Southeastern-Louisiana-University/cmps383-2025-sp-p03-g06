@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Users;
 
@@ -20,10 +19,7 @@ namespace Selu383.SP25.P03.Api
 
             // Configure OpenAPI/Swagger - standard configuration
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API v1", Version = "v1" });
-            });
+            builder.Services.AddSwaggerGen();
 
             builder.Services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DataContext>()
@@ -70,18 +66,22 @@ namespace Selu383.SP25.P03.Api
                 options.SlidingExpiration = true;
             });
 
-            //CHANGE THIS SETTING IN PRODUCTION TO policy.WithOrigins("https://yourproductionapp.com")
-            //CORS policy 
+            // Add CORS policy with the correct port for your React app
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("DevelopmentPolicy", policy =>
                 {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
-                });
+                    policy.WithOrigins(
+                            "http://localhost:5249",    // HTTP Swagger UI
+                            "https://localhost:7027",    // HTTPS API
+                            "http://localhost:5173"      // Vite default port
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                }); 
             });
-
+           
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
@@ -96,19 +96,14 @@ namespace Selu383.SP25.P03.Api
                 SeedTheaterRooms.Initialize(scope.ServiceProvider);
                 SeedSeats.Initialize(scope.ServiceProvider);
                 SeedMovies.Initialize(scope.ServiceProvider);
+                SeedShowtimes.Initialize(scope.ServiceProvider);
                 SeedConcessions.Initialize(scope.ServiceProvider);
             }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                // Add this line - it's missing and critical
-                app.UseSwagger();
-
-                app.UseSwaggerUI(options =>
-                {
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API v1");
-                });
+                app.MapOpenApi();
             }
 
             // Apply CORS policy - uncommented
@@ -117,6 +112,7 @@ namespace Selu383.SP25.P03.Api
             //Swagger UI
             app.UseSwagger();
             app.UseSwaggerUI();
+
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseRouting()
