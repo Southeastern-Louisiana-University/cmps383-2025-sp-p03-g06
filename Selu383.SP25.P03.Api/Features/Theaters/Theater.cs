@@ -1,4 +1,5 @@
-﻿using Selu383.SP25.P03.Api.Features.Users;
+﻿// Features/Theaters/Theater.cs
+using Selu383.SP25.P03.Api.Features.Users;
 using System.ComponentModel.DataAnnotations;
 
 namespace Selu383.SP25.P03.Api.Features.Theaters
@@ -12,5 +13,8 @@ namespace Selu383.SP25.P03.Api.Features.Theaters
         public int SeatCount { get; set; }
         public int? ManagerId { get; set; }
         public virtual User? Manager { get; set; }
+
+        // Navigation property
+        public virtual ICollection<TheaterRoom> Rooms { get; set; } = new List<TheaterRoom>();
     }
 }

@@ -1,6 +1,6 @@
-
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Users;
 
@@ -17,9 +17,13 @@ namespace Selu383.SP25.P03.Api
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DataContext") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
 
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
-            builder.Services.AddRazorPages();
+
+            // Configure OpenAPI/Swagger - standard configuration
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API v1", Version = "v1" });
+            });
 
             builder.Services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DataContext>()
@@ -66,21 +70,17 @@ namespace Selu383.SP25.P03.Api
                 options.SlidingExpiration = true;
             });
 
-            // Add CORS policy with the correct port for your React app
+            //CHANGE THIS SETTING IN PRODUCTION TO policy.WithOrigins("https://yourproductionapp.com")
+            //CORS policy 
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("DevelopmentPolicy", policy =>
                 {
-                    policy.WithOrigins(
-                            "http://localhost:5185",  // Your React app's actual port
-                            "http://localhost:5173"   // Default Vite port as fallback
-                        )
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
                 });
             });
-
 
             var app = builder.Build();
 
@@ -91,14 +91,32 @@ namespace Selu383.SP25.P03.Api
                 SeedTheaters.Initialize(scope.ServiceProvider);
                 await SeedRoles.Initialize(scope.ServiceProvider);
                 await SeedUsers.Initialize(scope.ServiceProvider);
+
+                // Initialize new seed data
+                SeedTheaterRooms.Initialize(scope.ServiceProvider);
+                SeedSeats.Initialize(scope.ServiceProvider);
+                SeedMovies.Initialize(scope.ServiceProvider);
+                SeedConcessions.Initialize(scope.ServiceProvider);
             }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                // Add this line - it's missing and critical
+                app.UseSwagger();
+
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API v1");
+                });
             }
 
+            // Apply CORS policy - uncommented
+            app.UseCors("DevelopmentPolicy");
+
+            //Swagger UI
+            app.UseSwagger();
+            app.UseSwaggerUI();
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseRouting()
@@ -108,9 +126,6 @@ namespace Selu383.SP25.P03.Api
                    x.MapControllers();
                });
             app.UseStaticFiles();
-
-            // Apply CORS policy - make sure this comes BEFORE other middleware
-            app.UseCors("DevelopmentPolicy");
 
             if (app.Environment.IsDevelopment())
             {
