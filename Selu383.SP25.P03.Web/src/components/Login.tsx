@@ -14,7 +14,6 @@ import {
   Alert,
   Stack,
   Group,
-  Box,
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";
@@ -24,7 +23,6 @@ import {
   IconLock,
   IconArrowRight,
   IconUserPlus,
-  IconLogin,
 } from "@tabler/icons-react";
 import AnimatedLion from "./AnimatedLion"; // Import our new component
 
