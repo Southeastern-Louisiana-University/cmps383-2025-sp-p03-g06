@@ -1,5 +1,4 @@
-﻿// Controllers/AuthenticationController.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,12 +8,20 @@ using Selu383.SP25.P03.Api.Features.Users;
 namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/authentication")]
-    public class AuthenticationController(SignInManager<User> signInManager, UserManager<User> userManager, DataContext dataContext) : ControllerBase
+    public class AuthenticationController : ControllerBase
     {
-        private readonly SignInManager<User> signInManager = signInManager;
-        private readonly UserManager<User> userManager = userManager;
-        private readonly DataContext dataContext = dataContext;
-        private readonly DbSet<User> users = dataContext.Set<User>();
+        private readonly SignInManager<User> signInManager;
+        private readonly UserManager<User> userManager;
+        private readonly DataContext dataContext;
+        private DbSet<User> users;
+
+        public AuthenticationController(SignInManager<User> signInManager, UserManager<User> userManager, DataContext dataContext)
+        {
+            this.signInManager = signInManager;
+            this.userManager = userManager;
+            this.dataContext = dataContext;
+            users = dataContext.Set<User>();
+        }
 
         [HttpPost]
         [Route("login")]
@@ -24,6 +31,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             {
                 return BadRequest("Username and password are required");
             }
+
             var result = await signInManager.PasswordSignInAsync(dto.UserName, dto.Password, false, false);
             if (result.Succeeded)
             {
@@ -36,7 +44,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 {
                     Id = user.Id,
                     UserName = user.UserName ?? string.Empty,
-                    Roles = (await userManager.GetRolesAsync(user)).ToArray() ?? []
+                    Roles = (await userManager.GetRolesAsync(user)).ToArray() ?? Array.Empty<string>()
                 };
             }
             return BadRequest("Invalid login attempt");
@@ -52,12 +60,14 @@ namespace Selu383.SP25.P03.Api.Controllers
             {
                 return BadRequest("User not found");
             }
+
             var roles = await userManager.GetRolesAsync(user);
+
             return new UserDto
             {
                 Id = user.Id,
                 UserName = user.UserName ?? string.Empty,
-                Roles = roles?.ToArray() ?? []
+                Roles = roles?.ToArray() ?? Array.Empty<string>()
             };
         }
 

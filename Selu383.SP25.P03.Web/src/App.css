@@ -1,179 +1,249 @@
-/* Clean App.css with minimal animations and improved legibility */
-
-/* Base Variables */
-:root {
-  --transition-standard: all 0.2s ease;
-  --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-dark: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --border-radius: 8px;
+/* src/App.css - Replace the existing App.css with this content */
+/* Basic Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* Global layout styles */
+body {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f4f4f4;
+}
+
 .app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  position: relative;
 }
 
 .content {
   flex: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 20px;
   width: 100%;
+}
+
+/* Navbar Styles */
+.navbar {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #333;
+  color: #fff;
+  padding: 1rem 2rem;
+}
+
+.navbar-brand a {
+  color: #fff;
+  font-size: 1.5rem;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.navbar-nav {
+  display: flex;
+  list-style: none;
   align-items: center;
 }
 
-/* Dark mode adjustments with enhanced readability */
-html[data-mantine-color-scheme="dark"] {
-  --card-bg: #25262b;
-  --input-bg: #1e1f22;
-  --text-primary: #ffffff;
-  --text-secondary: #c1c2c5;
-  --border-color: #373a40;
-  background-color: #1a1b1e;
-  color: #c1c2c5;
+.nav-item {
+  margin-left: 20px;
 }
 
-html[data-mantine-color-scheme="dark"] body {
-  background-color: #1a1b1e;
-  color: #c1c2c5;
+.nav-item a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s;
 }
 
-html[data-mantine-color-scheme="dark"] .mantine-Card-root {
-  background-color: var(--card-bg);
-  border-color: var(--border-color);
+.nav-item a:hover {
+  color: #ddd;
 }
 
-html[data-mantine-color-scheme="dark"] .mantine-Paper-root {
-  background-color: var(--card-bg);
-  color: var(--text-secondary);
+.user-name {
+  color: #ddd;
 }
 
-html[data-mantine-color-scheme="dark"] .mantine-Title-root {
-  color: var(--text-primary);
+.logout-button {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: background-color 0.3s;
 }
 
-html[data-mantine-color-scheme="dark"] .mantine-Text-root {
-  color: var(--text-secondary);
+.logout-button:hover {
+  background-color: #555;
 }
 
-html[data-mantine-color-scheme="dark"] .mantine-TextInput-input,
-html[data-mantine-color-scheme="dark"] .mantine-PasswordInput-input,
-html[data-mantine-color-scheme="dark"] .mantine-NumberInput-input {
-  background-color: var(--input-bg);
-  color: var(--text-primary);
-  border-color: var(--border-color);
+/* Form Styles */
+.form-group {
+  margin-bottom: 1rem;
 }
 
-/* Light mode enhancements */
-html[data-mantine-color-scheme="light"] {
-  --card-bg: #ffffff;
-  --input-bg: #f8f9fa;
-  --text-primary: #1a1b1e;
-  --text-secondary: #5c5f66;
-  --border-color: #e9ecef;
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
 }
 
-/* Card styling */
-.mantine-Card-root {
-  transition: var(--transition-standard);
-  border-radius: var(--border-radius);
+.form-group input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
 }
 
-/* Button styling */
-.mantine-Button-root {
-  transition: var(--transition-standard);
-  font-weight: 500;
-}
-
-/* Input field styling */
-.mantine-TextInput-input,
-.mantine-PasswordInput-input,
-.mantine-NumberInput-input,
-.mantine-Select-input {
-  transition: var(--transition-standard);
-  border-radius: var(--border-radius);
-  padding: 8px 36px 8px 36px; /* Ensure spacing for icons */
-  height: 42px;
-}
-
-/* Focus styles for better accessibility */
-.mantine-TextInput-input:focus,
-.mantine-PasswordInput-input:focus,
-.mantine-NumberInput-input:focus,
-.mantine-Select-input:focus {
-  border-color: var(--mantine-color-primary-6);
-}
-
-/* Improved input icon spacing */
-.mantine-TextInput-icon,
-.mantine-PasswordInput-icon {
-  width: 36px;
+.form-actions {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  gap: 10px;
+  margin-top: 1rem;
 }
 
-/* Alert styling */
-.mantine-Alert-root {
-  border-radius: var(--border-radius);
+button {
+  padding: 0.5rem 1rem;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
 }
 
-/* Simple fade-in animation */
-.fade-in {
-  animation: fadeIn 0.3s ease forwards;
+button:hover {
+  background-color: #555;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
 }
 
-/* Minimal animations - only use where needed */
-.page-transition.fadeIn {
-  animation: fadeIn 0.3s ease forwards;
+button[type="button"] {
+  background-color: #777;
 }
 
-.page-transition.fadeOut {
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.error-message {
+  color: #e74c3c;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #fadbd8;
+  border-radius: 4px;
 }
 
-/* Theater cards with cleaner design */
+/* Login Styles */
+.login-container {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-container h2 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Theater List Styles */
+.theater-list {
+  margin: 2rem 0;
+}
+
+.theater-list h2 {
+  margin-bottom: 1.5rem;
+}
+
+.actions {
+  margin-bottom: 1.5rem;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: #333;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #555;
+}
+
+.theaters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
 .theater-card {
-  height: 100%;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.theater-card h3 {
+  margin-bottom: 0.5rem;
+}
+
+.theater-card p {
+  margin-bottom: 0.5rem;
+  color: #666;
+}
+
+.theater-actions {
   display: flex;
-  flex-direction: column;
+  gap: 10px;
+  margin-top: 1rem;
 }
 
-.theater-card .mantine-Card-root {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.theater-actions a {
+  color: #3498db;
+  text-decoration: none;
 }
 
-.theater-card .card-actions {
-  margin-top: auto;
+.theater-actions a:hover {
+  text-decoration: underline;
 }
 
-/* Improved responsiveness */
-@media (max-width: 768px) {
-  .content {
-    padding: 1rem;
-  }
+.theater-actions button {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1rem;
 }
 
-/* Accessibility focus styles */
-*:focus-visible {
-  outline: 2px solid var(--mantine-color-primary-6);
-  outline-offset: 2px;
+.theater-actions button:hover {
+  text-decoration: underline;
+  background-color: transparent;
+}
+
+/* Theater Form Styles */
+.theater-form {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.theater-form h2 {
+  margin-bottom: 1.5rem;
+  text-align: center;
 }

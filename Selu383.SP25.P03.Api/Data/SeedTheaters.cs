@@ -7,7 +7,7 @@ namespace Selu383.SP25.P03.Api.Data
     {
         public static void Initialize(IServiceProvider serviceProvider)
         {
-            using var context = new DataContext(serviceProvider.GetRequiredService<DbContextOptions<DataContext>>());
+            using (var context = new DataContext(serviceProvider.GetRequiredService<DbContextOptions<DataContext>>()))
             {
                 // Look for any theaters.
                 if (context.Theaters.Any())

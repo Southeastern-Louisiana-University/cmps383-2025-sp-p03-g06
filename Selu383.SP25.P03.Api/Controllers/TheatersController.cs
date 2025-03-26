@@ -1,22 +1,29 @@
-﻿// Controllers/TheatersController.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Theaters;
 using Selu383.SP25.P03.Api.Features.Users;
-
+//commit
 namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/theaters")]
     [ApiController]
-    public class TheatersController(DataContext dataContext, UserManager<User> userManager) : ControllerBase
+    public class TheatersController : ControllerBase
     {
-        private readonly DbSet<Theater> theaters = dataContext.Set<Theater>();
-        private readonly DataContext dataContext = dataContext;
-        private readonly DbSet<User> users = dataContext.Set<User>();
-        private readonly UserManager<User> userManager = userManager;
+        private readonly DbSet<Theater> theaters;
+        private readonly DataContext dataContext;
+        private readonly DbSet<User> users;
+        private readonly UserManager<User> userManager;
+
+        public TheatersController(DataContext dataContext, UserManager<User> userManager)
+        {
+            this.dataContext = dataContext;
+            theaters = dataContext.Set<Theater>();
+            users = dataContext.Set<User>();
+            this.userManager = userManager;
+        }
 
         [HttpGet]
         public IQueryable<TheaterDto> GetAllTheaters()

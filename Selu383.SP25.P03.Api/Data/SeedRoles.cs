@@ -1,5 +1,4 @@
-﻿// Data/SeedRoles.cs
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Features.Users;
 
@@ -9,7 +8,7 @@ namespace Selu383.SP25.P03.Api.Data
     {
         public static async Task Initialize(IServiceProvider serviceProvider)
         {
-            using var context = new DataContext(serviceProvider.GetRequiredService<DbContextOptions<DataContext>>());
+            using (var context = new DataContext(serviceProvider.GetRequiredService<DbContextOptions<DataContext>>()))
             {
                 // Look for any roles.
                 if (context.Roles.Any())
@@ -18,7 +17,6 @@ namespace Selu383.SP25.P03.Api.Data
                 }
                 var roleManager = serviceProvider.GetRequiredService<RoleManager<Role>>();
                 await roleManager.CreateAsync(new Role { Name = UserRoleNames.Admin });
-                await roleManager.CreateAsync(new Role { Name = UserRoleNames.Manager });
                 await roleManager.CreateAsync(new Role { Name = UserRoleNames.User });
                 context.SaveChanges();
             }
