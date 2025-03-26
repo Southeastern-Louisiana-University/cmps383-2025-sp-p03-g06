@@ -42,6 +42,7 @@ const TheaterList = () => {
   const [filtersVisible, { toggle: toggleFilters }] = useDisclosure(false);
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
+  const theme = useMantineTheme();
 
   const fetchTheaters = async () => {
     try {

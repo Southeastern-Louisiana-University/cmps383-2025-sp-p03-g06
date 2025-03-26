@@ -2,11 +2,13 @@
 import {
   Modal,
   Tabs,
+  Text,
   Button,
   TextInput,
   PasswordInput,
   Stack,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 
 type Props = {
