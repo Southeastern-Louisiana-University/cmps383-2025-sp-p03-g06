@@ -1,24 +1,117 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* ===================================
+   ANIMATIONS 
+   =================================== */
+
+/* Core fade animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
-@keyframes logo-spin {
+/* Slide animations */
+@keyframes slideInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Scale animations */
+@keyframes zoomIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Special effects */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes rotate {
   from {
     transform: rotate(0deg);
   }
@@ -27,16 +120,219 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+/* Button effects */
+@keyframes buttonPush {
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
-.card {
-  padding: 2em;
+/* Lion-specific animations */
+@keyframes lionRoar {
+  0% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.1);
+  }
+  40% {
+    transform: scale(1.05);
+  }
+  60% {
+    transform: scale(1.1);
+  }
+  80% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-.read-the-docs {
-  color: #888;
+/* Animation utility classes */
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+.fade-out {
+  animation: fadeOut 0.5s ease forwards;
+}
+.slide-in-up {
+  animation: slideInUp 0.5s ease forwards;
+}
+.slide-in-down {
+  animation: slideInDown 0.5s ease forwards;
+}
+.slide-in-left {
+  animation: slideInLeft 0.5s ease forwards;
+}
+.slide-in-right {
+  animation: slideInRight 0.5s ease forwards;
+}
+.zoom-in {
+  animation: zoomIn 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+}
+.pulse {
+  animation: pulse 2s infinite;
+}
+.shake {
+  animation: shake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+.rotate {
+  animation: rotate 1s linear infinite;
+}
+.button-push {
+  animation: buttonPush 0.3s linear;
+}
+.lion-roar {
+  animation: lionRoar 0.7s ease-in-out;
+}
+
+/* Animation delays */
+.delay-100 {
+  animation-delay: 100ms;
+}
+.delay-200 {
+  animation-delay: 200ms;
+}
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+/* Theme toggle animations */
+.theme-toggle-button {
+  transition: all 0.3s ease;
+}
+
+.theme-toggle-button:hover {
+  transform: scale(1.1);
+}
+
+html[data-mantine-color-scheme="dark"] .theme-toggle-button {
+  box-shadow: 0 0 10px 1px rgba(255, 215, 0, 0.5);
+}
+
+html[data-mantine-color-scheme="light"] .theme-toggle-button {
+  box-shadow: 0 0 10px 1px rgba(25, 113, 194, 0.5);
+}
+
+/* Improved focus styles for better accessibility */
+*:focus-visible {
+  outline: 2px solid var(--mantine-color-primary-6);
+  outline-offset: 2px;
+  transition: outline-offset 0.2s ease;
+}
+
+/* ===================================
+   STYLES
+   =================================== */
+
+/* Base Variables */
+:root {
+  --transition-standard: all 0.2s ease;
+  --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-dark: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --border-radius: 8px;
+}
+
+/* Global layout styles */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+}
+
+.content {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* Dark mode adjustments */
+html[data-mantine-color-scheme="dark"] {
+  --card-bg: #25262b;
+  --input-bg: #1e1f22;
+  --text-primary: #ffffff;
+  --text-secondary: #c1c2c5;
+  --border-color: #373a40;
+  background-color: #1a1b1e;
+  color: #c1c2c5;
+}
+
+html[data-mantine-color-scheme="light"] {
+  --card-bg: #ffffff;
+  --input-bg: #f8f9fa;
+  --text-primary: #1a1b1e;
+  --text-secondary: #5c5f66;
+  --border-color: #e9ecef;
+}
+
+/* UI Element styling */
+.mantine-Card-root {
+  transition: var(--transition-standard);
+  border-radius: var(--border-radius);
+}
+
+.mantine-Button-root {
+  transition: var(--transition-standard);
+  font-weight: 500;
+}
+
+.mantine-TextInput-input,
+.mantine-PasswordInput-input,
+.mantine-NumberInput-input,
+.mantine-Select-input {
+  transition: var(--transition-standard);
+  border-radius: var(--border-radius);
+  padding: 8px 36px 8px 36px;
+  height: 42px;
+}
+
+/* Theater cards styling */
+.theater-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.theater-card .mantine-Card-root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.theater-card .card-actions {
+  margin-top: auto;
+}
+
+/* Page transitions */
+.page-transition.fadeIn {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.page-transition.fadeOut {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content {
+    padding: in1rem;
+  }
+}
+
+/* Accessibility focus styles */
+*:focus-visible {
+  outline: 2px solid var(--mantine-color-primary-6);
+  outline-offset: 2px;
 }

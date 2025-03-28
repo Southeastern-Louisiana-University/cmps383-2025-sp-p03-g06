@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// Controllers/UsersController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,47 +10,63 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/users")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public class UsersController(RoleManager<Role> roleManager, UserManager<User> userManager, DataContext dataContext) : ControllerBase
     {
-        private readonly UserManager<User> userManager;
-        private readonly RoleManager<Role> roleManager;
-        private readonly DataContext dataContext;
-        private DbSet<Role> roles;
+        private readonly UserManager<User> userManager = userManager;
+        private readonly RoleManager<Role> roleManager = roleManager;
+        private readonly DataContext dataContext = dataContext;
+        private readonly DbSet<Role> roles = dataContext.Set<Role>();
 
-        public UsersController(
-            RoleManager<Role> roleManager,
-            UserManager<User> userManager,
-            DataContext dataContext)
+        [HttpPost("register")]
+        [AllowAnonymous] // Explicitly allow unauthenticated access
+        public async Task<ActionResult<UserDto>> Register([FromBody] CreateUserDto dto)
         {
-            this.roleManager = roleManager;
-            this.userManager = userManager;
-            this.dataContext = dataContext;
-            roles = dataContext.Set<Role>();
-        }
-
-        [HttpPost]
-        [Authorize]
-        public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserDto dto)
-        {
-            if (!dto.Roles.Any() || !dto.Roles.All(x => roles.Any(y => x == y.Name)))
+            if (dto == null)
             {
-                return BadRequest();
+                return BadRequest("User data is required");
             }
 
-            var result = await userManager.CreateAsync(new User { UserName = dto.Username }, dto.Password);
-            if (result.Succeeded)
+            if (string.IsNullOrWhiteSpace(dto.Username))
             {
-                await userManager.AddToRolesAsync(await userManager.FindByNameAsync(dto.Username), dto.Roles);
-
-                var user = await userManager.FindByNameAsync(dto.Username);
-                return new UserDto
-                {
-                    Id = user.Id,
-                    UserName = dto.Username,
-                    Roles = dto.Roles
-                };
+                return BadRequest("Username is required");
             }
-            return BadRequest();
+
+            if (string.IsNullOrWhiteSpace(dto.Password))
+            {
+                return BadRequest("Password is required");
+            }
+
+            // For security, override any roles provided and only assign the User role
+            // This prevents privilege escalation during registration
+            var userRoles = new string[] { UserRoleNames.User };
+
+            var user = new User { UserName = dto.Username };
+            var createResult = await userManager.CreateAsync(user, dto.Password);
+            if (!createResult.Succeeded)
+            {
+                return BadRequest(createResult.Errors.Select(e => e.Description));
+            }
+
+            var existingUser = await userManager.FindByNameAsync(dto.Username);
+            if (existingUser == null)
+            {
+                return BadRequest("Failed to create user");
+            }
+
+            var rolesResult = await userManager.AddToRolesAsync(existingUser, userRoles);
+            if (!rolesResult.Succeeded)
+            {
+                // Clean up by deleting the user since role assignment failed
+                await userManager.DeleteAsync(existingUser);
+                return BadRequest(rolesResult.Errors.Select(e => e.Description));
+            }
+
+            return new UserDto
+            {
+                Id = existingUser.Id,
+                UserName = existingUser.UserName ?? string.Empty,
+                Roles = userRoles
+            };
         }
     }
 }

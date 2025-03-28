@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// Controllers/TheatersController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,20 +11,12 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/theaters")]
     [ApiController]
-    public class TheatersController : ControllerBase
+    public class TheatersController(DataContext dataContext, UserManager<User> userManager) : ControllerBase
     {
-        private readonly DbSet<Theater> theaters;
-        private readonly DataContext dataContext;
-        private readonly DbSet<User> users;
-        private readonly UserManager<User> userManager;
-
-        public TheatersController(DataContext dataContext, UserManager<User> userManager)
-        {
-            this.dataContext = dataContext;
-            theaters = dataContext.Set<Theater>();
-            users = dataContext.Set<User>();
-            this.userManager = userManager;
-        }
+        private readonly DbSet<Theater> theaters = dataContext.Set<Theater>();
+        private readonly DataContext dataContext = dataContext;
+        private readonly DbSet<User> users = dataContext.Set<User>();
+        private readonly UserManager<User> userManager = userManager;
 
         [HttpGet]
         public IQueryable<TheaterDto> GetAllTheaters()
@@ -74,14 +67,19 @@ namespace Selu383.SP25.P03.Api.Controllers
         [Authorize]
         public async Task<ActionResult<TheaterDto>> UpdateTheater(int id, TheaterDto dto)
         {
-            if (IsInvalid(dto))
+            if (dto == null || IsInvalid(dto))
             {
-                return BadRequest();
+                return BadRequest("Invalid theater data");
             }
 
             var currentUser = await userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                return BadRequest("User not found");
+            }
 
-            if (!User.IsInRole(UserRoleNames.Admin) && currentUser.Id != dto.ManagerId)
+            bool isManager = dto.ManagerId.HasValue && currentUser.Id == dto.ManagerId.Value;
+            if (!User.IsInRole(UserRoleNames.Admin) && !isManager)
             {
                 return Forbid();
             }
