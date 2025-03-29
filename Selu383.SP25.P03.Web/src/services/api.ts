@@ -1,4 +1,4 @@
-// src/services/api.ts - Updated with movie, showtime, and ticket API endpoints
+// src/services/api.ts
 
 // Base URL for API requests
 const API_BASE_URL = "/api";

@@ -66,22 +66,6 @@ namespace Selu383.SP25.P03.Api
                 options.SlidingExpiration = true;
             });
 
-            // Add CORS policy with the correct port for your React app
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("DevelopmentPolicy", policy =>
-                {
-                    policy.WithOrigins(
-                            "http://localhost:5249",    // HTTP Swagger UI
-                            "https://localhost:7027",    // HTTPS API
-                            "http://localhost:5173"      // Vite default port
-                        )
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
-                }); 
-            });
-           
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
@@ -105,9 +89,6 @@ namespace Selu383.SP25.P03.Api
             {
                 app.MapOpenApi();
             }
-
-            // Apply CORS policy - uncommented
-            app.UseCors("DevelopmentPolicy");
 
             //Swagger UI
             app.UseSwagger();
