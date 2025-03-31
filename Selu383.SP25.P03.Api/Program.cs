@@ -19,7 +19,15 @@ namespace Selu383.SP25.P03.Api
 
             // Configure OpenAPI/Swagger - standard configuration
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "Lions Den Cinemas API",
+                    Version = "v1",
+                    Description = "API for Lions Den Cinemas mobile app"
+                });
+            });
 
             builder.Services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DataContext>()
@@ -66,23 +74,30 @@ namespace Selu383.SP25.P03.Api
                 options.SlidingExpiration = true;
             });
 
-            // Add CORS policy with the correct port for your React app
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("DevelopmentPolicy", policy =>
-                {
-                    policy.WithOrigins(
-                            "http://localhost:5249",    // HTTP Swagger UI
-                            "https://localhost:7027",    // HTTPS API
-                            "http://localhost:5173"      // Vite default port
-                        )
-                        .AllowAnyHeader()
+                options.AddPolicy("AllowAny",
+                    builder => builder
+                        .AllowAnyOrigin()
                         .AllowAnyMethod()
-                        .AllowCredentials();
-                }); 
+                        .AllowAnyHeader());
             });
-           
+
+            builder.WebHost.ConfigureKestrel(serverOptions =>
+            {
+                serverOptions.ListenAnyIP(5249); // Open to your local network
+            });
+
             var app = builder.Build();
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Lions Den API v1");
+                });
+            }
 
             using (var scope = app.Services.CreateScope())
             {
@@ -107,15 +122,19 @@ namespace Selu383.SP25.P03.Api
             }
 
             // Apply CORS policy - uncommented
-            app.UseCors("DevelopmentPolicy");
+            app.UseCors("AllowAny");
 
             //Swagger UI
             app.UseSwagger();
             app.UseSwaggerUI();
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
+            app.UseAuthentication();
+            app.UseRouting();
+
             app.UseAuthentication();
             app.UseRouting()
+
                .UseAuthorization()
                .UseEndpoints(x =>
                {
