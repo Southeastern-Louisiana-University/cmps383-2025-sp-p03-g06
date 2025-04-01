@@ -14,6 +14,7 @@ import {
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext"; // Add this import
 import { Carousel } from "@mantine/carousel";
+import { featuredMovies } from "../components/FeaturedMovies";
 import "@mantine/carousel/styles.css"; // Import carousel styles
 import {
   IconTicket,
@@ -83,48 +84,44 @@ const LandingPage = () => {
     },
   ];
 
-  return (
-    <>
-      <Box
-        style={{
-          backgroundImage: `url('/images/tickets_stock.jpg')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          padding: "100px 20px",
-          textAlign: "center",
-          color: "#ffffff",
-          boxShadow: "inset 0 0 0 1000px rgba(0, 0, 0, 0.6)",
-        }}
-      >
-        <Title order={1} size="48px" mb="md" style={{ color: "#fff" }}>
-          Welcome to Lion's Den Cinema
-        </Title>
-        <Text size="lg" mb="xl" style={{ color: "#ddd" }}>
-          Enjoy blockbuster movies, ultimate comfort, and unforgettable
-          experiences.
-        </Text>
-        <Group justify="center" gap="md">
-          <Button
-            component={Link}
-            to="/movies"
-            size="lg"
-            color={isDark ? "yellow" : "green"}
-            leftSection={<IconMovie size={20} />}
-          >
-            Browse Movies
-          </Button>
-          <Button
-            component={Link}
-            to={isAuthenticated ? "/my-reservations" : "/login"}
-            size="lg"
-            variant="outline"
-            color="white"
-            leftSection={<IconTicket size={20} />}
-          >
-            My Tickets
-          </Button>
-        </Group>
-      </Box>
+    return (
+        <>
+         {/* Movie Carousel Hero */}
+         <Box
+           style={{
+             position: "relative",
+             height: "500px",
+             overflow: "hidden",
+             }}
+            >
+          <Carousel
+             withIndicators
+             withControls
+             loop
+             height="100%"
+             styles={{
+             root: { height: "100%" },
+             slide: { height: "100%" },
+             controls: {
+             color: "#fff",
+             backgroundColor: "rgba(0, 0, 0, 0.3)",
+             border: "none",
+               },
+                indicator: {
+                width: "10px",
+                height: "10px",
+                transition: "width 250ms ease",
+                backgroundColor: "rgba(255, 255, 255, 0.5)",
+                "&[data-active]": {
+                backgroundColor: "#fff",
+                       },
+                        },
+                    }}
+                >
+                  
+                    )
+                </Carousel>
+            </Box>
 
       <Container size="lg" py="xl">
         <Title order={2} mb="lg" ta="center">
