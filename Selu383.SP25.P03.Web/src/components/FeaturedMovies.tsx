@@ -1,12 +1,12 @@
 export const featuredMovies = [
     {
         id: 1,
-        image: "/images/now_showing/LooneyTunes.avif",
+        image: "/images/featured_movies/looneytunes.jpeg",
         title: "Looney Tunes",
         description: "Join Bugs Bunny and friends in this animated adventure",
         releaseDate: "April 15, 2025",
         rating: "PG"
-    },
+    }, 
     {
         id: 2,
         image: "/images/now_showing/CaptainAmerica.avif",
