@@ -89,37 +89,65 @@ const LandingPage = () => {
          {/* Movie Carousel Hero */}
          <Box
            style={{
-             position: "relative",
-             height: "500px",
-             overflow: "hidden",
-             }}
+           position: "relative",
+           height: "500px",
+           overflow: "hidden",
+                }}
             >
-          <Carousel
-             withIndicators
-             withControls
-             loop
-             height="100%"
-             styles={{
-             root: { height: "100%" },
-             slide: { height: "100%" },
-             controls: {
-             color: "#fff",
-             backgroundColor: "rgba(0, 0, 0, 0.3)",
-             border: "none",
-               },
-                indicator: {
+           <Carousel
+            withIndicators
+            withControls
+            loop
+            height="100%"
+            styles={{
+            root: { height: "100%" },
+            slide: { height: "100%" },
+            controls: {
+            color: "#fff",
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            border: "none",
+              },
+              indicator: {
                 width: "10px",
                 height: "10px",
                 transition: "width 250ms ease",
                 backgroundColor: "rgba(255, 255, 255, 0.5)",
                 "&[data-active]": {
                 backgroundColor: "#fff",
-                       },
-                        },
-                    }}
+                     },
+                   },
+                }}
+             >
+             {featuredMovies.map((movie, idx) => (
+               <Carousel.Slide key={idx}>
+                 <Box
+                   style={{
+                   backgroundImage: `url('${movie.image}')`,
+                   backgroundSize: "cover",
+                   backgroundPosition: "center",
+                   height: "100%",
+                   display: "flex",
+                   flexDirection: "column",
+                   justifyContent: "flex-end",
+                   padding: "2rem",
+                   boxShadow: "inset 0 -200px 100px -100px rgba(0, 0, 0, 0.7)",
+                       }}
                 >
-                  
-                    )
+                  <Box style={{ maxWidth: "800px", margin: "0 auto", width: "100%", textAlign: "center" }}>
+                    <Title order={1} size="48px" mb="xs" style={{ color: "#fff" }}>
+                      {movie.title}
+                     </Title>
+                     <Text size="xl" mb="xl" style={{ color: "#ddd" }}>
+                      {movie.description}
+                     </Text>
+                      <Group justify="center" gap="md">
+                                    
+                                       
+                      </Group>
+                      </Box>
+                      </Box>
+                      </Carousel.Slide>
+                    ))}
                 </Carousel>
             </Box>
 
