@@ -9,7 +9,7 @@ export const featuredMovies = [
     }, 
     {
         id: 2,
-        image: "/images/now_showing/CaptainAmerica.avif",
+        image: "/images/featured_movies/captain-america.jpg",
         title: "Captain America",
         description: "The latest chapter in the Marvel Universe",
         releaseDate: "March 28, 2025",
@@ -17,7 +17,7 @@ export const featuredMovies = [
     },
     {
         id: 3,
-        image: "/images/now_showing/PaddingtonBear.avif",
+        image: "/images/featured_movies/paddington.jpg",
         title: "Paddington Bear",
         description: "A heartwarming tale for the whole family",
         releaseDate: "April 5, 2025",
@@ -25,7 +25,7 @@ export const featuredMovies = [
     },
     {
         id: 4,
-        image: "/images/now_showing/Mickey17.jpg",
+        image: "/images/featured_movies/mickey17.jpeg",
         title: "Mickey17",
         description: "The sci-fi thriller everyone's talking about",
         releaseDate: "April 10, 2025",
@@ -33,7 +33,7 @@ export const featuredMovies = [
     },
     {
         id: 5,
-        image: "/images/now_showing/Mufasa.avif",
+        image: "/images/featured_movies/mufasa.jpg",
         title: "Mufasa: The Lion King",
         description: "The untold story of Simba's father",
         releaseDate: "March 30, 2025",

@@ -86,7 +86,7 @@ const LandingPage = () => {
 
     return (
         <>
-         {/* Movie Carousel Hero */}
+         {}
          <Box
            style={{
            position: "relative",
