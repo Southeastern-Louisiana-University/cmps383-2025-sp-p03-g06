@@ -91,7 +91,9 @@ const LandingPage = () => {
            style={{
            position: "relative",
            height: "500px",
+           margin: 0,
            overflow: "hidden",
+           width: '100vw'
                 }}
             >
            <Carousel
@@ -104,7 +106,7 @@ const LandingPage = () => {
             slide: { height: "100%" },
             controls: {
             color: "#fff",
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            backgroundColor: "transparent",
             border: "none",
               },
               indicator: {
@@ -130,7 +132,6 @@ const LandingPage = () => {
                    flexDirection: "column",
                    justifyContent: "flex-end",
                    padding: "2rem",
-                   boxShadow: "inset 0 -200px 100px -100px rgba(0, 0, 0, 0.7)",
                        }}
                 >
                   <Box style={{ maxWidth: "800px", margin: "0 auto", width: "100%", textAlign: "center" }}>
