@@ -1,23 +1,19 @@
-// app/components/movies/MovieCard.tsx
 import React from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { Movie } from "../../services/api";
+import type { Movie } from "@/services/api/moviesApi";
 
 interface MovieCardProps {
   movie: Movie;
   onPress?: (movie: Movie) => void;
 }
 
-// Define MovieCard component
-const MovieCard: React.FC<MovieCardProps> = ({ movie, onPress }) => {
-  // Handle press event
+export const MovieCard: React.FC<MovieCardProps> = ({ movie, onPress }) => {
   const handlePress = () => {
     if (onPress) {
       onPress(movie);
     }
   };
 
-  // Format the release date
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -49,7 +45,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onPress }) => {
           )}
           <Text style={styles.duration}>{movie.durationMinutes} minutes</Text>
 
-          {movie.genres && movie.genres.length > 0 && (
+          {movie.genres?.length > 0 && (
             <Text style={styles.genres}>{movie.genres.join(", ")}</Text>
           )}
 
@@ -117,7 +113,3 @@ const styles = StyleSheet.create({
     color: "#666",
   },
 });
-
-// Export both named and default exports
-export { MovieCard };
-export default MovieCard;

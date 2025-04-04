@@ -1,9 +1,9 @@
 // app/screens/TestConnection.tsx
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { apiRequest } from "../services/api/client";
+import { apiRequest } from "@/services/api/client";
 
-export default function TestConnection() {
+const TestConnection = () => {
   const [status, setStatus] = useState("Checking...");
   const [error, setError] = useState("");
 
@@ -11,10 +11,10 @@ export default function TestConnection() {
     const checkConnection = async () => {
       try {
         const data = await apiRequest("/api/movies");
-        setStatus("✅ Connected to backend!");
+        setStatus("Connected to backend!");
         console.log("API response:", data);
       } catch (err) {
-        setStatus("❌ Could not connect.");
+        setStatus("Could not connect.");
         if (err instanceof Error) {
           setError(err.message);
         } else {
@@ -33,7 +33,7 @@ export default function TestConnection() {
       {status === "Checking..." && <ActivityIndicator />}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -50,3 +50,4 @@ const styles = StyleSheet.create({
     color: "red",
   },
 });
+export default TestConnection;

@@ -1,4 +1,4 @@
-// services/api/apiTypes.ts
+// /services/api/apiTypes.ts
 
 // Theater room interface
 export interface TheaterRoom {

@@ -1,7 +1,7 @@
 // screens/NowShowing.tsx
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { moviesApi } from "../services/api";
+import { moviesApi } from "@/services/api";
 
 const NowShowing = () => {
   useEffect(() => {
@@ -39,5 +39,4 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 });
-
 export default NowShowing;

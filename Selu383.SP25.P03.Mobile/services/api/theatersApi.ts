@@ -1,12 +1,12 @@
 // services/api/theatersApi.ts
 import { apiRequest } from "./client";
 
-// Define theater interface based on your backend model
+// Theater interface is defined based on the backend model
 export interface Theater {
   id: number;
   name: string;
   location: string;
-  // Add other fields from your TheaterDTO
+  // Add other fields from the TheaterDTO
 }
 
 // Theater API methods
@@ -17,4 +17,4 @@ export const theatersApi = {
   // Get theater by ID
   getById: (id: number) => apiRequest<Theater>(`api/theaters/${id}`),
 };
-// At the end of services/api/index.ts
+// add more theater methods as needed

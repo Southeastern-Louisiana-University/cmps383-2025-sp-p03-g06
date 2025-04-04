@@ -1,10 +1,29 @@
+// app/_layout.tsx
 import React from "react";
+import { View, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
-export default function RootLayout() {
+const RootLayout = () => {
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ title: "Lions Den Cinemas" }} />
-    </Stack>
+    <View style={styles.container}>
+      <StatusBar style="light" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: "#000000" },
+          animation: "fade",
+        }}
+      />
+    </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#000000",
+  },
+});
+
+export default RootLayout;

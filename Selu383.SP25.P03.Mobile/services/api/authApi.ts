@@ -1,5 +1,5 @@
 // services/api/authApi.ts
-import { apiRequest } from "./client";
+import { apiRequest } from "@/services/api/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // User interfaces
