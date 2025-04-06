@@ -57,3 +57,7 @@ The app uses a platform-aware setup to connect to the correct backend automatica
 - In <b>services/constants.ts</b>, the base URL changes based on environment.
 
 - All API calls go through <b>services/api/client.ts</b>. It constructs full API URLs using a base from constants.ts
+
+## Data Types
+
+The services/api/types.ts file defines shared TypeScript interfaces that describe the structure of the data used throughout the mobile app. These types ensure consistency between the frontend and backend and help prevent bugs caused by mismatched data shapes.

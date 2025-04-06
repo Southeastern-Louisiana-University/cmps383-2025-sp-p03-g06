@@ -1,6 +1,7 @@
 // Now Showing Screen
 // app/movies/index.tsx
 import React, { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -9,8 +10,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { moviesApi, Movie } from "@/services/api/moviesApi";
-import MovieCard from "@/components/movies/MovieCard";
+import MovieCard from "@/components/movie/MovieCard";
 
+const router = useRouter();
 export default function NowShowingScreen() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +44,12 @@ export default function NowShowingScreen() {
     <FlatList
       data={movies}
       keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => <MovieCard movie={item} />}
+      renderItem={({ item }) => (
+        <MovieCard
+          movie={item}
+          onPress={() => router.push(`/movies/${item.id}`)}
+        />
+      )}
       contentContainerStyle={styles.list}
     />
   );
