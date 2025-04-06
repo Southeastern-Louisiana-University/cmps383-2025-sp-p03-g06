@@ -18,6 +18,7 @@ import MovieList from "./components/MovieList";
 import MovieShowtimes from "./components/MovieShowtimes";
 import SeatSelection from "./components/SeatSelection";
 import MyReservations from "./components/MyReservations";
+import ConcessionSelection from "./components/ConcessionSelection";
 import TicketView from "./components/TicketView";
 import {
   MantineProvider,
@@ -264,6 +265,15 @@ const AppContent = () => {
                 />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
+
+                <Route
+                  path="/concessions/:id"
+                  element={
+                    <ProtectedRoute>
+                      <ConcessionSelection />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </PageTransition>
           </main>

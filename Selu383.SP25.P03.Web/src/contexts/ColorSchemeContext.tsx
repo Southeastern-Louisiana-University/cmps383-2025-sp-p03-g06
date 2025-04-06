@@ -8,7 +8,7 @@ import React, {
   ReactNode,
 } from "react";
 
-// Define types for clarity and type safety
+// Define types for color scheme
 type ColorScheme = "light" | "dark";
 
 interface ColorSchemeContextType {
@@ -17,7 +17,7 @@ interface ColorSchemeContextType {
   toggleColorScheme: () => void;
 }
 
-// Create context with default values
+// Create context with undefined as default
 const ColorSchemeContext = createContext<ColorSchemeContextType | undefined>(
   undefined
 );
@@ -27,78 +27,81 @@ interface ColorSchemeProviderProps {
 }
 
 export function ColorSchemeProvider({ children }: ColorSchemeProviderProps) {
-  // Get initial color scheme
-  const getInitialColorScheme = (): ColorScheme => {
-    if (typeof window !== "undefined") {
-      // First check local storage
+  // State initialization with null to prevent hydration mismatch
+  const [colorScheme, setColorSchemeState] = useState<ColorScheme>("light");
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Effect to initialize color scheme based on user preference
+  useEffect(() => {
+    // Function to determine initial color scheme
+    const getInitialColorScheme = (): ColorScheme => {
+      // First check if user has explicitly set a preference in localStorage
       const savedScheme = localStorage.getItem("color-scheme");
       if (savedScheme === "dark" || savedScheme === "light") {
         return savedScheme as ColorScheme;
       }
-      // Then check system preference
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        return "dark";
-      }
-    }
-    // Default fallback
-    return "light";
-  };
 
-  const [colorScheme, setColorScheme] = useState<ColorScheme>(
-    getInitialColorScheme
-  );
+      // Otherwise, respect system preference
+      return window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    };
 
-  // Memoized toggle function to prevent unnecessary re-renders
-  const toggleColorScheme = useCallback(() => {
-    setColorScheme((prevScheme: ColorScheme) => {
-      const newScheme = prevScheme === "dark" ? "light" : "dark";
-      localStorage.setItem("color-scheme", newScheme);
-      return newScheme;
-    });
+    // Set the initial color scheme
+    const initialScheme = getInitialColorScheme();
+    setColorSchemeState(initialScheme);
+    setIsInitialized(true);
+
+    // Apply it to the document
+    applyColorScheme(initialScheme);
   }, []);
 
-  // Update DOM when color scheme changes
-  useEffect(() => {
-    // Apply the color scheme to the HTML element
-    if (document.documentElement) {
-      if (colorScheme === "dark") {
-        document.documentElement.classList.add("dark-mode");
-        document.documentElement.setAttribute(
-          "data-mantine-color-scheme",
-          "dark"
-        );
-        document.documentElement.setAttribute("data-color-scheme", "dark");
-      } else {
-        document.documentElement.classList.remove("dark-mode");
-        document.documentElement.setAttribute(
-          "data-mantine-color-scheme",
-          "light"
-        );
-        document.documentElement.setAttribute("data-color-scheme", "light");
-      }
-    }
+  // Function to apply color scheme to document
+  const applyColorScheme = (scheme: ColorScheme) => {
+    document.documentElement.setAttribute("data-mantine-color-scheme", scheme);
+    document.documentElement.setAttribute("data-color-scheme", scheme);
 
-    // Store the user preference in localStorage
-    localStorage.setItem("color-scheme", colorScheme);
-  }, [colorScheme]);
+    if (scheme === "dark") {
+      document.documentElement.classList.add("dark-mode");
+    } else {
+      document.documentElement.classList.remove("dark-mode");
+    }
+  };
+
+  // Function to update color scheme
+  const setColorScheme = useCallback((newScheme: ColorScheme) => {
+    setColorSchemeState(newScheme);
+    localStorage.setItem("color-scheme", newScheme);
+    applyColorScheme(newScheme);
+  }, []);
+
+  // Function to toggle between light and dark
+  const toggleColorScheme = useCallback(() => {
+    setColorScheme(colorScheme === "dark" ? "light" : "dark");
+  }, [colorScheme, setColorScheme]);
 
   // Listen for system preference changes
   useEffect(() => {
+    if (!isInitialized) return;
+
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleChange = (e: MediaQueryListEvent) => {
-      // Only update if user hasn't set a preference
-      if (localStorage.getItem("color-scheme") === null) {
+      // Only update if the user hasn't set an explicit preference
+      if (!localStorage.getItem("color-scheme")) {
         setColorScheme(e.matches ? "dark" : "light");
       }
     };
 
-    // Add event listener
     mediaQuery.addEventListener("change", handleChange);
-
-    // Cleanup on unmount
     return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
+  }, [isInitialized, setColorScheme]);
+
+  // Don't render children until we've determined the color scheme
+  // to prevent flash of wrong theme
+  if (!isInitialized) {
+    return null;
+  }
 
   return (
     <ColorSchemeContext.Provider

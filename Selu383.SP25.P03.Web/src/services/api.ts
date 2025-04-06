@@ -84,6 +84,7 @@ export interface MovieDTO {
   posterImageUrl: string;
   releaseDate: string;
   genres: string[];
+  ratingScore?: number;
 }
 
 export interface ShowtimeDTO {
@@ -137,6 +138,52 @@ export interface CreateReservationRequest {
   seatIds: number[];
 }
 
+//concession
+export interface ConcessionItemDTO {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  categoryId: number;
+  categoryName: string;
+  isAvailable: boolean;
+}
+
+export interface ConcessionCategoryDTO {
+  id: number;
+  name: string;
+}
+
+export interface CreateOrderItemDTO {
+  concessionItemId: number;
+  quantity: number;
+  specialInstructions?: string;
+}
+
+export interface CreateConcessionOrderDTO {
+  reservationId: number;
+  items: CreateOrderItemDTO[];
+}
+
+export interface OrderItemDTO {
+  id: number;
+  concessionItemId: number;
+  itemName: string;
+  quantity: number;
+  unitPrice: number;
+  specialInstructions: string;
+}
+
+export interface ConcessionOrderDTO {
+  id: number;
+  reservationId: number;
+  orderTime: string;
+  totalPrice: number;
+  status: string;
+  items: OrderItemDTO[];
+}
+
 // Custom error class for API errors
 export class ApiError extends Error {
   statusCode: number;
@@ -164,6 +211,65 @@ const handleApiError = (error: any, customMessage: string): never => {
   throw new Error(customMessage);
 };
 
+// concessions
+export const concessionApi = {
+  getCategories: async (): Promise<ConcessionCategoryDTO[]> => {
+    try {
+      return await fetchWithRetry<ConcessionCategoryDTO[]>(
+        `${API_BASE_URL}/concession-categories`,
+        { credentials: "include" }
+      );
+    } catch (error) {
+      return handleApiError(error, "Failed to fetch concession categories.");
+    }
+  },
+
+  getItems: async (): Promise<ConcessionItemDTO[]> => {
+    try {
+      return await fetchWithRetry<ConcessionItemDTO[]>(
+        `${API_BASE_URL}/concession-items/available`,
+        { credentials: "include" }
+      );
+    } catch (error) {
+      return handleApiError(error, "Failed to fetch concession items.");
+    }
+  },
+
+  getItemsByCategory: async (
+    categoryId: number
+  ): Promise<ConcessionItemDTO[]> => {
+    try {
+      return await fetchWithRetry<ConcessionItemDTO[]>(
+        `${API_BASE_URL}/concession-items/category/${categoryId}`,
+        { credentials: "include" }
+      );
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch concession items for this category."
+      );
+    }
+  },
+
+  createOrder: async (
+    order: CreateConcessionOrderDTO
+  ): Promise<ConcessionOrderDTO> => {
+    try {
+      return await fetchWithRetry<ConcessionOrderDTO>(
+        `${API_BASE_URL}/concession-orders`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(order),
+        }
+      );
+    } catch (error) {
+      return handleApiError(error, "Failed to create concession order.");
+    }
+  },
+};
+
 // Utility function for API requests with retry logic
 async function fetchWithRetry<T>(
   url: string,
@@ -174,6 +280,11 @@ async function fetchWithRetry<T>(
   try {
     const response = await fetch(url, options);
 
+    // Don't retry authentication failures
+    if (response.status === 401) {
+      throw new ApiError("Not authenticated", 401);
+    }
+
     if (!response.ok) {
       const errorText = await response.text().catch(() => "Unknown error");
       throw new ApiError(`API request failed: ${errorText}`, response.status);
@@ -181,6 +292,11 @@ async function fetchWithRetry<T>(
 
     return await response.json();
   } catch (error) {
+    // Don't retry 401 errors at all
+    if (error instanceof ApiError && error.statusCode === 401) {
+      throw error;
+    }
+
     if (
       retries > 0 &&
       !(
@@ -237,6 +353,13 @@ export const authApi = {
       apiCache.set("currentUser", data, 30 * 60 * 1000);
       return data;
     } catch (error) {
+      // Don't propagate authentication errors, just return null
+      if (error instanceof ApiError && error.statusCode === 401) {
+        console.log("User not authenticated");
+        return Promise.reject(new Error("Not authenticated"));
+      }
+
+      // For other errors, use the standard error handler
       return handleApiError(error, "Failed to get current user information");
     }
   },
