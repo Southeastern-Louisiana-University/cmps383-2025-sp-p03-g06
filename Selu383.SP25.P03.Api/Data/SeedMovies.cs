@@ -53,7 +53,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "A princess joins forces with seven dwarfs to liberate her kingdom from her cruel stepmother the Evil Queen.",
                     DurationMinutes = 109, // 1 hr 49 minutes
                     Rating = "PG",
-                    PosterImageUrl = "/images/movies/snow_white.jpg",
+                    PosterImageUrl = "/images/now_showing/SnowWhite.png",
                     ReleaseDate = new DateTime(2025, 3, 21)
                 },
                 new()
@@ -62,7 +62,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Father-Daughter duo Elliott and Ridley hit a unicorn with their car and bring it to the wilderness retreat of a mega-wealthy pharmaceutical CEO.",
                     DurationMinutes = 108, // 1 hr 48 minutes
                     Rating = "R",
-                    PosterImageUrl = "/images/movies/death_of_a_unicorn.jpg",
+                    PosterImageUrl = "/images/now_showing/DeathOfAUnicorn.jpg",
                     ReleaseDate = new DateTime(2025, 3, 28)
                 },
                 new()
@@ -71,7 +71,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "When the girl of his dreams is kidnapped, a man incapable of feeling physical pain turns his rare condition into an unexpected advantage in the fight to rescue her.",
                     DurationMinutes = 110, // 1 hr 50 minutes
                     Rating = "R",
-                    PosterImageUrl = "/images/movies/novocaine.jpg",
+                    PosterImageUrl = "/images/now_showing/Novocaine.avif",
                     ReleaseDate = new DateTime(2025, 3, 14)
                 },
                 new()
@@ -80,7 +80,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Mickey 17, known as an \"expendable,\" goes on a dangerous journey to colonize an ice planet.",
                     DurationMinutes = 137, // 2 hr 17 minutes
                     Rating = "R",
-                    PosterImageUrl = "/images/movies/mickey_17.jpg",
+                    PosterImageUrl = "/images/now_showing/Mickey17.jpg",
                     ReleaseDate = new DateTime(2025, 3, 7)
                 },
                 new()
@@ -89,7 +89,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Levon Cade left his profession behind to work construction and be a good dad to his daughter. But when a local girl vanishes, he's asked to return to the skills that made him a mythic figure in the shadowy world of counter-terrorism.",
                     DurationMinutes = 116, // 1 hr 56 minutes
                     Rating = "R",
-                    PosterImageUrl = "/images/movies/a_working_man.jpg",
+                    PosterImageUrl = "/images/now_showing/AWorkingMan.jpg",
                     ReleaseDate = new DateTime(2025, 3, 28)
                 },
                 new()
@@ -98,7 +98,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "A mysterious woman repeatedly appears in a family's front yard, often delivering chilling warnings and unsettling messages, leaving them to question her identity, motives and the potential danger she might pose.",
                     DurationMinutes = 88, // 1 hr 28 minutes
                     Rating = "PG-13",
-                    PosterImageUrl = "/images/movies/woman_in_the_yard.jpg",
+                    PosterImageUrl = "/images/now_showing/AWomanInTheYard.jpg",
                     ReleaseDate = new DateTime(2025, 3, 28)
                 },
                 new()
@@ -107,7 +107,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Porky Pig and Daffy Duck are Earth's only hope when facing the threat of alien invasion.",
                     DurationMinutes = 91, // 1 hr 31 minutes
                     Rating = "PG",
-                    PosterImageUrl = "/images/movies/looney_tunes.jpg",
+                    PosterImageUrl = "/images/now_showing/LooneyTunes.avif",
                     ReleaseDate = new DateTime(2025, 3, 14)
                 },
                 new()
@@ -116,7 +116,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Dog Man, half dog and half man, he is sworn to protect and serve as he doggedly pursues the feline supervillain Petey the Cat.",
                     DurationMinutes = 94, // 1 hr 34 minutes
                     Rating = "PG",
-                    PosterImageUrl = "/images/movies/dog_man.jpg",
+                    PosterImageUrl = "/images/now_showing/DogMan.jpg",
                     ReleaseDate = new DateTime(2025, 1, 31)
                 },
                 new()
@@ -125,7 +125,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "When twin brothers Bill and Hal find their father's old monkey toy in the attic, a series of gruesome deaths start. The siblings decide to throw the toy away and move on with their lives, growing apart over the years.",
                     DurationMinutes = 98, // 1 hr 38 minutes
                     Rating = "R",
-                    PosterImageUrl = "/images/movies/the_monkey.jpg",
+                    PosterImageUrl = "/images/now_showing/TheMonkey.jpg",
                     ReleaseDate = new DateTime(2025, 2, 21)
                 },
                 new()
@@ -134,7 +134,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Paddington returns to Peru to visit his beloved Aunt Lucy, who now resides at the Home for Retired Bears. With the Brown family in tow, a thrilling adventure ensues when a mystery plunges them into an unexpected journey.",
                     DurationMinutes = 106, // 1 hr 46 minutes
                     Rating = "PG",
-                    PosterImageUrl = "/images/movies/paddington_in_peru.jpg",
+                    PosterImageUrl = "/images/now_showing/PaddingtonBear.avif",
                     ReleaseDate = new DateTime(2025, 2, 14)
                 },
                 new()
@@ -143,7 +143,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Sam Wilson, the new Captain America, finds himself in the middle of an international incident and must discover the motive behind a nefarious global plan.",
                     DurationMinutes = 118, // 1 hr 58 minutes
                     Rating = "PG-13",
-                    PosterImageUrl = "/images/movies/captain_america.jpg",
+                    PosterImageUrl = "/images/now_showing/CaptainAmerica.avif",
                     ReleaseDate = new DateTime(2025, 2, 14)
                 },
                 new()
@@ -152,7 +152,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Mufasa, a cub lost and alone, meets a sympathetic lion named Taka, the heir to a royal bloodline. The chance meeting sets in motion an expansive journey of a group of misfits searching for their destiny.",
                     DurationMinutes = 118, // 1 hr 58 minutes
                     Rating = "PG",
-                    PosterImageUrl = "/images/movies/mufasa.jpg",
+                    PosterImageUrl = "/images/now_showing/Mufasa.avif",
                     ReleaseDate = new DateTime(2024, 12, 20)
                 },
                 new()
@@ -161,7 +161,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "A thief breaking into a luxury SUV realizes that he has slipped into a sophisticated game of psychological horror.",
                     DurationMinutes = 95, // 1 hr 35 minutes
                     Rating = "R",
-                    PosterImageUrl = "/images/movies/locked.jpg",
+                    PosterImageUrl = "/images/now_showing/Locked.jpg",
                     ReleaseDate = new DateTime(2025, 3, 21)
                 },
                 new()
@@ -170,7 +170,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "When best friends and roommates Dreux and Alyssa discover Alyssa's boyfriend has blown their rent money, the duo finds themselves going to extremes in a race against the clock to avoid eviction and keep their friendship intact.",
                     DurationMinutes = 97, // 1 hr 37 minutes
                     Rating = "R",
-                    PosterImageUrl = "/images/movies/one_of_them_days.jpg",
+                    PosterImageUrl = "/images/now_showing/OOTD.png",
                     ReleaseDate = new DateTime(2025, 1, 17)
                 }
             };

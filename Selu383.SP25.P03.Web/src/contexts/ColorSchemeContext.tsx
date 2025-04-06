@@ -1,4 +1,3 @@
-// src/contexts/ColorSchemeContext.tsx
 import React, {
   createContext,
   useContext,

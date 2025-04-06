@@ -1,4 +1,3 @@
-// Updated src/components/MovieList.tsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -196,7 +195,7 @@ const MovieList = () => {
       {/* Filters and Search */}
       <Paper shadow="sm" p="md" mb="xl" withBorder>
         <Grid>
-          <Grid.Col span={{ base: 12, md: 6 }}>
+          <Grid.Col span={{ base: 12, md: 4 }}>
             <TextInput
               leftSection={<IconSearch size={16} />}
               placeholder="Search movies..."
@@ -205,7 +204,7 @@ const MovieList = () => {
               mb={{ base: "sm", md: 0 }}
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 4, md: 2 }}>
+          <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
             <Select
               placeholder="Filter by genre"
               data={[{ value: "", label: "All Genres" }, ...allGenres]}
@@ -213,7 +212,21 @@ const MovieList = () => {
               onChange={setGenreFilter}
               leftSection={<IconFilter size={16} />}
               clearable
+              mb="sm"
             />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+            <Select
+              placeholder="Filter by rating"
+              data={[{ value: "", label: "All Ratings" }, ...allRatings]}
+              value={ratingFilter}
+              onChange={setRatingFilter}
+              leftSection={<IconFilter size={16} />}
+              clearable
+              mb="sm"
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
             <Select
               placeholder="Sort by"
               data={[

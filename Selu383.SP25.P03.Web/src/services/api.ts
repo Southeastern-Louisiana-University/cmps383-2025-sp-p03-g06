@@ -51,8 +51,8 @@ const apiCache = new ApiCache();
 
 // Types
 export interface LoginRequest {
-  userName: string;
-  password: string;
+  UserName: string;
+  Password: string;
 }
 
 export interface UserDTO {
@@ -316,7 +316,7 @@ async function fetchWithRetry<T>(
 // Authentication API calls
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<UserDTO> => {
-    console.log("Attempting login with:", credentials.userName);
+    console.log("Attempting login with:", credentials.UserName);
 
     try {
       const data = await fetchWithRetry<UserDTO>(
