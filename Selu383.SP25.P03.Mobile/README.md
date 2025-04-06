@@ -1,4 +1,5 @@
-# Welcome to your Expo app 👋
+Lions Den Cinemas — Mobile App
+This is the official mobile app for Lions Den Cinemas, built using Expo, React Native, and TypeScript.
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
@@ -48,3 +49,11 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Bridging Mobile with the Backend API
+
+The app uses a platform-aware setup to connect to the correct backend automatically.
+
+- In <b>services/constants.ts</b>, the base URL changes based on environment.
+
+- All API calls go through <b>services/api/client.ts</b>. It constructs full API URLs using a base from constants.ts

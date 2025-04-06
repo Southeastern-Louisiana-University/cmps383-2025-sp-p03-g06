@@ -1,23 +1,12 @@
 // app/index.tsx
+//Entry point of the mobile app.
 import React from "react";
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
-import TestConnection from "./screens/TestConnection";
+import TestConnection from "./TestConnection";
+import { Redirect } from "expo-router";
 
 // Add the default export here:
 
 export default function Index() {
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <TestConnection />
-    </SafeAreaView>
-  );
+  return <Redirect href="/movies" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-});
-// At the end of services/api/index.ts
