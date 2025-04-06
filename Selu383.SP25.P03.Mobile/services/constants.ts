@@ -9,6 +9,8 @@ const getBaseUrl = () => {
 
   // Use Android emulator IP during local dev
   if (Platform.OS === "android") {
+    //10.0.2.2 is the Android emulator's alias for localhost
+    // Use your local IP address if testing on a physical device
     return "http://10.0.2.2:5249";
   }
   // Default to iOS simulator or web
