@@ -22,7 +22,7 @@ export const BottomNavBar = ({ activeRoute = "index" }: BottomNavBarProps) => {
     { label: "LOCATIONS", icon: "location-outline", route: "locations" },
     { label: "FOOD & DRINKS", icon: "fast-food-outline", route: "concessions" },
     { label: "REWARDS", icon: "star-outline", route: "rewards" },
-    { label: "MY ACCOUNT", icon: "person-outline", route: "account" },
+    { label: "MY DEN", icon: "person-outline", route: "account" },
   ];
 
   const handleNavigation = (route: string) => {
