@@ -44,7 +44,11 @@ export default function NowShowingScreen() {
         <View style={styles.container}>
             <TouchableOpacity
                 style={styles.theaterButton}
-                onPress={() => router.push('/theaters/index')}
+                onPress={() => {
+                    console.log("Navigating to theaters list");
+                    // @ts-ignore
+                    router.push("/theaters/index");
+                }}
             >
                 <Text style={styles.buttonText}>View Our Theaters</Text>
             </TouchableOpacity>

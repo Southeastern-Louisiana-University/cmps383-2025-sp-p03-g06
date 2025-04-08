@@ -1,22 +1,29 @@
 // app/theaters/[theatersId].tsx
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { theatersApi, Theater } from "@/services/api/theatersApi";
 
 export default function TheaterDetailScreen() {
+    const router = useRouter();
     const params = useLocalSearchParams();
-    // Add more debug logging
     console.log("URL params received:", JSON.stringify(params));
 
-    // Check if theatersId is available and valid
     const theatersId = params.theatersId;
     console.log("Raw theatersId:", theatersId);
 
-    // Safely parse the ID with a fallback
-    const id = theatersId ?
-        (Array.isArray(theatersId) ? parseInt(theatersId[0]) : parseInt(String(theatersId))) : 0;
+    // Check if this is the "index" route or a numeric ID
+    if (theatersId === "index") {
+        // We're actually on the index page, not a details page
+        return (
+            <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>Please select a theater from the list.</Text>
+            </View>
+        );
+    }
 
+    // Parse the ID for an actual theater
+    const id = parseInt(String(theatersId));
     console.log("Parsed ID:", id);
 
     const [theater, setTheater] = useState<Theater | null>(null);
@@ -67,6 +74,7 @@ export default function TheaterDetailScreen() {
             <View style={styles.card}>
                 <Text style={styles.theaterName}>{theater.name}</Text>
                 <Text style={styles.theaterLocation}>{theater.address}</Text>
+                <Text style={styles.seatInfo}>Seats: {theater.seatCount}</Text>
 
                 <View style={styles.divider} />
 
@@ -102,6 +110,11 @@ const styles = StyleSheet.create({
     theaterLocation: {
         fontSize: 18,
         color: '#666',
+        marginBottom: 8,
+    },
+    seatInfo: {
+        fontSize: 16,
+        color: '#666',
         marginBottom: 16,
     },
     divider: {
@@ -129,5 +142,6 @@ const styles = StyleSheet.create({
     errorText: {
         fontSize: 18,
         color: '#ff3b30',
+        textAlign: 'center',
     },
 });
