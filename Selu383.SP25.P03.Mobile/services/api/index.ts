@@ -1,20 +1,4 @@
 // services/api/index.ts
-<<<<<<< HEAD
-import { apiRequest } from "./client";
-import { moviesApi } from "./moviesApi";
-import { theatersApi } from "./theatersApi";
-
-export * from "./client";
-export * from "./moviesApi";
-export * from "./theatersApi";
-// // Add other API modules here as you create them
-// Export other API modules as you create them
-
-export default {
-  apiRequest,
-  moviesApi,
-  theatersApi,
-=======
 
 export { apiRequest } from "./client";
 export { moviesApi } from "./moviesApi";
@@ -25,13 +9,24 @@ export { reservationsApi } from "./reservationsApi";
 // Authenticated request with token
 import { apiRequest } from "./client";
 import { getToken } from "./authApi";
+import { moviesApi } from "./moviesApi";
+import { theatersApi } from "./theatersApi";
 
 export const authenticatedRequest = async <T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> => {
   const token = await getToken();
+export * from "./client";
+export * from "./moviesApi";
+export * from "./theatersApi";
+// // Add other API modules here as you create them
+// Export other API modules as you create them
 
+export default {
+  apiRequest,
+  moviesApi,
+  theatersApi,
   return apiRequest<T>(endpoint, {
     ...options,
     headers: {
@@ -39,5 +34,4 @@ export const authenticatedRequest = async <T>(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
->>>>>>> origin/last-branch
 };

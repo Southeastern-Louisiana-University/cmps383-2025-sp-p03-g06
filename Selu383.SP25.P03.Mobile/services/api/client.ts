@@ -1,15 +1,14 @@
 // services/api/client.ts
-<<<<<<< HEAD
-import { API_BASE_URL } from "../constants";
-=======
 
 const API_URL = "http://10.0.2.2:5249";
 const isProd = process.env.NODE_ENV === "production";
 const PROD_URL = "https://cmps383-2025-sp-p03-g06.azurewebsites.net";
 const BASE_URL = isProd ? PROD_URL : API_URL;
->>>>>>> origin/last-branch
 
 export const apiRequest = async <T>(
+import { API_BASE_URL } from "../constants";
+
+export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> => {

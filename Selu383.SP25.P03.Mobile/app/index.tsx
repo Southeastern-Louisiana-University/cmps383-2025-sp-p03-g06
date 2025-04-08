@@ -1,10 +1,8 @@
 // app/index.tsx
-<<<<<<< HEAD
 //Entry point of the mobile app.
 import React from "react";
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
 import { Redirect } from "expo-router";
-=======
 import React, { useState } from "react";
 import {
   View,
@@ -14,7 +12,6 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { MainLayout } from "@/components/MainLayout"; // ✅ correct
->>>>>>> origin/last-branch
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("now-playing");
@@ -23,11 +20,6 @@ const Index = () => {
     setActiveTab(tab);
   };
 
-<<<<<<< HEAD
-export default function Index() {
-  return <Redirect href="/movies" />;
-}
-=======
   return (
     <MainLayout currentRoute="index">
       <View style={styles.container}>
@@ -163,4 +155,6 @@ const styles = StyleSheet.create({
 });
 
 export default Index;
->>>>>>> origin/last-branch
+export default function Index() {
+  return <Redirect href="/movies" />;
+}
