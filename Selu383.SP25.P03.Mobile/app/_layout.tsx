@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 // app/_layout.tsx
+=======
+﻿// app/_layout.tsx
+>>>>>>> Stashed changes
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
@@ -18,6 +22,8 @@ const RootLayout = () => {
     </View>
   );
 };
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider } from '../contexts/AuthContext'; // ✅ make sure this path is correct
 
 const styles = StyleSheet.create({
   container: {
@@ -25,6 +31,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000000",
   },
 });
+SplashScreen.preventAutoHideAsync();
 
 export default RootLayout;
 export default function RootLayout() {
@@ -35,4 +42,35 @@ export default function RootLayout() {
             <Stack.Screen name="theaters" options={{ headerShown: false }} />
         </Stack>
     );
+<<<<<<< Updated upstream
 }
+=======
+}
+    const colorScheme = useColorScheme();
+    const [loaded] = useFonts({
+        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    });
+
+    useEffect(() => {
+        if (loaded) {
+            SplashScreen.hideAsync();
+        }
+    }, [loaded]);
+
+    if (!loaded) {
+        return null;
+    }
+
+    return (
+        <AuthProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <Stack>
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="+not-found" />
+                </Stack>
+                <StatusBar style="auto" />
+            </ThemeProvider>
+        </AuthProvider>
+    );
+}
+>>>>>>> Stashed changes
