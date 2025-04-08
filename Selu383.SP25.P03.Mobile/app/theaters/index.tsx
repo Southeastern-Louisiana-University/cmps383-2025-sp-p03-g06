@@ -20,6 +20,7 @@ export default function TheatersScreen() {
         async function loadTheaters() {
             try {
                 const data = await theatersApi.getAll();
+                console.log("Theaters loaded:", data); // Debug log
                 setTheaters(data);
             } catch (error) {
                 console.error("Failed to load theaters:", error);
@@ -48,13 +49,17 @@ export default function TheatersScreen() {
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         style={styles.theaterCard}
-                        onPress={() => router.push({
-                            pathname: "/theaters/[theatersId]" as any,
-                            params: { theatersId: item.id }
-                        })}
+                        onPress={() => {
+                            console.log("Navigating to theater with ID:", item.id);
+                            // Make sure the ID is properly passed
+                            router.push({
+                                pathname: "/theaters/[theatersId]",
+                                params: { theatersId: item.id.toString() }
+                            } as any);
+                        }}
                     >
                         <Text style={styles.theaterName}>{item.name}</Text>
-                        <Text style={styles.theaterLocation}>{item.location}</Text>
+                        <Text style={styles.theaterLocation}>{item.address}</Text>
                     </TouchableOpacity>
                 )}
                 contentContainerStyle={styles.list}

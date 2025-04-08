@@ -1,19 +1,40 @@
-// app/theaters/[theaterId].tsx
+// app/theaters/[theatersId].tsx
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { theatersApi, Theater } from "@/services/api/theatersApi";
 
 export default function TheaterDetailScreen() {
-    const { theaterId } = useLocalSearchParams();
-    const id = Array.isArray(theaterId) ? parseInt(theaterId[0]) : parseInt(theaterId);
+    const params = useLocalSearchParams();
+    // Add more debug logging
+    console.log("URL params received:", JSON.stringify(params));
+
+    // Check if theatersId is available and valid
+    const theatersId = params.theatersId;
+    console.log("Raw theatersId:", theatersId);
+
+    // Safely parse the ID with a fallback
+    const id = theatersId ?
+        (Array.isArray(theatersId) ? parseInt(theatersId[0]) : parseInt(String(theatersId))) : 0;
+
+    console.log("Parsed ID:", id);
+
     const [theater, setTheater] = useState<Theater | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchTheater() {
+            // Skip the API call if we don't have a valid ID
+            if (!id || isNaN(id)) {
+                console.error("Invalid theater ID");
+                setLoading(false);
+                return;
+            }
+
             try {
+                console.log("Fetching theater with ID:", id);
                 const data = await theatersApi.getById(id);
+                console.log("Theater data received:", data);
                 setTheater(data);
             } catch (error) {
                 console.error("Error fetching theater:", error);
@@ -45,7 +66,7 @@ export default function TheaterDetailScreen() {
         <View style={styles.container}>
             <View style={styles.card}>
                 <Text style={styles.theaterName}>{theater.name}</Text>
-                <Text style={styles.theaterLocation}>{theater.location}</Text>
+                <Text style={styles.theaterLocation}>{theater.address}</Text>
 
                 <View style={styles.divider} />
 
