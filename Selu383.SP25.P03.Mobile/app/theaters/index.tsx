@@ -19,7 +19,9 @@ export default function TheatersScreen() {
     useEffect(() => {
         async function loadTheaters() {
             try {
+                console.log("Fetching theaters from API...");
                 const data = await theatersApi.getAll();
+                console.log("Theaters data received:", JSON.stringify(data));
                 setTheaters(data);
             } catch (error) {
                 console.error("Failed to load theaters:", error);
@@ -39,6 +41,15 @@ export default function TheatersScreen() {
         );
     }
 
+    // Add this check to see if theaters data is available
+    if (!theaters || theaters.length === 0) {
+        return (
+            <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>No theaters found. Please check your connection.</Text>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Our Theaters</Text>
@@ -49,10 +60,9 @@ export default function TheatersScreen() {
                     <TouchableOpacity
                         style={styles.theaterCard}
                         onPress={() => {
-                            const theaterId = item.id;
-                            console.log("Navigating to theater details:", theaterId);
+                            console.log("Navigating to theater details:", item.id);
                             // @ts-ignore
-                            router.push(`/theaters/${theaterId}`);
+                            router.push(`/theaters/${item.id}`);
                         }}
                     >
                         <Text style={styles.theaterName}>{item.name}</Text>
@@ -104,5 +114,16 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+    errorText: {
+        fontSize: 18,
+        color: '#ff3b30',
+        textAlign: 'center',
     },
 });

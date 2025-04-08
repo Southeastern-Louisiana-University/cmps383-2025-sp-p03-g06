@@ -47,7 +47,7 @@ export default function NowShowingScreen() {
                 onPress={() => {
                     console.log("Navigating to theaters list");
                     // @ts-ignore
-                    router.push("/theaters/index");
+                    router.push("/theaters");
                 }}
             >
                 <Text style={styles.buttonText}>View Our Theaters</Text>
