@@ -48,7 +48,10 @@ export default function TheatersScreen() {
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         style={styles.theaterCard}
-                        onPress={() => router.push('/theaters/index')}
+                        onPress={() => router.push({
+                            pathname: "/theaters/[theatersId]" as any,
+                            params: { theatersId: item.id }
+                        })}
                     >
                         <Text style={styles.theaterName}>{item.name}</Text>
                         <Text style={styles.theaterLocation}>{item.location}</Text>
