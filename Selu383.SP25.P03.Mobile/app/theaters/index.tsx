@@ -7,8 +7,7 @@ import {
     StyleSheet,
     FlatList,
     ActivityIndicator,
-    TouchableOpacity,
-    Image
+    TouchableOpacity
 } from "react-native";
 import { theatersApi, Theater } from "@/services/api/theatersApi";
 
@@ -49,13 +48,10 @@ export default function TheatersScreen() {
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         style={styles.theaterCard}
-                      //  onPress={() => router.push(`/theaters/${item.id}`)}
+                        onPress={() => router.push('/theaters/index')}
                     >
-                        <View style={styles.theaterInfo}>
-                            <Text style={styles.theaterName}>{item.name}</Text>
-                            <Text style={styles.theaterLocation}>{item.location}</Text>
-                        </View>
-                        <Text style={styles.viewDetails}>View Details →</Text>
+                        <Text style={styles.theaterName}>{item.name}</Text>
+                        <Text style={styles.theaterLocation}>{item.location}</Text>
                     </TouchableOpacity>
                 )}
                 contentContainerStyle={styles.list}
@@ -84,30 +80,20 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: 16,
         marginBottom: 16,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 2,
     },
-    theaterInfo: {
-        flex: 1,
-    },
     theaterName: {
         fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 4,
+        marginBottom: 8,
     },
     theaterLocation: {
-        fontSize: 14,
+        fontSize: 16,
         color: '#666',
-    },
-    viewDetails: {
-        color: '#0066cc',
-        fontWeight: '500',
     },
     loader: {
         flex: 1,
