@@ -12,10 +12,10 @@ import {
 import { moviesApi, Movie } from "@/services/api/moviesApi";
 import MovieCard from "@/components/movie/MovieCard";
 
-const router = useRouter();
 export default function NowShowingScreen() {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
+    const router = useRouter(); 
+    const [movies, setMovies] = useState<Movie[]>([]);
+    const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadMovies() {
