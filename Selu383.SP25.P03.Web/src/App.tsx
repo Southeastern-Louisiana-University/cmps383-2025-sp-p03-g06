@@ -28,6 +28,7 @@ import {
   Transition,
 } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
+import "./styles/animations.css";
 import "./App.css";
 
 // Page transition component
@@ -53,7 +54,6 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   const [showLoader, setShowLoader] = useState(loading);
-  const location = useLocation();
 
   // Add a delay before showing the loader to prevent flicker
   useEffect(() => {
@@ -74,9 +74,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!isAuthenticated) {
-    return (
-      <Navigate to="/login" state={{ redirectTo: location.pathname }} replace />
-    );
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -115,6 +113,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 // Enhanced theme
 const theme = createTheme({
   colors: {
+
     primary: [
       "#ffeaef", // primary-light
       "#ffbfcd",
@@ -138,10 +137,11 @@ const theme = createTheme({
       "#1f1f1f", // secondary-dark
       "#121212",
       "#0a0a0a",
+
     ],
   },
-  primaryColor: "primary",
-  primaryShade: 6,
+  primaryColor: "brand",
+  primaryShade: 9,
   fontFamily: "Poppins, sans-serif",
   headings: {
     fontFamily: "Poppins, sans-serif",
@@ -150,6 +150,7 @@ const theme = createTheme({
     Button: {
       defaultProps: {
         radius: "md",
+        color: "brand",
       },
     },
     Card: {
@@ -203,7 +204,6 @@ const AppContent = () => {
                 {/* Landing page accessible by everyone */}
                 <Route path="/" element={<LandingPage />} />
 
-                {/* Theater routes */}
                 <Route
                   path="/theaters"
                   element={
@@ -231,39 +231,6 @@ const AppContent = () => {
                   }
                 />
 
-                {/* Movie and showtime routes */}
-                <Route path="/movies" element={<MovieList />} />
-                <Route
-                  path="/movies/:id/showtimes"
-                  element={<MovieShowtimes />}
-                />
-
-                {/* Reservation and ticket routes */}
-                <Route
-                  path="/reservations/create/:id"
-                  element={
-                    <ProtectedRoute>
-                      <SeatSelection />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/my-reservations"
-                  element={
-                    <ProtectedRoute>
-                      <MyReservations />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/ticket/:id"
-                  element={
-                    <ProtectedRoute>
-                      <TicketView />
-                    </ProtectedRoute>
-                  }
-                />
-
                 <Route path="*" element={<Navigate to="/" replace />} />
 
                 <Route
@@ -287,7 +254,19 @@ const AppContent = () => {
 function App() {
   return (
     <BrowserRouter>
-      <MantineProvider theme={theme} defaultColorScheme="auto">
+      <MantineProvider
+        theme={{
+          ...theme,
+          components: {
+            ActionIcon: {
+              defaultProps: {
+                color: "brand",
+              },
+            },
+          },
+        }}
+        defaultColorScheme="auto"
+      >
         <ModalsProvider>
           <ColorSchemeProvider>
             <AuthProvider>
