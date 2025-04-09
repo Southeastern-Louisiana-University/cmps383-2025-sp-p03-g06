@@ -42,7 +42,7 @@
       "router": {
         "origin": false
       },
-      "eas": {}
+      "eas": { "projectId": "e37300cc-d840-4522-b4df-1cfe03e573e4" }
     },
     "owner": "taylfrad"
   }
