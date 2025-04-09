@@ -19,7 +19,15 @@ namespace Selu383.SP25.P03.Api
 
             // Configure OpenAPI/Swagger - standard configuration
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "Lions Den Cinemas API",
+                    Version = "v1",
+                    Description = "API for Lions Den Cinemas mobile app"
+                });
+            });
 
             builder.Services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DataContext>()
@@ -68,6 +76,15 @@ namespace Selu383.SP25.P03.Api
 
             var app = builder.Build();
 
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Lions Den API v1");
+                });
+            }
+
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<DataContext>();
@@ -94,9 +111,13 @@ namespace Selu383.SP25.P03.Api
             app.UseSwagger();
             app.UseSwaggerUI();
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
+            app.UseAuthentication();
+            app.UseRouting();
+
             app.UseAuthentication();
             app.UseRouting()
+
                .UseAuthorization()
                .UseEndpoints(x =>
                {
