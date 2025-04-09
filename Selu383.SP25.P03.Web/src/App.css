@@ -225,114 +225,72 @@ html[data-mantine-color-scheme="light"] .theme-toggle-button {
   transition: outline-offset 0.2s ease;
 }
 
-/* ===================================
-   STYLES
-   =================================== */
-
-/* Base Variables */
 :root {
-  --transition-standard: all 0.2s ease;
-  --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-dark: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --border-radius: 8px;
-}
-
-/* Global layout styles */
-.app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  position: relative;
-}
-
-.content {
-  flex: 1;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-/* Dark mode adjustments */
-html[data-mantine-color-scheme="dark"] {
-  --card-bg: #25262b;
-  --input-bg: #1e1f22;
+  --primary-color: #c70036;
   --text-primary: #ffffff;
-  --text-secondary: #c1c2c5;
-  --border-color: #373a40;
-  background-color: #1a1b1e;
-  color: #c1c2c5;
+  --background-dark: #121212;
+  --background-light: #1e1e1e;
 }
 
-html[data-mantine-color-scheme="light"] {
-  --card-bg: #ffffff;
-  --input-bg: #f8f9fa;
-  --text-primary: #1a1b1e;
-  --text-secondary: #5c5f66;
-  --border-color: #e9ecef;
+html[data-mantine-color-scheme="dark"] {
+  background-color: var(--background-dark) !important;
+  color: var(--text-primary);
 }
 
-/* UI Element styling */
-.mantine-Card-root {
-  transition: var(--transition-standard);
-  border-radius: var(--border-radius);
+body {
+  background-color: var(--background-dark);
+  color: var(--text-primary);
+  font-family: Arial, sans-serif;
 }
 
 .mantine-Button-root {
-  transition: var(--transition-standard);
-  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.mantine-Button-root:hover {
+  transform: scale(1.02);
+}
+
+.mantine-Card-root,
+.mantine-Paper-root {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: var(--background-light) !important;
 }
 
 .mantine-TextInput-input,
 .mantine-PasswordInput-input,
-.mantine-NumberInput-input,
 .mantine-Select-input {
-  transition: var(--transition-standard);
-  border-radius: var(--border-radius);
-  padding: 8px 36px 8px 36px;
-  height: 42px;
+  background-color: rgba(30, 30, 30, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-primary) !important;
 }
 
-/* Theater cards styling */
-.theater-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+header {
+  background-color: var(--background-dark) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.theater-card .mantine-Card-root {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.theater-card .card-actions {
-  margin-top: auto;
-}
-
-/* Page transitions */
-.page-transition.fadeIn {
-  animation: fadeIn 0.3s ease forwards;
-}
-
-.page-transition.fadeOut {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .content {
-    padding: in1rem;
-  }
-}
-
-/* Accessibility focus styles */
 *:focus-visible {
-  outline: 2px solid var(--mantine-color-primary-6);
+  outline: 2px solid var(--primary-color);
   outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a30030;
 }
