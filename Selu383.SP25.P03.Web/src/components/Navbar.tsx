@@ -298,7 +298,7 @@ const Navbar = () => {
             <>
               <Group mb="md">
                 <Avatar size="md" color="primary" radius="xl">
-                  {user?.userName.charAt(0).toUpperCase()}
+                  {user?.userName?.charAt(0).toUpperCase() || "?"}
                 </Avatar>
                 <div>
                   <Text fw={500}>{user?.userName}</Text>
