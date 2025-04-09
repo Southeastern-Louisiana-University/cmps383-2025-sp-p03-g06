@@ -169,35 +169,42 @@ const SeatSelection = () => {
       );
 
       // Show confirmation modal
+      // Change this part in SeatSelection.tsx
+      // Inside the handleCreateReservation function, replace the modal with:
+
+      // Show confirmation modal
       modals.open({
         title: <Text fw={700}>Reservation Confirmed!</Text>,
         centered: true,
         children: (
           <>
             <Text mb="md">
-              Your tickets have been reserved successfully. Your reservation
-              code is:
-            </Text>
-            <Text ta="center" fw={700} size="xl" mb="md">
-              {createdReservation.ticketCode}
-            </Text>
-            <Text size="sm" c="dimmed" mb="md">
-              Please keep this code to access your tickets at the theater.
+              Your seats have been reserved successfully! Would you like to add
+              concessions to your order?
             </Text>
             <Group justify="center" mt="md">
               <Button
+                variant="outline"
                 onClick={() => {
                   modals.closeAll();
                   navigate("/my-reservations");
                 }}
               >
-                View My Reservations
+                Skip
+              </Button>
+              <Button
+                onClick={() => {
+                  modals.closeAll();
+                  navigate(`/concessions/${createdReservation.id}`);
+                }}
+              >
+                Add Food & Drinks
               </Button>
             </Group>
           </>
         ),
         onClose: () => {
-          navigate("/my-reservations");
+          navigate(`/concessions/${createdReservation.id}`);
         },
       });
     } catch (error) {
