@@ -71,7 +71,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "When the girl of his dreams is kidnapped, a man incapable of feeling physical pain turns his rare condition into an unexpected advantage in the fight to rescue her.",
                     DurationMinutes = 110, // 1 hr 50 minutes
                     Rating = "R",
-                    PosterImageUrl = "/images/now_showing/Novocaine.avif",
+                    PosterImageUrl = "/images/now_showing/Novocaine.jpg",
                     ReleaseDate = new DateTime(2025, 3, 14)
                 },
                 new()
@@ -107,7 +107,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Porky Pig and Daffy Duck are Earth's only hope when facing the threat of alien invasion.",
                     DurationMinutes = 91, // 1 hr 31 minutes
                     Rating = "PG",
-                    PosterImageUrl = "/images/now_showing/LooneyTunes.avif",
+                    PosterImageUrl = "/images/now_showing/LooneyTunes.jpg",
                     ReleaseDate = new DateTime(2025, 3, 14)
                 },
                 new()
@@ -134,7 +134,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Paddington returns to Peru to visit his beloved Aunt Lucy, who now resides at the Home for Retired Bears. With the Brown family in tow, a thrilling adventure ensues when a mystery plunges them into an unexpected journey.",
                     DurationMinutes = 106, // 1 hr 46 minutes
                     Rating = "PG",
-                    PosterImageUrl = "/images/now_showing/PaddingtonBear.avif",
+                    PosterImageUrl = "/images/now_showing/PaddingtonBear.jpg",
                     ReleaseDate = new DateTime(2025, 2, 14)
                 },
                 new()
@@ -143,7 +143,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Sam Wilson, the new Captain America, finds himself in the middle of an international incident and must discover the motive behind a nefarious global plan.",
                     DurationMinutes = 118, // 1 hr 58 minutes
                     Rating = "PG-13",
-                    PosterImageUrl = "/images/now_showing/CaptainAmerica.avif",
+                    PosterImageUrl = "/images/now_showing/CaptainAmerica.jpg",
                     ReleaseDate = new DateTime(2025, 2, 14)
                 },
                 new()
@@ -152,7 +152,7 @@ namespace Selu383.SP25.P03.Api.Data
                     Description = "Mufasa, a cub lost and alone, meets a sympathetic lion named Taka, the heir to a royal bloodline. The chance meeting sets in motion an expansive journey of a group of misfits searching for their destiny.",
                     DurationMinutes = 118, // 1 hr 58 minutes
                     Rating = "PG",
-                    PosterImageUrl = "/images/now_showing/Mufasa.avif",
+                    PosterImageUrl = "/images/now_showing/Mufasa.jpg",
                     ReleaseDate = new DateTime(2024, 12, 20)
                 },
                 new()
