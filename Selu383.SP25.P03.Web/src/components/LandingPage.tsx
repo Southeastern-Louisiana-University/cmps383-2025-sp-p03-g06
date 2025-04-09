@@ -6,12 +6,15 @@ import { Carousel } from "@mantine/carousel";
 import "@mantine/carousel/styles.css";
 import { movieApi, MovieDTO } from "../services/api";
 
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
+
   const { isAuthenticated } = useAuth();
   const [movies, setMovies] = useState<MovieDTO[]>([]);
+
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -22,6 +25,7 @@ const LandingPage = () => {
         console.error("Failed to fetch movies", error);
       }
     };
+
 
     fetchMovies();
   }, []);
@@ -43,10 +47,12 @@ const LandingPage = () => {
     });
   };
 
+
   return (
     <Box>
       <Box
         style={{
+
           position: "relative",
           padding: "30px 0",
           overflow: "hidden",
@@ -55,11 +61,13 @@ const LandingPage = () => {
       >
         <Carousel
           slideSize={{ base: "70%", sm: "40%", md: "30%", lg: "20%" }}
+
           slideGap="md"
           containScroll="trimSnaps"
           slidesToScroll={1}
           withControls
           loop
+
           controlsOffset="xs"
           styles={{
             container: {
@@ -162,10 +170,12 @@ const LandingPage = () => {
                   </Button>
                 </Flex>
               </Flex>
+
             </Carousel.Slide>
           ))}
         </Carousel>
       </Box>
+
 
       {/* Membership Section - Only show if not authenticated */}
       {!isAuthenticated && (
@@ -177,6 +187,7 @@ const LandingPage = () => {
           }}
         >
           <Text size="xl" fw={700} mb={10}>
+
             Become a Member
           </Text>
           <Text c="dimmed" mb={20}>
@@ -184,6 +195,7 @@ const LandingPage = () => {
             more.
           </Text>
           <Button
+
             color="red"
             size="md"
             onClick={handleJoinClick}
@@ -202,6 +214,7 @@ const LandingPage = () => {
                 color: "white",
               },
             }}
+
           >
             JOIN NOW
           </Button>
