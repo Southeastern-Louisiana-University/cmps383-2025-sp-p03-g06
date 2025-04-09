@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - master
+      - web-frontend
 jobs:
   update:
     runs-on: ubuntu-latest
