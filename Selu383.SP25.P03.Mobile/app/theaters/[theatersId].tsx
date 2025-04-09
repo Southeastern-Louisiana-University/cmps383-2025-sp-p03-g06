@@ -1,4 +1,5 @@
 // app/theaters/[theatersId].tsx
+//working
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
