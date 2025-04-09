@@ -2,7 +2,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 
 // Base URL for API requests
-const API_BASE_URL = "/api";
+const API_BASE_URL = "http://localhost:5249/api";
 
 // Create axios instance with default config
 const axiosInstance: AxiosInstance = axios.create({
