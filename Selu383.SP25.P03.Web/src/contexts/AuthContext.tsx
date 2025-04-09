@@ -50,7 +50,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     setError(null);
     try {
-      const userData = await authApi.login({ userName: username, password });
+      const userData = await authApi.login({
+        UserName: username,
+        Password: password,
+      });
       setUser(userData);
     } catch (error) {
       setError("Invalid username or password");
