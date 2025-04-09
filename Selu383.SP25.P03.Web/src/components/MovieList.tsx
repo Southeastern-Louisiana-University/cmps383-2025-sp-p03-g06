@@ -184,11 +184,12 @@ const MovieList = () => {
           color: "white",
         }}
       >
+        {/* Improved title */}
         <Title order={1} ta="center" mb="md">
-          Now Showing
+          Experience the Latest Movies at Lions Den Cinemas
         </Title>
         <Text ta="center" size="lg" mb="lg">
-          Book your tickets for the latest movies at Lions Den Cinemas
+          Book your tickets for the newest releases at Lions Den Cinemas
         </Text>
       </Paper>
 
@@ -265,11 +266,13 @@ const MovieList = () => {
                 }}
               >
                 <Card.Section>
+                  {/* Ensure the movie poster shows fully */}
                   <Image
                     src={movie.posterImageUrl || "/images/default-movie.jpg"}
                     height={250}
                     alt={movie.title}
                     fallbackSrc="https://placehold.co/400x600/gray/white?text=No+Poster"
+                    fit="contain"
                   />
                 </Card.Section>
 
@@ -312,12 +315,21 @@ const MovieList = () => {
 
                 <Divider my="md" />
 
+                {/* Updated button color (#c70036) with white text */}
                 <Button
                   fullWidth
                   mt="md"
                   component={Link}
                   to={`/movies/${movie.id}/showtimes`}
-                  color={isDark ? "yellow" : "green"}
+                  styles={{
+                    root: {
+                      backgroundColor: "#c70036",
+                      color: "#ffffff",
+                      "&:hover": {
+                        backgroundColor: "#a00029",
+                      },
+                    },
+                  }}
                   leftSection={<IconTicket size={20} />}
                 >
                   View Showtimes

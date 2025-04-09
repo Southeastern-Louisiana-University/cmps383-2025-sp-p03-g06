@@ -116,28 +116,28 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 const theme = createTheme({
   colors: {
     primary: [
-      "#e8f5ed", // primary-light
-      "#c5e4d3",
-      "#a2d4b9",
-      "#7fc49f",
-      "#5cb485",
-      "#39a46b",
-      "#0d6832", // primary-color
-      "#064023", // primary-dark
-      "#043519",
-      "#02280f",
+      "#ffeaef", // primary-light
+      "#ffbfcd",
+      "#ff94ab",
+      "#ff698a",
+      "#ff3d68",
+      "#ff1147",
+      "#c70036", // primary-color (client's requested color)
+      "#a10029", // primary-dark
+      "#7a001f",
+      "#540015",
     ],
     secondary: [
-      "#fdf7e4", // secondary-light
-      "#f9eec9",
-      "#f5e4ae",
-      "#f1db93",
-      "#ecd178",
-      "#e8c85d",
-      "#d4af37", // secondary-color
-      "#b3901f", // secondary-dark
-      "#856b17",
-      "#57460f",
+      "#e6e6e6", // secondary-light
+      "#cccccc",
+      "#b3b3b3",
+      "#999999",
+      "#808080",
+      "#666666",
+      "#2d2d2d", // secondary-color (dark)
+      "#1f1f1f", // secondary-dark
+      "#121212",
+      "#0a0a0a",
     ],
   },
   primaryColor: "primary",

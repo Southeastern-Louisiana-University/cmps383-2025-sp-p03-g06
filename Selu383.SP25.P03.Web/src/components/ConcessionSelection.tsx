@@ -226,7 +226,7 @@ const ConcessionSelection = () => {
         </Group>
 
         {reservation && (
-          <Alert color="blue" mb="md">
+          <Alert color="red" mb="md">
             <Text>
               Your seats for "{reservation.movieTitle}" at{" "}
               {new Date(reservation.showtimeStartTime).toLocaleTimeString([], {
@@ -264,7 +264,7 @@ const ConcessionSelection = () => {
 
                   <Group justify="apart" mt="md" mb="xs">
                     <Text fw={500}>{item.name}</Text>
-                    <Badge color={isDark ? "yellow" : "green"}>
+                    <Badge color={isDark ? "secondary" : "primary"}>
                       ${item.price.toFixed(2)}
                     </Badge>
                   </Group>
@@ -398,7 +398,7 @@ const ConcessionSelection = () => {
 
         <Button
           onClick={handleSubmitOrder}
-          color={isDark ? "yellow" : "green"}
+          color={isDark ? "secondary" : "primary"}
           loading={orderLoading}
           leftSection={<IconBrandCashapp size={16} />}
         >

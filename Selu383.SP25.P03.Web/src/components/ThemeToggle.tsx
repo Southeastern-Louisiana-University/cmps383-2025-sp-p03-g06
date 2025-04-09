@@ -1,4 +1,4 @@
-// src/components/ThemeToggle.tsx - Optimized
+// src/components/ThemeToggle.tsx - Updated with new color theme
 import { useState, useEffect, memo } from "react";
 import {
   ActionIcon,
@@ -37,7 +37,7 @@ const ThemeToggle = memo(
       return (
         <Button
           variant={isDark ? "filled" : "outline"}
-          color={isDark ? "yellow" : "blue"}
+          color={isDark ? "accent" : "primary"}
           leftSection={isDark ? <IconSun size={16} /> : <IconMoon size={16} />}
           onClick={toggleColorScheme}
           fullWidth
@@ -55,13 +55,18 @@ const ThemeToggle = memo(
       >
         <ActionIcon
           variant="outline"
-          color={isDark ? "yellow" : "blue"}
+          color={isDark ? "accent" : "primary"}
           onClick={toggleColorScheme}
           aria-label="Toggle color scheme"
           size={size}
           radius="md"
           className="theme-toggle-button"
-          style={{ borderWidth: "1px" }}
+          style={{
+            borderWidth: "1px",
+            boxShadow: isDark
+              ? "0 0 10px 1px rgba(255, 192, 28, 0.3)"
+              : "0 0 10px 1px rgba(199, 0, 54, 0.2)",
+          }}
         >
           {isDark ? (
             <IconSun
