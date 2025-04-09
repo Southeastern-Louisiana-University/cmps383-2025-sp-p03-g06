@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - master
+      - feat_mobile_navigation
 jobs:
   update:
     runs-on: ubuntu-latest
