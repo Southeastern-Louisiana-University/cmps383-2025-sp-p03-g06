@@ -74,20 +74,6 @@ namespace Selu383.SP25.P03.Api
                 options.SlidingExpiration = true;
             });
 
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAny",
-                    builder => builder
-                        .AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader());
-            });
-
-            builder.WebHost.ConfigureKestrel(serverOptions =>
-            {
-                serverOptions.ListenAnyIP(5249); // Open to your local network
-            });
-
             var app = builder.Build();
 
             if (app.Environment.IsDevelopment())
@@ -120,9 +106,6 @@ namespace Selu383.SP25.P03.Api
             {
                 app.MapOpenApi();
             }
-
-            // Apply CORS policy - uncommented
-            app.UseCors("AllowAny");
 
             //Swagger UI
             app.UseSwagger();

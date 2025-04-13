@@ -5,6 +5,7 @@ import {
   useState,
   useEffect,
   ReactNode,
+  useRef,
 } from "react";
 import { authApi, UserDTO } from "../services/api";
 
@@ -21,32 +22,38 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  // In your AuthContext.tsx
   const [user, setUser] = useState<UserDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const authCheckPerformed = useRef(false);
 
-  // Check if the user is already logged in when the app loads
   useEffect(() => {
+    if (authCheckPerformed.current) return;
+
     const checkAuthStatus = async () => {
       try {
         const userData = await authApi.getCurrentUser();
         setUser(userData);
       } catch (error) {
         // User is not authenticated - this is not an error state
-        console.log("User not authenticated");
+        setUser(null);
       } finally {
         setLoading(false);
+        authCheckPerformed.current = true;
       }
     };
 
     checkAuthStatus();
   }, []);
-
   const login = async (username: string, password: string) => {
     setLoading(true);
     setError(null);
     try {
-      const userData = await authApi.login({ userName: username, password });
+      const userData = await authApi.login({
+        UserName: username,
+        Password: password,
+      });
       setUser(userData);
     } catch (error) {
       setError("Invalid username or password");

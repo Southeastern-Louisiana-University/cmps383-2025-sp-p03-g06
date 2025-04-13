@@ -17,27 +17,21 @@ namespace Selu383.SP25.P03.Api.Data
                 context.Theaters.AddRange(
                     new Theater
                     {
-                        Name = "AMC Palace 10",
-                        Address = "123 Main St, Springfield",
+                        Name = "Lions Den 1",
+                        Address = "New York: 570 2nd Ave, New York, NY 10016",
                         SeatCount = 150
                     },
                     new Theater
                     {
-                        Name = "Regal Cinema",
-                        Address = "456 Elm St, Shelbyville",
+                        Name = "Lions Den 2",
+                        Address = "New Orleans: 636 N Broad St, New Orleans, LA 70119",
                         SeatCount = 200
                     },
                     new Theater
                     {
-                        Name = "Grand Theater",
-                        Address = "789 Broadway Ave, Metropolis",
+                        Name = "Lions den 3",
+                        Address = "Los Angeles: 4020 Marlton Ave, Los Angeles, CA 90008",
                         SeatCount = 300
-                    },
-                    new Theater
-                    {
-                        Name = "Vintage Drive-In",
-                        Address = "101 Retro Rd, Smallville",
-                        SeatCount = 75
                     }
                 );
                 context.SaveChanges();

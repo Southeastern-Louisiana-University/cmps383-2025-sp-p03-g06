@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - feat_mobile_navigation
+      - frontend-test
 jobs:
   update:
     runs-on: ubuntu-latest
