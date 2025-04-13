@@ -32,7 +32,6 @@ const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [modalOpened, modalHandlers] = useDisclosure(false);
-  const openModal = modalHandlers.open;
   const closeModal = modalHandlers.close;
   const location = useLocation();
   const theme = useMantineTheme();
@@ -72,8 +71,6 @@ const Navbar = () => {
         h={64}
         px="md"
         style={{
-
-
           backgroundColor: scrolled
             ? "rgba(18, 18, 18, 0.95)"
             : "rgba(18, 18, 18, 1)",
@@ -99,7 +96,6 @@ const Navbar = () => {
                 gap: "12px",
               }}
             >
-
               <IconMovie
                 size={32}
                 color={theme.colors.primary[5]}
@@ -109,7 +105,6 @@ const Navbar = () => {
               <Text
                 fw={700}
                 style={{
-
                   color: theme.colors.primary[0],
 
                   letterSpacing: "0.5px",
@@ -134,9 +129,7 @@ const Navbar = () => {
                     component={Link}
                     to="/"
                     variant={activeLink("/") ? "filled" : "subtle"}
-
                     color="primary"
-
                     leftSection={<IconHome size={18} />}
                     style={{ color: "white" }} // This will make the text white
                   >
@@ -145,7 +138,6 @@ const Navbar = () => {
 
                   <Button
                     component={Link}
-
                     to="/movies"
                     variant={activeLink("/movies") ? "filled" : "subtle"}
                     color="primary"
@@ -160,13 +152,11 @@ const Navbar = () => {
                     to="/theaters"
                     variant={activeLink("/theaters") ? "filled" : "subtle"}
                     color="primary"
-
                     leftSection={<IconTheater size={18} />}
                     style={{ color: "white" }}
                   >
                     Theaters
                   </Button>
-
 
                   <Button
                     component={Link}
@@ -189,7 +179,6 @@ const Navbar = () => {
                         color="primary"
                         leftSection={
                           <Avatar size="sm" color="primary" radius="xl">
-
                             {user?.userName.charAt(0).toUpperCase()}
                           </Avatar>
                         }
@@ -212,7 +201,6 @@ const Navbar = () => {
                   </Menu>
                 </>
               ) : (
-
                 <>
                   <Button
                     component={Link}
@@ -279,7 +267,6 @@ const Navbar = () => {
                     LOGIN
                   </Button>
                 </>
-
               )}
             </Group>
           </Group>
@@ -289,9 +276,7 @@ const Navbar = () => {
             opened={opened}
             onClick={toggle}
             hiddenFrom="sm"
-
             color={theme.colors.primary[0]}
-
             size="sm"
           />
         </Group>
@@ -305,9 +290,7 @@ const Navbar = () => {
         size="xs"
         padding="md"
         title={
-
           <Text fw={700} size="lg" c="primary">
-
             Lions Den Cinemas
           </Text>
         }
@@ -321,9 +304,7 @@ const Navbar = () => {
             // Similar color updates for mobile drawer
             <>
               <Group mb="md">
-
                 <Avatar size="md" color="primary" radius="xl">
-
                   {user?.userName.charAt(0).toUpperCase()}
                 </Avatar>
                 <div>
@@ -340,9 +321,7 @@ const Navbar = () => {
                 component={Link}
                 to="/"
                 variant="subtle"
-
                 color="primary"
-
                 fullWidth
                 leftSection={<IconHome size={18} />}
                 onClick={close}
@@ -352,22 +331,18 @@ const Navbar = () => {
 
               <Button
                 component={Link}
-
                 to="/movies"
                 variant={activeLink("/movies") ? "filled" : "subtle"}
                 color="primary"
                 leftSection={<IconMovie size={18} />}
                 style={{ color: "white" }} // This changes the text color to white
-
               >
                 Theaters
               </Button>
 
               <Button
                 variant="subtle"
-
                 color="primary"
-
                 fullWidth
                 leftSection={<IconMovie size={18} />}
                 onClick={close}
@@ -377,16 +352,13 @@ const Navbar = () => {
 
               <Button
                 variant="subtle"
-
                 color="primary"
-
                 fullWidth
                 leftSection={<IconTicket size={18} />}
                 onClick={close}
               >
                 Tickets
               </Button>
-
 
               <Button
                 variant="outline"
@@ -422,7 +394,6 @@ const Navbar = () => {
                 component={Link}
                 to="/signup"
                 variant="outline"
-
                 fullWidth
                 leftSection={<IconUserPlus size={18} />}
                 onClick={close}
@@ -443,9 +414,7 @@ const Navbar = () => {
 
               <Button
                 component={Link}
-
                 to="/login"
-
                 fullWidth
                 onClick={close}
                 style={{

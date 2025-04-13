@@ -14,12 +14,8 @@ import TheaterList from "./components/TheaterList";
 import TheaterForm from "./components/TheaterForm";
 import Navbar from "./components/Navbar";
 import LandingPage from "./components/LandingPage";
-import MovieList from "./components/MovieList";
-import MovieShowtimes from "./components/MovieShowtimes";
-import SeatSelection from "./components/SeatSelection";
-import MyReservations from "./components/MyReservations";
 import ConcessionSelection from "./components/ConcessionSelection";
-import TicketView from "./components/TicketView";
+
 import {
   MantineProvider,
   createTheme,
@@ -113,7 +109,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 // Enhanced theme
 const theme = createTheme({
   colors: {
-
     primary: [
       "#ffeaef", // primary-light
       "#ffbfcd",
@@ -137,7 +132,6 @@ const theme = createTheme({
       "#1f1f1f", // secondary-dark
       "#121212",
       "#0a0a0a",
-
     ],
   },
   primaryColor: "brand",
