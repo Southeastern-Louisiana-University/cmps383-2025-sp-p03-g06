@@ -26,8 +26,8 @@ env:
 
 on:
   push:
-    branches: ["frontend-test"]
-    
+    branches: ["mobile_dev"]
+
   workflow_dispatch:
 
 permissions:
