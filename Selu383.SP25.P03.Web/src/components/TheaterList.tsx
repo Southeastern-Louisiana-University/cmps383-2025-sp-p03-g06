@@ -128,14 +128,14 @@ const TheaterList = () => {
           <IconTheater
             size={32}
             stroke={1.5}
-            color={isDark ? "#d4af37" : "#0d6832"}
+            color="#e03131" // Changed to red color
           />
           <Title
             order={2}
             style={{
               fontSize: "1.8rem",
               fontWeight: 700,
-              color: isDark ? "#ffffff" : "#0d6832",
+              color: "#ffffff", // Always white in dark mode
             }}
           >
             Our Theaters

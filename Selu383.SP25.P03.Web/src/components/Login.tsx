@@ -68,8 +68,8 @@ const Login = () => {
         <Group justify="center" mb={24}>
           <AnimatedLion
             size={80}
-            primaryColor="#D2691E" // Deep Chestnut/Reddish-Brown
-            secondaryColor="#8B4513" // Saddle Brown (darker shade for depth)
+            primaryColor="#d4af37"
+            secondaryColor="#6B4226"
           />
         </Group>
         <Title

@@ -1,8 +1,158 @@
-/* ===================================
-   ANIMATIONS 
-   =================================== */
+/* THEME VARIABLES */
+:root {
+  --primary-color: #e03131; /* Red from landing page */
+  --primary-hover: #c92a2a;
+  --primary-light: #ff3d68;
+  --primary-dark: #a10029;
+  --text-primary: #ffffff;
+  --text-secondary: #c1c2c5;
+  --text-muted: #909296;
+  --background-dark: #121212;
+  --background-darker: #0a0a0a;
+  --card-background: #1a1b1e;
+  --border-color: rgba(255, 255, 255, 0.1);
+}
 
-/* Core fade animations */
+/* GLOBAL STYLES */
+body,
+html {
+  background-color: var(--background-dark);
+  color: var(--text-primary);
+  font-family: "Poppins", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Force dark mode */
+html {
+  color-scheme: dark;
+}
+
+/* LAYOUT & CONTAINERS */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+}
+
+/* TYPOGRAPHY */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+p {
+  color: var(--text-secondary);
+}
+
+/* BUTTONS */
+.mantine-Button-root {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.mantine-Button-root:hover {
+  transform: scale(1.02);
+}
+
+/* Primary button (red) */
+.mantine-Button-filled[data-button="primary"] {
+  background-color: var(--primary-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.mantine-Button-filled[data-button="primary"]:hover {
+  background-color: var(--primary-hover) !important;
+}
+
+/* CARDS & CONTAINERS */
+.mantine-Card-root,
+.mantine-Paper-root {
+  background-color: var(--card-background) !important;
+  border-color: var(--border-color) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Special red-top border for cards */
+.red-top-border {
+  border-top: 3px solid var(--primary-color) !important;
+}
+
+/* FORM ELEMENTS */
+.mantine-TextInput-input,
+.mantine-PasswordInput-input,
+.mantine-Select-input,
+.mantine-NumberInput-input {
+  background-color: rgba(26, 27, 30, 0.8) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* NAVIGATION */
+header {
+  background-color: var(--background-darker) !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* UTILITY CLASSES */
+.primary-text {
+  color: var(--primary-color) !important;
+}
+
+.primary-bg {
+  background-color: var(--primary-color) !important;
+}
+
+/* CUSTOM SCROLLBAR */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-darker);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover);
+}
+
+/* ACCESSIBILITY FOCUS */
+*:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  transition: outline-offset 0.2s ease;
+}
+
+/* PAGE TRANSITIONS */
+.page-transition {
+  transition: opacity 0.3s ease;
+}
+
+.page-transition.fadeIn {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.page-transition.fadeOut {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+/* ANIMATIONS */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -21,7 +171,6 @@
   }
 }
 
-/* Slide animations */
 @keyframes slideInUp {
   from {
     transform: translateY(30px);
@@ -33,52 +182,6 @@
   }
 }
 
-@keyframes slideInDown {
-  from {
-    transform: translateY(-30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-/* Scale animations */
-@keyframes zoomIn {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* Special effects */
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -91,206 +194,20 @@
   }
 }
 
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translateX(-5px);
-  }
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translateX(5px);
-  }
+/* Red glow effect for buttons and interactive elements */
+.red-glow {
+  box-shadow: 0 0 8px rgba(224, 49, 49, 0.5);
+  transition: box-shadow 0.3s ease;
 }
 
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.red-glow:hover {
+  box-shadow: 0 0 15px rgba(224, 49, 49, 0.8);
 }
 
-/* Button effects */
-@keyframes buttonPush {
-  50% {
-    transform: scale(0.95);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* Lion-specific animations */
-@keyframes lionRoar {
-  0% {
-    transform: scale(1);
-  }
-  20% {
-    transform: scale(1.1);
-  }
-  40% {
-    transform: scale(1.05);
-  }
-  60% {
-    transform: scale(1.1);
-  }
-  80% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* Animation utility classes */
-.fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
-.fade-out {
-  animation: fadeOut 0.5s ease forwards;
-}
-.slide-in-up {
-  animation: slideInUp 0.5s ease forwards;
-}
-.slide-in-down {
-  animation: slideInDown 0.5s ease forwards;
-}
-.slide-in-left {
-  animation: slideInLeft 0.5s ease forwards;
-}
-.slide-in-right {
-  animation: slideInRight 0.5s ease forwards;
-}
-.zoom-in {
-  animation: zoomIn 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-}
-.pulse {
-  animation: pulse 2s infinite;
-}
-.shake {
-  animation: shake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-}
-.rotate {
-  animation: rotate 1s linear infinite;
-}
-.button-push {
-  animation: buttonPush 0.3s linear;
-}
-.lion-roar {
-  animation: lionRoar 0.7s ease-in-out;
-}
-
-/* Animation delays */
-.delay-100 {
-  animation-delay: 100ms;
-}
-.delay-200 {
-  animation-delay: 200ms;
-}
-.delay-300 {
-  animation-delay: 300ms;
-}
-
-/* Theme toggle animations */
-.theme-toggle-button {
-  transition: all 0.3s ease;
-}
-
-.theme-toggle-button:hover {
-  transform: scale(1.1);
-}
-
-html[data-mantine-color-scheme="dark"] .theme-toggle-button {
-  box-shadow: 0 0 10px 1px rgba(255, 215, 0, 0.5);
-}
-
-html[data-mantine-color-scheme="light"] .theme-toggle-button {
-  box-shadow: 0 0 10px 1px rgba(25, 113, 194, 0.5);
-}
-
-/* Improved focus styles for better accessibility */
-*:focus-visible {
-  outline: 2px solid var(--mantine-color-primary-6);
-  outline-offset: 2px;
-  transition: outline-offset 0.2s ease;
-}
-
-:root {
-  --primary-color: #c70036;
-  --text-primary: #ffffff;
-  --background-dark: #121212;
-  --background-light: #1e1e1e;
-}
-
-html[data-mantine-color-scheme="dark"] {
-  background-color: var(--background-dark) !important;
+/* Navbar title styling with red gradient */
+.navbar-title {
   color: var(--text-primary);
-}
-
-body {
-  background-color: var(--background-dark);
-  color: var(--text-primary);
-  font-family: Arial, sans-serif;
-}
-
-.mantine-Button-root {
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.mantine-Button-root:hover {
-  transform: scale(1.02);
-}
-
-.mantine-Card-root,
-.mantine-Paper-root {
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  background-color: var(--background-light) !important;
-}
-
-.mantine-TextInput-input,
-.mantine-PasswordInput-input,
-.mantine-Select-input {
-  background-color: rgba(30, 30, 30, 0.8) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: var(--text-primary) !important;
-}
-
-header {
-  background-color: var(--background-dark) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-*:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--background-light);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a30030;
+  background: linear-gradient(45deg, #ffffff 30%, var(--primary-color) 90%);
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
 }

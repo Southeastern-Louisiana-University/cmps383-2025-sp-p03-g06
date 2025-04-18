@@ -34,8 +34,11 @@ const MovieShowtimes = () => {
   const [showtimes, setShowtimes] = useState<ShowtimeDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { colorScheme } = useMantineColorScheme();
-  const isDark = colorScheme === "dark";
+  useMantineColorScheme();
+
+  // Define main ticket color and lighter price color
+  const mainTicketColor = "#c70036"; // Specified ticket color
+  const lighterPriceColor = "#ff3366"; // Lighter version for prices
 
   useEffect(() => {
     const fetchMovieAndShowtimes = async () => {
@@ -117,7 +120,7 @@ const MovieShowtimes = () => {
             radius="md"
             withBorder
             style={{
-              borderTop: `3px solid ${isDark ? "#d4af37" : "#0d6832"}`,
+              borderTop: `3px solid ${mainTicketColor}`, // Changed to main ticket color
             }}
           >
             <Card.Section>
@@ -134,7 +137,7 @@ const MovieShowtimes = () => {
             </Title>
 
             <Group mb="md">
-              <Badge color={isDark ? "yellow" : "green"}>{movie.rating}</Badge>
+              <Badge color="red">{movie.rating}</Badge> {/* Changed to red */}
               <Text size="sm">{movie.durationMinutes} minutes</Text>
             </Group>
 
@@ -153,7 +156,9 @@ const MovieShowtimes = () => {
 
             <Group gap="xs" mb="md">
               {movie.genres.map((genre, index) => (
-                <Badge key={index} size="sm" variant="light">
+                <Badge key={index} size="sm" variant="light" color="red">
+                  {" "}
+                  {/* Changed to red */}
                   {genre}
                 </Badge>
               ))}
@@ -167,7 +172,7 @@ const MovieShowtimes = () => {
             p="lg"
             withBorder
             style={{
-              borderTop: `3px solid ${isDark ? "#d4af37" : "#0d6832"}`,
+              borderTop: `3px solid ${mainTicketColor}`, // Changed to main ticket color
             }}
           >
             <Title order={3} mb="md">
@@ -238,16 +243,26 @@ const MovieShowtimes = () => {
                                 <Button
                                   key={showtime.id}
                                   variant="outline"
-                                  color={isDark ? "yellow" : "green"}
+                                  color="red" // Changed to red
                                   onClick={() =>
                                     handleSelectShowtime(showtime.id)
                                   }
                                   leftSection={<IconTicket size={16} />}
                                   rightSection={
-                                    <Badge size="sm" variant="light">
-                                      ${showtime.baseTicketPrice.toFixed(2)}
+                                    <Badge
+                                      size="sm"
+                                      variant="light"
+                                      color="red"
+                                    >
+                                      {" "}
+                                      {/* Changed to red */}$
+                                      {showtime.baseTicketPrice.toFixed(2)}
                                     </Badge>
                                   }
+                                  style={{
+                                    borderColor: mainTicketColor, // Using main ticket color
+                                    color: mainTicketColor, // Using main ticket color
+                                  }}
                                 >
                                   {new Date(
                                     showtime.startTime
@@ -331,20 +346,29 @@ const MovieShowtimes = () => {
                                     <Button
                                       key={showtime.id}
                                       variant="outline"
-                                      color={isDark ? "yellow" : "green"}
+                                      color="red" // Changed to red
                                       onClick={() =>
                                         handleSelectShowtime(showtime.id)
                                       }
                                       leftSection={<IconClock size={16} />}
                                       rightSection={
                                         <Group gap={4}>
-                                          <Badge size="sm" variant="light">
+                                          <Badge
+                                            size="sm"
+                                            variant="light"
+                                            color="red"
+                                          >
+                                            {" "}
+                                            {/* Changed to red */}
                                             {showtime.theaterRoomName}
                                           </Badge>
                                           <Badge
                                             size="sm"
                                             variant="filled"
-                                            color="blue"
+                                            style={{
+                                              backgroundColor:
+                                                lighterPriceColor,
+                                            }} // Using lighter price color
                                           >
                                             $
                                             {showtime.baseTicketPrice.toFixed(
@@ -353,6 +377,10 @@ const MovieShowtimes = () => {
                                           </Badge>
                                         </Group>
                                       }
+                                      style={{
+                                        borderColor: mainTicketColor, // Using main ticket color
+                                        color: mainTicketColor, // Using main ticket color
+                                      }}
                                     >
                                       {new Date(
                                         showtime.startTime
