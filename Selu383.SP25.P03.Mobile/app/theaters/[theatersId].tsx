@@ -8,13 +8,18 @@ import {
     ScrollView
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import { theatersApi, Theater } from "@/services/api/theatersApi";
 import { showtimesApi, Showtime } from "@/services/api/showtimesApi";
+import { moviesApi, Movie } from "@/services/api/moviesApi";
+import { TouchableOpacity, Image } from "react-native";
 
 export default function TheaterDetailScreen() {
     const params = useLocalSearchParams();
     const theatersId = params.theatersId;
     const id = parseInt(String(theatersId));
+    const [moviesAtTheater, setMoviesAtTheater] = useState<Movie[]>([]);
+    const router = useRouter()
 
     const [theater, setTheater] = useState<Theater | null>(null);
     const [loading, setLoading] = useState(true);
@@ -28,14 +33,24 @@ export default function TheaterDetailScreen() {
             }
 
             try {
-                //fetch theater
+                //fetch theaters
                 const theaterData = await theatersApi.getById(id);
                 setTheater(theaterData);
 
                 //fetch showtimes
                 const theaterShowtimes = await showtimesApi.getByTheater(id);
                 setShowtimes(theaterShowtimes);
-                console.log(`Found ${theaterShowtimes.length} showtimes for theater ${id}`);
+
+                //movie ids
+                const movieIds = [...new Set(theaterShowtimes.map(showtime => showtime.movieId))];
+                console.log(`Found ${movieIds.length} unique movies at theater ${id}`);
+
+                //fetch movies
+                if (movieIds.length > 0) {
+                    const moviesPromises = movieIds.map(movieId => moviesApi.getById(movieId));
+                    const moviesData = await Promise.all(moviesPromises);
+                    setMoviesAtTheater(moviesData);
+                }
             } catch (error) {
                 console.error("Error fetching theater data:", error);
             } finally {
