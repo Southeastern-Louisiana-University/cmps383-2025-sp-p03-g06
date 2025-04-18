@@ -18,8 +18,8 @@ export const BottomNavBar = ({ activeRoute = "index" }: BottomNavBarProps) => {
   const router = useRouter();
 
   const navItems: NavItem[] = [
-    { label: "SEE A MOVIE", icon: "film-outline", route: "index" },
-    { label: "LOCATIONS", icon: "location-outline", route: "locations" },
+    { label: "SEE A MOVIE", icon: "film-outline", route: "/movies" },
+    { label: "LOCATIONS", icon: "location-outline", route: "/theaters" },
     { label: "FOOD & DRINKS", icon: "fast-food-outline", route: "concessions" },
     { label: "REWARDS", icon: "star-outline", route: "rewards" },
     { label: "MY DEN", icon: "person-outline", route: "account" },

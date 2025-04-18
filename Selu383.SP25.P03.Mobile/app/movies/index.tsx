@@ -42,16 +42,6 @@ export default function NowShowingScreen() {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity
-                style={styles.theaterButton}
-                onPress={() => {
-                    console.log("Navigating to theaters list");
-                    // @ts-ignore
-                    router.push("/theaters");
-                }}
-            >
-                <Text style={styles.buttonText}>View Our Theaters</Text>
-            </TouchableOpacity>
 
             <FlatList
                 data={movies}
