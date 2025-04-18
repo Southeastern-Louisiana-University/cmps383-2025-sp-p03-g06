@@ -74,7 +74,7 @@ const Navbar = () => {
           backgroundColor: scrolled
             ? "rgba(18, 18, 18, 0.95)"
             : "rgba(18, 18, 18, 1)",
-          color: theme.colors.primary[0],
+          color: theme.colors.brand[0],
           position: "sticky",
           top: 0,
           zIndex: 100,
@@ -90,7 +90,7 @@ const Navbar = () => {
               to="/"
               style={{
                 textDecoration: "none",
-                color: theme.colors.primary[0],
+                color: theme.colors.brand[0],
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
@@ -98,14 +98,14 @@ const Navbar = () => {
             >
               <IconMovie
                 size={32}
-                color={theme.colors.primary[5]}
+                color={theme.colors.brand[5]}
                 stroke={1.5}
               />
 
               <Text
                 fw={700}
                 style={{
-                  color: theme.colors.primary[0],
+                  color: theme.colors.brand[0],
 
                   letterSpacing: "0.5px",
                   fontFamily: "'Arial', sans-serif",
@@ -276,7 +276,7 @@ const Navbar = () => {
             opened={opened}
             onClick={toggle}
             hiddenFrom="sm"
-            color={theme.colors.primary[0]}
+            color={theme.colors.brand[0]}
             size="sm"
           />
         </Group>

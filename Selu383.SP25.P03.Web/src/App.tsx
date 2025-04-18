@@ -109,7 +109,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 // Enhanced theme
 const theme = createTheme({
   colors: {
-    primary: [
+    brand: [
       "#ffeaef", // primary-light
       "#ffbfcd",
       "#ff94ab",
