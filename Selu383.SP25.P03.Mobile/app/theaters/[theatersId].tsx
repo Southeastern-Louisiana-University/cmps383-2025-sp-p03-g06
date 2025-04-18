@@ -168,5 +168,49 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#AAAAAA',
         marginTop: 4,
+    }, movieCard: {
+        backgroundColor: '#1E1E1E',
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 16,
+        flexDirection: 'row',
+    },
+    poster: {
+        width: 100,
+        height: 150,
+        borderRadius: 8,
+    },
+    movieDetails: {
+        marginLeft: 12,
+        flex: 1,
+        justifyContent: 'space-between',
+    },
+    movieTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+        marginBottom: 6,
+    },
+    ratingContainer: {
+        backgroundColor: '#c70036',
+        alignSelf: 'flex-start',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 4,
+        marginBottom: 6,
+    },
+    rating: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        fontSize: 12,
+    },
+    duration: {
+        color: '#CCCCCC',
+        fontSize: 14,
+        marginBottom: 4,
+    },
+    genre: {
+        color: '#AAAAAA',
+        fontSize: 14,
     }
 });
