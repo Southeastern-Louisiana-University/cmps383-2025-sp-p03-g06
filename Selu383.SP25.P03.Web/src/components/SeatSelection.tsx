@@ -256,7 +256,9 @@ const SeatSelection = () => {
 
   // Group seats by row for display
   const seatsByRow = groupSeatsByRow(seats);
-  const sortedRows = Object.keys(seatsByRow).sort();
+  const sortedRows = Object.keys(seatsByRow)
+    .sort() // ["A","B","C",…]
+    .reverse(); // […,"C","B","A"]
 
   // Calculate total price
   const basePrice = showtime.baseTicketPrice;

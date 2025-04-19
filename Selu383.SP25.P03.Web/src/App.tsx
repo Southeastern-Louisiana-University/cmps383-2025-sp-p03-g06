@@ -19,6 +19,7 @@ import MovieShowtimes from "./components/MovieShowtimes";
 import SeatSelection from "./components/SeatSelection";
 import MyReservations from "./components/MyReservations";
 import TicketView from "./components/TicketView";
+import Footer from "./components/Footer";
 import {
   MantineProvider,
   createTheme,
@@ -30,37 +31,37 @@ import { ModalsProvider } from "@mantine/modals";
 import "./styles/animations.css";
 import "./App.css";
 
-// Page transition component
+// Component to animate page transitions
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const [displayLocation, setDisplayLocation] = useState(location);
-  const [transitionStage, setTransitionStage] = useState("fadeIn");
+  const [stage, setStage] = useState("fadeIn");
 
   useEffect(() => {
     if (location.pathname !== displayLocation.pathname) {
-      setTransitionStage("fadeOut");
-      setTimeout(() => {
+      setStage("fadeOut");
+      const timeout = setTimeout(() => {
         setDisplayLocation(location);
-        setTransitionStage("fadeIn");
+        setStage("fadeIn");
       }, 300);
+      return () => clearTimeout(timeout);
     }
   }, [location, displayLocation]);
 
-  return <div className={`page-transition ${transitionStage}`}>{children}</div>;
+  return <div className={`page-transition ${stage}`}>{children}</div>;
 };
 
-// Protected route component
+// Route wrapper handling auth & loading
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
-  const [showLoader, setShowLoader] = useState(loading);
+  const [showLoader, setShowLoader] = useState(false);
 
   useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => setShowLoader(true), 300);
       return () => clearTimeout(timer);
-    } else {
-      setShowLoader(false);
     }
+    setShowLoader(false);
   }, [loading]);
 
   if (showLoader) {
@@ -70,26 +71,20 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       </Center>
     );
   }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
-// Admin route component
+// Admin-only route
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, loading } = useAuth();
-  const [showLoader, setShowLoader] = useState(loading);
+  const [showLoader, setShowLoader] = useState(false);
 
   useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => setShowLoader(true), 300);
       return () => clearTimeout(timer);
-    } else {
-      setShowLoader(false);
     }
+    setShowLoader(false);
   }, [loading]);
 
   if (showLoader) {
@@ -99,44 +94,24 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       </Center>
     );
   }
-
-  if (!isAdmin) {
-    return <Navigate to="/theaters" replace />;
-  }
-
-  return <>{children}</>;
+  return isAdmin ? <>{children}</> : <Navigate to="/theaters" replace />;
 };
 
-// Enhanced theme with consistent colors
+// Unified red palette theme
 const theme = createTheme({
   colors: {
-    // Red color scheme based on landing page
     primary: [
-      "#ffeaef",
-      "#ffbfcd",
-      "#ff94ab",
-      "#ff698a",
-      "#ff3d68",
-      "#ff1147",
-      "#e03131", // primary-color (matches landing page red buttons)
-      "#c92a2a", // primary-dark
-      "#a10029",
-      "#540015",
+      "#ffe5e8",
+      "#ffc2c8",
+      "#ff9eaa",
+      "#ff7574",
+      "#ff4d58",
+      "#ff1a3c",
+      "#c70036",
+      "#a8002c",
+      "#860022",
+      "#600018",
     ],
-    // Gold accent colors for the lion theme
-    secondary: [
-      "#fff8e0",
-      "#ffefc0",
-      "#ffe7a0",
-      "#ffde80",
-      "#ffd55f",
-      "#d4af37", // Lion gold color
-      "#c49102",
-      "#a97c01",
-      "#8d6700",
-      "#6b4d00",
-    ],
-    // Dark theme colors
     dark: [
       "#c1c2c5",
       "#a6a7ab",
@@ -145,7 +120,7 @@ const theme = createTheme({
       "#373a40",
       "#2c2e33",
       "#25262b",
-      "#1a1b1e", // main background color
+      "#1a1b1e",
       "#141517",
       "#101113",
     ],
@@ -154,24 +129,17 @@ const theme = createTheme({
   primaryShade: 6,
   defaultRadius: "md",
   fontFamily: "Poppins, sans-serif",
-  headings: {
-    fontFamily: "Poppins, sans-serif",
-  },
+  headings: { fontFamily: "Poppins, sans-serif" },
 });
 
-// Main component with animation
+// Main app layout with forced dark mode
 const AppContent = () => {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
 
-  // Force dark mode for the entire application
   useEffect(() => {
-    document.documentElement.setAttribute("data-mantine-color-scheme", "dark");
     document.documentElement.setAttribute("data-color-scheme", "dark");
     document.documentElement.classList.add("dark-mode");
-  }, []);
-
-  useEffect(() => {
     setVisible(true);
   }, []);
 
@@ -246,18 +214,15 @@ const AppContent = () => {
           </main>
         )}
       </Transition>
+      <Footer />
     </div>
   );
 };
 
-// Root App component with providers
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
-      <MantineProvider
-        theme={theme}
-        defaultColorScheme="dark" // Force dark theme
-      >
+      <MantineProvider theme={theme} defaultColorScheme="dark">
         <ModalsProvider>
           <AuthProvider>
             <AppContent />
@@ -267,5 +232,3 @@ function App() {
     </BrowserRouter>
   );
 }
-
-export default App;

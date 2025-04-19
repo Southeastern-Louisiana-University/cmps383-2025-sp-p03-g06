@@ -90,7 +90,7 @@ const LandingPage = () => {
         }}
       >
         <Carousel
-          slideSize="33.333%"
+          slideSize="20%"
           slidesToScroll={1}
           align="start"
           slideGap="md"
