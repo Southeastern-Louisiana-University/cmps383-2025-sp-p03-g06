@@ -104,18 +104,21 @@ export default function TheaterDetailScreen() {
                             resizeMode="cover"
                         />
                         <View style={styles.movieDetails}>
-                            <TouchableOpacity
-                                style={styles.viewShowtimesButton}
-                                onPress={() => router.push(`/movies/${movie.id}?theaterId=${id}`)}
-                            >
-                                <Text style={styles.viewShowtimesText}>View Showtimes</Text>
-                            </TouchableOpacity>
                             <Text style={styles.movieTitle}>{movie.title}</Text>
                             <View style={styles.ratingContainer}>
                                 <Text style={styles.rating}>{movie.rating}</Text>
                             </View>
                             <Text style={styles.duration}>{movie.durationMinutes} min</Text>
-                            <Text style={styles.genre}>{movie.genres.join(', ')}</Text>
+
+                            <View style={styles.genreButtonRow}>
+                                <Text style={styles.genre}>{movie.genres.join(', ')}</Text>
+                                <TouchableOpacity
+                                    style={styles.viewShowtimesButton}
+                                    onPress={() => router.push(`/movies/${movie.id}?theaterId=${id}`)}
+                                >
+                                    <Text style={styles.viewShowtimesText}>View Showtimes</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </TouchableOpacity>
                 ))
@@ -234,21 +237,28 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginBottom: 4,
     },
-    genre: {
-        color: '#AAAAAA',
-        fontSize: 14,
+    genreButtonRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginTop: 12,
     },
     viewShowtimesButton: {
         backgroundColor: '#c70036',
-        paddingVertical: 6,
-        paddingHorizontal: 10,
-        borderRadius: 4,
-        alignSelf: 'flex-start',
-        marginTop: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 6,
     },
     viewShowtimesText: {
         color: '#FFFFFF',
         fontWeight: 'bold',
-        fontSize: 12,
-    }
+        fontSize: 14,
+       },
+    genre: {
+        color: '#AAAAAA',
+        fontSize: 14,
+        flex: 1, 
+        textAlign: 'left', 
+        marginBottom: 0, 
+    },
 });
