@@ -104,6 +104,12 @@ export default function TheaterDetailScreen() {
                             resizeMode="cover"
                         />
                         <View style={styles.movieDetails}>
+                            <TouchableOpacity
+                                style={styles.viewShowtimesButton}
+                                onPress={() => router.push(`/movies/${movie.id}?theaterId=${id}`)}
+                            >
+                                <Text style={styles.viewShowtimesText}>View Showtimes</Text>
+                            </TouchableOpacity>
                             <Text style={styles.movieTitle}>{movie.title}</Text>
                             <View style={styles.ratingContainer}>
                                 <Text style={styles.rating}>{movie.rating}</Text>
@@ -116,7 +122,7 @@ export default function TheaterDetailScreen() {
             )}
         </ScrollView>
     );
-} // This closing brace was missing
+} 
 
 const styles = StyleSheet.create({
     container: {
@@ -231,5 +237,18 @@ const styles = StyleSheet.create({
     genre: {
         color: '#AAAAAA',
         fontSize: 14,
+    },
+    viewShowtimesButton: {
+        backgroundColor: '#c70036',
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+        marginTop: 8,
+    },
+    viewShowtimesText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        fontSize: 12,
     }
 });
