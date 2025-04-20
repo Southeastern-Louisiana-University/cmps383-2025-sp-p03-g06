@@ -5,21 +5,21 @@ import {
     Text,
     StyleSheet,
     ActivityIndicator,
-    ScrollView
+    ScrollView,
+    TouchableOpacity,
+    Image
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { theatersApi, Theater } from "@/services/api/theatersApi";
 import { showtimesApi, Showtime } from "@/services/api/showtimesApi";
 import { moviesApi, Movie } from "@/services/api/moviesApi";
-import { TouchableOpacity, Image } from "react-native";
 
 export default function TheaterDetailScreen() {
     const params = useLocalSearchParams();
     const theatersId = params.theatersId;
     const id = parseInt(String(theatersId));
     const [moviesAtTheater, setMoviesAtTheater] = useState<Movie[]>([]);
-    const router = useRouter()
+    const router = useRouter();
 
     const [theater, setTheater] = useState<Theater | null>(null);
     const [loading, setLoading] = useState(true);
@@ -83,22 +83,40 @@ export default function TheaterDetailScreen() {
                 <Text style={styles.theaterName}>{theater.name}</Text>
                 <Text style={styles.theaterAddress}>{theater.address}</Text>
                 <Text style={styles.seatCount}>Capacity: {theater.seatCount} seats</Text>
-                <Text style={styles.showsCount}>
-                    {showtimes.length} showtimes available
-                </Text>
             </View>
 
             <Text style={styles.sectionTitle}>Movies Now Showing</Text>
-            <View style={styles.noMoviesContainer}>
-                <Text style={styles.noMoviesText}>
-                    {showtimes.length > 0
-                        ? "Loading movie details..."
-                        : "No movies are currently showing at this theater."}
-                </Text>
-            </View>
+
+            {moviesAtTheater.length === 0 ? (
+                <View style={styles.noMoviesContainer}>
+                    <Text style={styles.noMoviesText}>No movies are currently showing at this theater.</Text>
+                </View>
+            ) : (
+                moviesAtTheater.map(movie => (
+                    <TouchableOpacity
+                        key={movie.id}
+                        style={styles.movieCard}
+                        onPress={() => router.push(`/movies/${movie.id}`)}
+                    >
+                        <Image
+                            source={{ uri: movie.posterImageUrl || 'https://via.placeholder.com/120x180' }}
+                            style={styles.poster}
+                            resizeMode="cover"
+                        />
+                        <View style={styles.movieDetails}>
+                            <Text style={styles.movieTitle}>{movie.title}</Text>
+                            <View style={styles.ratingContainer}>
+                                <Text style={styles.rating}>{movie.rating}</Text>
+                            </View>
+                            <Text style={styles.duration}>{movie.durationMinutes} min</Text>
+                            <Text style={styles.genre}>{movie.genres.join(', ')}</Text>
+                        </View>
+                    </TouchableOpacity>
+                ))
+            )}
         </ScrollView>
     );
-}
+} // This closing brace was missing
 
 const styles = StyleSheet.create({
     container: {
@@ -168,7 +186,8 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#AAAAAA',
         marginTop: 4,
-    }, movieCard: {
+    },
+    movieCard: {
         backgroundColor: '#1E1E1E',
         borderRadius: 12,
         padding: 12,
