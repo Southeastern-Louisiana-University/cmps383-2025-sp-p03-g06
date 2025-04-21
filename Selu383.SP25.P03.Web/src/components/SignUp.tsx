@@ -174,11 +174,11 @@ const SignUp = () => {
         }}
       >
         <Group justify="center" mb={24}>
-          {/* Replace IconMovie with AnimatedLion */}
+          {/* Replace with AnimatedLion using red colors */}
           <AnimatedLion
             size={80}
-            primaryColor={isDark ? "#d4af37" : "#0d6832"}
-            secondaryColor={isDark ? "#8B4513" : "#6B4226"}
+            primaryColor="#d4af37"
+            secondaryColor="#6B4226"
           />
         </Group>
 
@@ -189,7 +189,7 @@ const SignUp = () => {
             fontSize: "1.8rem",
             fontWeight: 700,
             marginBottom: "8px",
-            color: isDark ? "#ffffff" : "#0d6832",
+            color: isDark ? "#ffffff" : "#e03131", // Changed from green to red
           }}
         >
           Join the Den
@@ -238,7 +238,7 @@ const SignUp = () => {
                   }`,
                   "&:focus": {
                     borderColor: isDark
-                      ? theme.colors.secondary[6]
+                      ? "#e03131" // Changed from secondary to red
                       : theme.colors.primary[6],
                   },
                 },
@@ -271,7 +271,7 @@ const SignUp = () => {
                     }`,
                     "&:focus": {
                       borderColor: isDark
-                        ? theme.colors.secondary[6]
+                        ? "#e03131" // Changed from secondary to red
                         : theme.colors.primary[6],
                     },
                   },
@@ -327,7 +327,7 @@ const SignUp = () => {
                   }`,
                   "&:focus": {
                     borderColor: isDark
-                      ? theme.colors.secondary[6]
+                      ? "#e03131" // Changed from secondary to red
                       : theme.colors.primary[6],
                   },
                 },
@@ -345,7 +345,7 @@ const SignUp = () => {
               fullWidth
               type="submit"
               loading={loading}
-              color={isDark ? "yellow" : "green"}
+              color="primary" // Changed from yellow to primary (red)
               mt="md"
               rightSection={loading ? null : <IconUserCheck size={18} />}
               disabled={
@@ -355,9 +355,9 @@ const SignUp = () => {
                 root: {
                   height: "42px",
                   fontSize: "1rem",
-                  background: isDark ? "#d4af37" : "#0d6832",
+                  background: "#e03131", // Changed from gold to red
                   "&:hover": {
-                    background: isDark ? "#b3901f" : "#0a5728",
+                    background: "#c92a2a", // Darker red for hover
                   },
                   "&:disabled": {
                     background: isDark
@@ -392,7 +392,7 @@ const SignUp = () => {
             component={Link}
             to="/login"
             variant="outline"
-            color={isDark ? "yellow" : "green"}
+            color="primary" // Changed from yellow to primary (red)
             fullWidth
             leftSection={<IconArrowLeft size={18} />}
             styles={{
@@ -400,6 +400,8 @@ const SignUp = () => {
                 height: "42px",
                 borderWidth: "1px",
                 transition: "background 0.2s ease",
+                borderColor: "#e03131", // Added explicit red border color
+                color: "#e03131", // Added explicit red text color
               },
             }}
           >

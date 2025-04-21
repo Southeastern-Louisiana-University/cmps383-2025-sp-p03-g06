@@ -54,8 +54,7 @@ const MovieList = () => {
   const [filteredMovies, setFilteredMovies] = useState<MovieDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { colorScheme } = useMantineColorScheme();
-  const isDark = colorScheme === "dark";
+  useMantineColorScheme();
 
   // Filtering/sorting states
   const [searchQuery, setSearchQuery] = useState("");
@@ -262,7 +261,7 @@ const MovieList = () => {
                   display: "flex",
                   flexDirection: "column",
                   height: "100%",
-                  borderTop: `3px solid ${isDark ? "#d4af37" : "#0d6832"}`,
+                  borderTop: `3px solid #e03131`, // Changed from gold to red
                 }}
               >
                 <Card.Section>
