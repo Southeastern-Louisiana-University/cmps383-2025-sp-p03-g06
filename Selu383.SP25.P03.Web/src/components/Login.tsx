@@ -59,7 +59,7 @@ const Login = () => {
         withBorder
         style={{
           marginTop: "2.5rem",
-          borderTop: `3px solid ${theme.colors.primary[5]}`,
+          borderTop: `3px solid ${theme.colors.brand[5]}`,
           background: theme.colors.dark[8],
           backdropFilter: "blur(10px)",
           boxShadow: theme.shadows.md,
@@ -78,7 +78,7 @@ const Login = () => {
           style={{
             fontSize: "1.8rem",
             fontWeight: 700,
-            color: theme.colors.primary[0],
+            color: theme.colors.brand[0],
           }}
         >
           Welcome Back

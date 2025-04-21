@@ -1,4 +1,4 @@
-// src/components/Navbar.tsx
+// src/components/Navbar.tsx - Updated with matching button colors
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -14,6 +14,7 @@ import {
   Drawer,
   Stack,
   Avatar,
+  useMantineTheme,
 } from "@mantine/core";
 import {
   IconLogout,
@@ -25,6 +26,7 @@ import {
   IconUserPlus,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -32,11 +34,12 @@ const Navbar = () => {
   const [modalOpened, modalHandlers] = useDisclosure(false);
   const closeModal = modalHandlers.close;
   const location = useLocation();
+  const theme = useMantineTheme();
 
   const [opened, { toggle, close }] = useDisclosure(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Consistent red accent color
+  // Red color code to match landing page
   const redButtonColor = "#e03131";
 
   // Handle scroll effect
@@ -71,12 +74,13 @@ const Navbar = () => {
           backgroundColor: scrolled
             ? "rgba(18, 18, 18, 0.95)"
             : "rgba(18, 18, 18, 1)",
-          color: "#ffffff",
+          color: theme.colors.brand[0],
           position: "sticky",
           top: 0,
           zIndex: 100,
-          borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+          borderBottom: `1px solid ${theme.colors.dark[4]}`,
           boxShadow: scrolled ? "0 4px 10px rgba(0, 0, 0, 0.1)" : "none",
+
           backdropFilter: "blur(8px)",
         }}
       >
@@ -86,20 +90,25 @@ const Navbar = () => {
               to="/"
               style={{
                 textDecoration: "none",
-                color: "#ffffff",
+                color: theme.colors.brand[0],
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
               }}
             >
-              <IconMovie size={32} color={redButtonColor} stroke={1.5} />
+              <IconMovie
+                size={32}
+                color={theme.colors.brand[5]}
+                stroke={1.5}
+              />
 
               <Text
                 fw={700}
-                className="navbar-title"
                 style={{
+                  color: theme.colors.brand[0],
+
                   letterSpacing: "0.5px",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Arial', sans-serif",
                   fontSize: "1.25rem",
                 }}
               >
@@ -111,15 +120,18 @@ const Navbar = () => {
           {/* Desktop menu */}
           <Group visibleFrom="sm">
             <Group gap="md">
+              <ThemeToggle />
+
               {isAuthenticated ? (
                 <>
+                  {/* Use color="primary" for consistent coloring */}
                   <Button
                     component={Link}
                     to="/"
                     variant={activeLink("/") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconHome size={18} />}
-                    style={{ color: "white" }}
+                    style={{ color: "white" }} // This will make the text white
                   >
                     Home
                   </Button>
@@ -130,7 +142,7 @@ const Navbar = () => {
                     variant={activeLink("/movies") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconMovie size={18} />}
-                    style={{ color: "white" }}
+                    style={{ color: "white" }} // This changes the text color to white
                   >
                     Movies
                   </Button>
@@ -166,12 +178,7 @@ const Navbar = () => {
                         variant="subtle"
                         color="primary"
                         leftSection={
-                          <Avatar
-                            size="sm"
-                            color="primary"
-                            radius="xl"
-                            style={{ backgroundColor: redButtonColor }}
-                          >
+                          <Avatar size="sm" color="primary" radius="xl">
                             {user?.userName.charAt(0).toUpperCase()}
                           </Avatar>
                         }
@@ -184,7 +191,7 @@ const Navbar = () => {
                     <Menu.Dropdown>
                       <Menu.Label>Account</Menu.Label>
                       <Menu.Item
-                        color="red"
+                        color="primary"
                         leftSection={<IconLogout size={14} />}
                         onClick={handleLogout}
                       >
@@ -201,11 +208,10 @@ const Navbar = () => {
                     variant={activeLink("/movies") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconMovie size={18} />}
-                    style={{ color: "white" }}
+                    style={{ color: "white" }} // This changes the text color to white
                   >
                     Movies
                   </Button>
-
                   <Button
                     component={Link}
                     to="/theaters"
@@ -217,7 +223,7 @@ const Navbar = () => {
                     Our Theaters
                   </Button>
 
-                  {/* Sign up button */}
+                  {/* Sign up button - Match red color */}
                   <Button
                     component={Link}
                     to="/signup"
@@ -238,7 +244,7 @@ const Navbar = () => {
                     Sign Up
                   </Button>
 
-                  {/* Login button - Same red as landing page */}
+                  {/* Login button - Match same red as landing page */}
                   <Button
                     component={Link}
                     to="/login"
@@ -250,8 +256,11 @@ const Navbar = () => {
                     styles={{
                       root: {
                         "&:hover": {
-                          backgroundColor: "#c92a2a",
+                          backgroundColor: "#c92a2a", // Slightly darker red on hover
                         },
+                      },
+                      label: {
+                        color: "white",
                       },
                     }}
                   >
@@ -267,7 +276,7 @@ const Navbar = () => {
             opened={opened}
             onClick={toggle}
             hiddenFrom="sm"
-            color="#ffffff"
+            color={theme.colors.brand[0]}
             size="sm"
           />
         </Group>
@@ -281,38 +290,21 @@ const Navbar = () => {
         size="xs"
         padding="md"
         title={
-          <Text
-            fw={700}
-            size="lg"
-            style={{
-              color: redButtonColor,
-            }}
-          >
+          <Text fw={700} size="lg" c="primary">
             Lions Den Cinemas
           </Text>
         }
         hiddenFrom="sm"
         withCloseButton
         position="right"
-        styles={{
-          body: {
-            backgroundColor: "#1a1b1e",
-          },
-          header: {
-            backgroundColor: "#1a1b1e",
-          },
-        }}
       >
+        {/* Similarly update colors in drawer content */}
         <Stack>
           {isAuthenticated ? (
+            // Similar color updates for mobile drawer
             <>
               <Group mb="md">
-                <Avatar
-                  size="md"
-                  color="primary"
-                  radius="xl"
-                  style={{ backgroundColor: redButtonColor }}
-                >
+                <Avatar size="md" color="primary" radius="xl">
                   {user?.userName.charAt(0).toUpperCase()}
                 </Avatar>
                 <div>
@@ -342,6 +334,15 @@ const Navbar = () => {
                 to="/movies"
                 variant={activeLink("/movies") ? "filled" : "subtle"}
                 color="primary"
+                leftSection={<IconMovie size={18} />}
+                style={{ color: "white" }} // This changes the text color to white
+              >
+                Theaters
+              </Button>
+
+              <Button
+                variant="subtle"
+                color="primary"
                 fullWidth
                 leftSection={<IconMovie size={18} />}
                 onClick={close}
@@ -350,21 +351,7 @@ const Navbar = () => {
               </Button>
 
               <Button
-                component={Link}
-                to="/theaters"
-                variant={activeLink("/theaters") ? "filled" : "subtle"}
-                color="primary"
-                fullWidth
-                leftSection={<IconTheater size={18} />}
-                onClick={close}
-              >
-                Theaters
-              </Button>
-
-              <Button
-                component={Link}
-                to="/my-reservations"
-                variant={activeLink("/my-reservations") ? "filled" : "subtle"}
+                variant="subtle"
                 color="primary"
                 fullWidth
                 leftSection={<IconTicket size={18} />}
@@ -414,6 +401,13 @@ const Navbar = () => {
                   borderColor: redButtonColor,
                   color: redButtonColor,
                 }}
+                styles={{
+                  root: {
+                    "&:hover": {
+                      backgroundColor: `${redButtonColor}10`,
+                    },
+                  },
+                }}
               >
                 Sign Up
               </Button>
@@ -427,6 +421,16 @@ const Navbar = () => {
                   backgroundColor: redButtonColor,
                   color: "white",
                   fontWeight: 600,
+                }}
+                styles={{
+                  root: {
+                    "&:hover": {
+                      backgroundColor: "#c92a2a",
+                    },
+                  },
+                  label: {
+                    color: "white",
+                  },
                 }}
               >
                 LOGIN
