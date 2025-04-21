@@ -1,40 +1,33 @@
 // components/movie/MovieCard.styles.ts
-// #c70036 is the brand color
 import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#1a1a1a",
-    borderRadius: 8,
+    backgroundColor: "#121212",
+    borderRadius: 12,
+    padding: 8,
     marginBottom: 16,
-    overflow: "hidden",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  cardContent: {
-    flexDirection: "row",
-    padding: 12,
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   poster: {
-    width: 100,
-    height: 150,
-    marginRight: 12,
-    borderRadius: 4,
+    width: 140,
+    height: 210,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   posterPlaceholder: {
-    width: 100,
-    height: 150,
-    marginRight: 12,
+    width: 140,
+    height: 210,
+    borderRadius: 8,
     backgroundColor: "#333",
-    borderRadius: 4,
+    marginBottom: 8,
   },
   title: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
-    color: "#c70036", // brand color
-    marginBottom: 4,
+    color: "#c70036",
+    textAlign: "center",
   },
 });
