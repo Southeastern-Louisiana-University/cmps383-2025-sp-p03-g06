@@ -4,6 +4,16 @@ module.exports = function (api) {
     presets: ["babel-preset-expo"],
     plugins: [
       [
+        "module:react-native-dotenv",
+        {
+          moduleName: "@env",
+          path: ".env",
+          allowUndefined: true,
+        },
+      ],
+      "react-native-reanimated/plugin",
+      "@babel/plugin-transform-runtime",
+      [
         "module-resolver",
         {
           alias: {
@@ -11,7 +21,6 @@ module.exports = function (api) {
           },
         },
       ],
-      "@babel/plugin-transform-runtime",
     ],
   };
 };
