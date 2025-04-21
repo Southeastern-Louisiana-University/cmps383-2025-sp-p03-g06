@@ -5,10 +5,10 @@ import {
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    Image,
     FlatList,
     SafeAreaView,
-    ActivityIndicator
+    ActivityIndicator,
+    Modal
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +28,9 @@ export default function TheaterShowtimesScreen() {
     const [loading, setLoading] = useState(true);
     const [selectedMovie, setSelectedMovie] = useState(null);
     const [availableDates, setAvailableDates] = useState([]);
+
+    const [dateModalVisible, setDateModalVisible] = useState(false);
+    const [movieModalVisible, setMovieModalVisible] = useState(false);
 
     useEffect(() => {
         async function loadData() {
@@ -124,60 +127,65 @@ export default function TheaterShowtimesScreen() {
                 </View>
             </View>
 
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.dateSelector}
-                contentContainerStyle={styles.dateSelectorContent}
-            >
-                {availableDates.map(date => (
-                    <TouchableOpacity
-                        key={date}
-                        style={[
-                            styles.dateButton,
-                            selectedDate === date && styles.selectedDateButton
-                        ]}
-                        onPress={() => setSelectedDate(date)}
-                    >
-                        <Text
-                            style={[
-                                styles.dateButtonText,
-                                selectedDate === date && styles.selectedDateText
-                            ]}
-                        >
-                            {formatDate(date)}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
+            <View style={styles.filterContainer}>
+                <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => setDateModalVisible(true)}
+                >
+                    <Text style={styles.dropdownButtonText}>
+                        Date: {formatDate(selectedDate)}
+                    </Text>
+                    <Ionicons name="chevron-down" size={20} color="#fff" />
+                </TouchableOpacity>
 
-            <View style={styles.movieSelector}>
-                <FlatList
-                    horizontal
-                    data={movies}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={[
-                                styles.movieTab,
-                                selectedMovie?.id === item.id && styles.selectedMovieTab
-                            ]}
-                            onPress={() => setSelectedMovie(item)}
-                        >
-                            <Text
-                                style={[
-                                    styles.movieTabText,
-                                    selectedMovie?.id === item.id && styles.selectedMovieTabText
-                                ]}
-                                numberOfLines={1}
-                            >
-                                {item.title}
-                            </Text>
-                        </TouchableOpacity>
-                    )}
-                    showsHorizontalScrollIndicator={false}
-                />
+                <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => setMovieModalVisible(true)}
+                >
+                    <Text style={styles.dropdownButtonText} numberOfLines={1}>
+                        Movie: {selectedMovie?.title || "All Movies"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={20} color="#fff" />
+                </TouchableOpacity>
             </View>
+
+            <Modal visible={dateModalVisible} animationType="slide" transparent={true}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        {availableDates.map(date => (
+                            <TouchableOpacity
+                                key={date}
+                                onPress={() => {
+                                    setSelectedDate(date);
+                                    setDateModalVisible(false);
+                                }}
+                                style={styles.modalOption}
+                            >
+                                <Text style={styles.modalOptionText}>{formatDate(date)}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal visible={movieModalVisible} animationType="slide" transparent={true}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        {movies.map(movie => (
+                            <TouchableOpacity
+                                key={movie.id}
+                                onPress={() => {
+                                    setSelectedMovie(movie);
+                                    setMovieModalVisible(false);
+                                }}
+                                style={styles.modalOption}
+                            >
+                                <Text style={styles.modalOptionText}>{movie.title}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            </Modal>
 
             {selectedMovie && (
                 <ScrollView style={styles.movieDetails}>
@@ -248,53 +256,47 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginHorizontal: 8,
     },
-    dateSelector: {
-        paddingVertical: 12,
+
+    filterContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#333',
     },
-    dateSelectorContent: {
-        paddingHorizontal: 16,
-    },
-    dateButton: {
-        backgroundColor: '#333333',
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        marginRight: 10,
-    },
-    selectedDateButton: {
-        backgroundColor: '#c70036',
-    },
-    dateButtonText: {
-        color: '#FFFFFF',
-        fontWeight: '500',
-    },
-    selectedDateText: {
-        fontWeight: 'bold',
-    },
-    movieSelector: {
-        borderBottomWidth: 1,
-        borderBottomColor: '#333',
-        paddingVertical: 12,
-    },
-    movieTab: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        marginHorizontal: 6,
-        borderRadius: 20,
+    dropdownButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         backgroundColor: '#333',
+        borderRadius: 8,
+        padding: 12,
+        flex: 0.48,
     },
-    selectedMovieTab: {
-        backgroundColor: '#c70036',
-    },
-    movieTabText: {
+    dropdownButtonText: {
         color: '#fff',
-        fontWeight: '500',
+        marginRight: 8,
+        flex: 1,
     },
-    selectedMovieTabText: {
-        fontWeight: 'bold',
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0,0.6)',
     },
+    modalContent: {
+        margin: 20,
+        backgroundColor: '#1E1E1E',
+        borderRadius: 10,
+        padding: 20,
+    },
+    modalOption: {
+        paddingVertical: 12,
+    },
+    modalOptionText: {
+        color: '#fff',
+        fontSize: 16,
+    },
+
     movieDetails: {
         padding: 16,
     },
@@ -365,5 +367,5 @@ const styles = StyleSheet.create({
     movieDescriptionText: {
         color: '#ccc',
         lineHeight: 20,
-    }
+    },
 });
