@@ -96,9 +96,9 @@ export default function TheatersScreen() {
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         style={styles.theaterCard}
-                         onPress={() => {
+                        onPress={() => {
                             console.log("Navigating to theater details:", item.id);
-                            router.push(`/theaters/${item.id}/showtimes`);
+                            router.push(`/theaters/${item.id}`);
                         }}
                     >
                         <View style={styles.theaterCardContent}>
@@ -123,7 +123,7 @@ export default function TheatersScreen() {
                             <TouchableOpacity
                                 style={styles.showtimesButton}
                                 onPress={() => {
-                                    router.push(`/theaters/${item.id}/showtimes`);
+                                    router.push(`/theaters/${item.id}`);
                                 }}
                             >
                                 <Text style={styles.showtimesButtonText}>VIEW SHOWTIMES</Text>
