@@ -189,6 +189,56 @@ export default function TheaterShowtimesScreen() {
                 </TouchableOpacity>
             </Modal>
 
+            {/* Movie Modal */}
+            <Modal
+                visible={movieModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setMovieModalVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={closeAllModals}
+                >
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Select Movie</Text>
+                            <TouchableOpacity onPress={() => setMovieModalVisible(false)}>
+                                <Ionicons name="close" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <FlatList
+                            data={movies}
+                            keyExtractor={(item) => item.id.toString()}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.modalItem,
+                                        selectedMovie?.id === item.id && styles.selectedModalItem
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedMovie(item);
+                                        setMovieModalVisible(false);
+                                    }}
+                                >
+                                    <Text style={[
+                                        styles.modalItemText,
+                                        selectedMovie?.id === item.id && styles.selectedModalItemText
+                                    ]}>
+                                        {item.title}
+                                    </Text>
+                                    {selectedMovie?.id === item.id && (
+                                        <Ionicons name="checkmark" size={20} color="#c70036" />
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                        />
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
             {/* Movie Details & Showtimes */}
             {selectedMovie && (
                 <ScrollView style={styles.movieDetails}>
