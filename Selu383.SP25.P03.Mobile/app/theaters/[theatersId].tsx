@@ -42,16 +42,10 @@ export default function TheaterShowtimesScreen() {
                 setShowtimes(theaterShowtimes);
 
                 const movieIds = [...new Set(theaterShowtimes.map(s => s.movieId))];
-
-                const moviesData = await Promise.all(
-                    movieIds.map(id => moviesApi.getById(id))
-                );
-
+                const moviesData = await Promise.all(movieIds.map(id => moviesApi.getById(id)));
                 setMovies(moviesData);
 
-                if (moviesData.length > 0) {
-                    setSelectedMovie(moviesData[0]);
-                }
+                if (moviesData.length > 0) setSelectedMovie(moviesData[0]);
 
                 const dates = [...new Set(
                     theaterShowtimes.map(st => new Date(st.startTime).toISOString().split('T')[0])
@@ -67,20 +61,22 @@ export default function TheaterShowtimesScreen() {
         loadData();
     }, [theaterId]);
 
+    const closeAllModals = () => {
+        setDateModalVisible(false);
+        setMovieModalVisible(false);
+    };
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
-        if (date.toDateString() === today.toDateString()) {
-            return "Today";
-        } else {
-            return date.toLocaleDateString(undefined, {
+        return date.toDateString() === today.toDateString()
+            ? "Today"
+            : date.toLocaleDateString(undefined, {
                 weekday: 'short',
                 month: 'short',
                 day: 'numeric'
             });
-        }
     };
 
     const formatTime = (dateString) => {
@@ -96,9 +92,7 @@ export default function TheaterShowtimesScreen() {
     );
 
     const showtimesByMovie = filteredShowtimes.reduce((acc, showtime) => {
-        if (!acc[showtime.movieId]) {
-            acc[showtime.movieId] = [];
-        }
+        if (!acc[showtime.movieId]) acc[showtime.movieId] = [];
         acc[showtime.movieId].push(showtime);
         return acc;
     }, {});
@@ -113,12 +107,7 @@ export default function TheaterShowtimesScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Stack.Screen
-                options={{
-                    title: theater?.name || "Showtimes",
-                    headerShown: true,
-                }}
-            />
+            <Stack.Screen options={{ title: theater?.name || "Showtimes", headerShown: true }} />
 
             <View style={styles.theaterHeader}>
                 <View style={styles.theaterSelector}>
@@ -127,6 +116,7 @@ export default function TheaterShowtimesScreen() {
                 </View>
             </View>
 
+            {/* Filter Dropdown UI */}
             <View style={styles.filterContainer}>
                 <TouchableOpacity
                     style={styles.dropdownButton}
@@ -149,44 +139,57 @@ export default function TheaterShowtimesScreen() {
                 </TouchableOpacity>
             </View>
 
-            <Modal visible={dateModalVisible} animationType="slide" transparent={true}>
-                <View style={styles.modalOverlay}>
+            {/* Date Modal */}
+            <Modal
+                visible={dateModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setDateModalVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={closeAllModals}
+                >
                     <View style={styles.modalContent}>
-                        {availableDates.map(date => (
-                            <TouchableOpacity
-                                key={date}
-                                onPress={() => {
-                                    setSelectedDate(date);
-                                    setDateModalVisible(false);
-                                }}
-                                style={styles.modalOption}
-                            >
-                                <Text style={styles.modalOptionText}>{formatDate(date)}</Text>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Select Date</Text>
+                            <TouchableOpacity onPress={() => setDateModalVisible(false)}>
+                                <Ionicons name="close" size={24} color="#fff" />
                             </TouchableOpacity>
-                        ))}
+                        </View>
+
+                        <FlatList
+                            data={availableDates}
+                            keyExtractor={(item) => item}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.modalItem,
+                                        selectedDate === item && styles.selectedModalItem
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedDate(item);
+                                        setDateModalVisible(false);
+                                    }}
+                                >
+                                    <Text style={[
+                                        styles.modalItemText,
+                                        selectedDate === item && styles.selectedModalItemText
+                                    ]}>
+                                        {formatDate(item)}
+                                    </Text>
+                                    {selectedDate === item && (
+                                        <Ionicons name="checkmark" size={20} color="#c70036" />
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                        />
                     </View>
-                </View>
+                </TouchableOpacity>
             </Modal>
 
-            <Modal visible={movieModalVisible} animationType="slide" transparent={true}>
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        {movies.map(movie => (
-                            <TouchableOpacity
-                                key={movie.id}
-                                onPress={() => {
-                                    setSelectedMovie(movie);
-                                    setMovieModalVisible(false);
-                                }}
-                                style={styles.modalOption}
-                            >
-                                <Text style={styles.modalOptionText}>{movie.title}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-            </Modal>
-
+            {/* Movie Details & Showtimes */}
             {selectedMovie && (
                 <ScrollView style={styles.movieDetails}>
                     <View style={styles.movieHeader}>
@@ -256,7 +259,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginHorizontal: 8,
     },
-
     filterContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -280,23 +282,47 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        justifyContent: 'center',
-        backgroundColor: 'rgba(0,0,0,0.6)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
     },
     modalContent: {
-        margin: 20,
         backgroundColor: '#1E1E1E',
-        borderRadius: 10,
-        padding: 20,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        maxHeight: '70%',
     },
-    modalOption: {
-        paddingVertical: 12,
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
     },
-    modalOptionText: {
+    modalTitle: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    modalItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
+    },
+    selectedModalItem: {
+        backgroundColor: '#2A2A2A',
+    },
+    modalItemText: {
         color: '#fff',
         fontSize: 16,
     },
-
+    selectedModalItemText: {
+        color: '#c70036',
+        fontWeight: 'bold',
+    },
     movieDetails: {
         padding: 16,
     },
