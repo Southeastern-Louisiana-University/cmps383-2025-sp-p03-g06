@@ -8,7 +8,7 @@ const generateDummySeats = () => {
     const seats = [];
     for (let row = 0; row < rowLabels.length; row++) {
         for (let seatNum = 1; seatNum <= seatsPerRow; seatNum++) {
-            const isAvailable = Math.random() > 0.2; // Random availability
+            const isAvailable = Math.random() > 0.2; 
             seats.push({
                 id: `${rowLabels[row]}-${seatNum}`,
                 row: rowLabels[row],
@@ -20,8 +20,17 @@ const generateDummySeats = () => {
     return seats;
 };
 
-export default function SeatSelectionScreen() {
-    const availableSeats = generateDummySeats();
+    export default function SeatSelectionScreen() {
+        const [selectedSeats, setSelectedSeats] = useState([]);
+        const availableSeats = generateDummySeats();
+
+        const toggleSeatSelection = (seatId) => {
+            if (selectedSeats.includes(seatId)) {
+                setSelectedSeats(selectedSeats.filter(id => id !== seatId));
+            } else {
+                setSelectedSeats([...selectedSeats, seatId]);
+            }
+        };
 
     return (
         <SafeAreaView style={styles.container}>
