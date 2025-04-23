@@ -1,4 +1,5 @@
 ﻿// Features/Movies/Movie.cs
+
 using Selu383.SP25.P03.Api.Features.Showtimes;
 using System.ComponentModel.DataAnnotations;
 
@@ -29,5 +30,7 @@ namespace Selu383.SP25.P03.Api.Features.Movies
         // Navigation properties
         public virtual ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
         public virtual ICollection<Showtime> Showtimes { get; set; } = new List<Showtime>();
+        public virtual ICollection<TheaterMovie> TheaterMovies { get; set; } = new List<TheaterMovie>();
+
     }
 }

@@ -1,5 +1,4 @@
-﻿// Controllers/ShowtimesController.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
@@ -12,12 +11,20 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/showtimes")]
     [ApiController]
-    public class ShowtimesController(DataContext context) : ControllerBase
+    public class ShowtimesController : ControllerBase
     {
-        private readonly DataContext _context = context;
-        private readonly DbSet<Showtime> _showtimes = context.Set<Showtime>();
-        private readonly DbSet<Movie> _movies = context.Set<Movie>();
-        private readonly DbSet<TheaterRoom> _theaterRooms = context.Set<TheaterRoom>();
+        private readonly DataContext _context;
+        private readonly DbSet<Showtime> _showtimes;
+        private readonly DbSet<Movie> _movies;
+        private readonly DbSet<TheaterRoom> _theaterRooms;
+
+        public ShowtimesController(DataContext context)
+        {
+            _context = context;
+            _showtimes = context.Set<Showtime>();
+            _movies = context.Set<Movie>();
+            _theaterRooms = context.Set<TheaterRoom>();
+        }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ShowtimeDTO>>> GetShowtimes()
@@ -25,7 +32,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             var showtimes = await _showtimes
                 .Include(s => s.Movie)
                 .Include(s => s.TheaterRoom)
-                .ThenInclude(tr => tr!.Theater)
+                    .ThenInclude(tr => tr!.Theater)
                 .Select(s => new ShowtimeDTO
                 {
                     Id = s.Id,
@@ -51,7 +58,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             var showtimes = await _showtimes
                 .Include(s => s.Movie)
                 .Include(s => s.TheaterRoom)
-                .ThenInclude(tr => tr!.Theater)
+                    .ThenInclude(tr => tr!.Theater)
                 .Where(s => s.StartTime > now)
                 .OrderBy(s => s.StartTime)
                 .Select(s => new ShowtimeDTO
@@ -77,14 +84,12 @@ namespace Selu383.SP25.P03.Api.Controllers
         {
             var movie = await _movies.FindAsync(movieId);
             if (movie == null)
-            {
                 return NotFound("Movie not found");
-            }
 
             var showtimes = await _showtimes
                 .Include(s => s.Movie)
                 .Include(s => s.TheaterRoom)
-                .ThenInclude(tr => tr!.Theater)
+                    .ThenInclude(tr => tr!.Theater)
                 .Where(s => s.MovieId == movieId && s.StartTime > DateTime.UtcNow)
                 .OrderBy(s => s.StartTime)
                 .Select(s => new ShowtimeDTO
@@ -111,7 +116,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             var showtimes = await _showtimes
                 .Include(s => s.Movie)
                 .Include(s => s.TheaterRoom)
-                .ThenInclude(tr => tr!.Theater)
+                    .ThenInclude(tr => tr!.Theater)
                 .Where(s => s.TheaterRoom!.TheaterId == theaterId && s.StartTime > DateTime.UtcNow)
                 .OrderBy(s => s.StartTime)
                 .Select(s => new ShowtimeDTO
@@ -138,7 +143,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             var showtime = await _showtimes
                 .Include(s => s.Movie)
                 .Include(s => s.TheaterRoom)
-                .ThenInclude(tr => tr!.Theater)
+                    .ThenInclude(tr => tr!.Theater)
                 .Where(s => s.Id == id)
                 .Select(s => new ShowtimeDTO
                 {
@@ -156,9 +161,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 .FirstOrDefaultAsync();
 
             if (showtime == null)
-            {
                 return NotFound();
-            }
 
             return Ok(showtime);
         }
@@ -167,35 +170,43 @@ namespace Selu383.SP25.P03.Api.Controllers
         [Authorize(Roles = $"{UserRoleNames.Admin},{UserRoleNames.Manager}")]
         public async Task<ActionResult<ShowtimeDTO>> CreateShowtime(ShowtimeDTO showtimeDto)
         {
+            // Validate movie exists
             var movie = await _movies.FindAsync(showtimeDto.MovieId);
             if (movie == null)
-            {
                 return BadRequest("Movie not found");
-            }
 
+            // Validate theater room exists and load its theater
             var theaterRoom = await _theaterRooms
                 .Include(tr => tr.Theater)
                 .FirstOrDefaultAsync(tr => tr.Id == showtimeDto.TheaterRoomId);
-
             if (theaterRoom == null)
-            {
                 return BadRequest("Theater room not found");
+
+            // Check theater restrictions
+            bool hasRestrictions = await _context.TheaterMovies
+                .AnyAsync(tm => tm.MovieId == showtimeDto.MovieId);
+            if (hasRestrictions)
+            {
+                bool allowed = await _context.TheaterMovies
+                    .AnyAsync(tm => tm.MovieId == showtimeDto.MovieId && tm.TheaterId == theaterRoom.TheaterId);
+                if (!allowed)
+                    return BadRequest("This movie is not allowed to play at this theater");
             }
 
+            // Calculate end time
             var endTime = showtimeDto.StartTime.AddMinutes(movie.DurationMinutes);
 
-            var hasConflict = await _showtimes
+            // Check for conflicts in the same room
+            var conflict = await _showtimes
                 .Where(s => s.TheaterRoomId == showtimeDto.TheaterRoomId)
                 .AnyAsync(s =>
                     (showtimeDto.StartTime >= s.StartTime && showtimeDto.StartTime < s.EndTime) ||
                     (endTime > s.StartTime && endTime <= s.EndTime) ||
                     (showtimeDto.StartTime <= s.StartTime && endTime >= s.EndTime));
-
-            if (hasConflict)
-            {
+            if (conflict)
                 return BadRequest("Time slot conflicts with another showtime in this room");
-            }
 
+            // Create and save
             var showtime = new Showtime
             {
                 MovieId = showtimeDto.MovieId,
@@ -204,10 +215,10 @@ namespace Selu383.SP25.P03.Api.Controllers
                 EndTime = endTime,
                 BaseTicketPrice = showtimeDto.BaseTicketPrice
             };
-
             _showtimes.Add(showtime);
             await _context.SaveChangesAsync();
 
+            // Return DTO with populated navigation data
             return CreatedAtAction(nameof(GetShowtime), new { id = showtime.Id }, new ShowtimeDTO
             {
                 Id = showtime.Id,
@@ -228,41 +239,29 @@ namespace Selu383.SP25.P03.Api.Controllers
         public async Task<ActionResult<ShowtimeDTO>> UpdateShowtime(int id, ShowtimeDTO showtimeDto)
         {
             if (id != showtimeDto.Id)
-            {
                 return BadRequest("ID mismatch");
-            }
 
             var showtime = await _showtimes.FindAsync(id);
             if (showtime == null)
-            {
                 return NotFound();
-            }
 
             var movie = await _movies.FindAsync(showtimeDto.MovieId);
             if (movie == null)
-            {
                 return BadRequest("Movie not found");
-            }
 
             var theaterRoom = await _theaterRooms.FindAsync(showtimeDto.TheaterRoomId);
             if (theaterRoom == null)
-            {
                 return BadRequest("Theater room not found");
-            }
 
             var endTime = showtimeDto.StartTime.AddMinutes(movie.DurationMinutes);
-
-            var hasConflict = await _showtimes
+            var conflict = await _showtimes
                 .Where(s => s.TheaterRoomId == showtimeDto.TheaterRoomId && s.Id != id)
                 .AnyAsync(s =>
                     (showtimeDto.StartTime >= s.StartTime && showtimeDto.StartTime < s.EndTime) ||
                     (endTime > s.StartTime && endTime <= s.EndTime) ||
                     (showtimeDto.StartTime <= s.StartTime && endTime >= s.EndTime));
-
-            if (hasConflict)
-            {
+            if (conflict)
                 return BadRequest("Time slot conflicts with another showtime in this room");
-            }
 
             showtime.MovieId = showtimeDto.MovieId;
             showtime.TheaterRoomId = showtimeDto.TheaterRoomId;
@@ -277,13 +276,8 @@ namespace Selu383.SP25.P03.Api.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!ShowtimeExists(id))
-                {
                     return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
             return Ok(await GetShowtimeDto(id));
@@ -295,9 +289,7 @@ namespace Selu383.SP25.P03.Api.Controllers
         {
             var showtime = await _showtimes.FindAsync(id);
             if (showtime == null)
-            {
                 return NotFound();
-            }
 
             _showtimes.Remove(showtime);
             await _context.SaveChangesAsync();
@@ -306,16 +298,13 @@ namespace Selu383.SP25.P03.Api.Controllers
         }
 
         private bool ShowtimeExists(int id)
-        {
-            return _showtimes.FirstOrDefault(e => e.Id == id) != null;
-        }
+            => _showtimes.Any(e => e.Id == id);
 
         private async Task<ShowtimeDTO?> GetShowtimeDto(int id)
-        {
-            return await _showtimes
+            => await _showtimes
                 .Include(s => s.Movie)
                 .Include(s => s.TheaterRoom)
-                .ThenInclude(tr => tr!.Theater)
+                    .ThenInclude(tr => tr!.Theater)
                 .Where(s => s.Id == id)
                 .Select(s => new ShowtimeDTO
                 {
@@ -331,6 +320,5 @@ namespace Selu383.SP25.P03.Api.Controllers
                     BaseTicketPrice = s.BaseTicketPrice
                 })
                 .FirstOrDefaultAsync();
-        }
     }
 }

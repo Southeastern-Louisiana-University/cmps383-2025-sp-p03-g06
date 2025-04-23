@@ -1,5 +1,4 @@
-﻿// Data/DataContext.cs
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Features.Concessions;
@@ -12,7 +11,15 @@ using System.Reflection.Emit;
 
 namespace Selu383.SP25.P03.Api.Data
 {
-    public class DataContext : IdentityDbContext<User, Role, int, IdentityUserClaim<int>, UserRole, IdentityUserLogin<int>, IdentityRoleClaim<int>, IdentityUserToken<int>>
+    public class DataContext : IdentityDbContext<
+        User,
+        Role,
+        int,
+        IdentityUserClaim<int>,
+        UserRole,
+        IdentityUserLogin<int>,
+        IdentityRoleClaim<int>,
+        IdentityUserToken<int>>
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
@@ -32,13 +39,15 @@ namespace Selu383.SP25.P03.Api.Data
         public DbSet<ConcessionOrder> ConcessionOrders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
 
+        // Add join table for Movie-Theater relationship
+        public DbSet<TheaterMovie> TheaterMovies { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
             // UserRole configuration
             builder.Entity<UserRole>().HasKey(x => new { x.UserId, x.RoleId });
-
             builder.Entity<User>()
                 .HasMany(e => e.UserRoles)
                 .WithOne(x => x.User)
@@ -49,18 +58,16 @@ namespace Selu383.SP25.P03.Api.Data
             builder.Entity<Role>()
                 .HasMany(e => e.UserRoles)
                 .WithOne(x => x.Role)
-                .HasForeignKey(e => e.RoleId)
+                .HasForeignKey(x => x.RoleId)  // Change e to x here
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
             // MovieGenre configuration
             builder.Entity<MovieGenre>().HasKey(x => new { x.MovieId, x.GenreId });
-
             builder.Entity<MovieGenre>()
                 .HasOne(mg => mg.Movie)
                 .WithMany(m => m.MovieGenres)
                 .HasForeignKey(mg => mg.MovieId);
-
             builder.Entity<MovieGenre>()
                 .HasOne(mg => mg.Genre)
                 .WithMany(g => g.MovieGenres)
@@ -69,13 +76,11 @@ namespace Selu383.SP25.P03.Api.Data
             // ReservationSeat configuration
             builder.Entity<ReservationSeat>()
                 .HasKey(rs => new { rs.ReservationId, rs.SeatId });
-
             builder.Entity<ReservationSeat>()
                 .HasOne(rs => rs.Reservation)
                 .WithMany(r => r.ReservationSeats)
                 .HasForeignKey(rs => rs.ReservationId)
                 .OnDelete(DeleteBehavior.Cascade);
-
             builder.Entity<ReservationSeat>()
                 .HasOne(rs => rs.Seat)
                 .WithMany(s => s.ReservationSeats)
@@ -99,7 +104,6 @@ namespace Selu383.SP25.P03.Api.Data
                 .HasOne(s => s.Movie)
                 .WithMany(m => m.Showtimes)
                 .HasForeignKey(s => s.MovieId);
-
             builder.Entity<Showtime>()
                 .HasOne(s => s.TheaterRoom)
                 .WithMany(r => r.Showtimes)
@@ -110,7 +114,6 @@ namespace Selu383.SP25.P03.Api.Data
                 .HasOne(r => r.User)
                 .WithMany()
                 .HasForeignKey(r => r.UserId);
-
             builder.Entity<Reservation>()
                 .HasOne(r => r.Showtime)
                 .WithMany(s => s.Reservations)
@@ -127,7 +130,6 @@ namespace Selu383.SP25.P03.Api.Data
                 .HasOne(oi => oi.Order)
                 .WithMany(o => o.OrderItems)
                 .HasForeignKey(oi => oi.OrderId);
-
             builder.Entity<OrderItem>()
                 .HasOne(oi => oi.ConcessionItem)
                 .WithMany(ci => ci.OrderItems)
@@ -138,6 +140,18 @@ namespace Selu383.SP25.P03.Api.Data
                 .HasOne(ci => ci.Category)
                 .WithMany(c => c.Items)
                 .HasForeignKey(ci => ci.CategoryId);
+
+            // TheaterMovie join configuration
+            builder.Entity<TheaterMovie>()
+                .HasKey(tm => new { tm.MovieId, tm.TheaterId });
+            builder.Entity<TheaterMovie>()
+                .HasOne(tm => tm.Movie)
+                .WithMany(m => m.TheaterMovies)
+                .HasForeignKey(tm => tm.MovieId);
+            builder.Entity<TheaterMovie>()
+                .HasOne(tm => tm.Theater)
+                .WithMany(t => t.TheaterMovies)
+                .HasForeignKey(tm => tm.TheaterId);
         }
     }
 }

@@ -30,6 +30,7 @@ import {
 import { ModalsProvider } from "@mantine/modals";
 import "./styles/animations.css";
 import "./App.css";
+import MovieTheaterAssignment from "./components/MovieTheaterAssignment";
 
 // Component to animate page transitions
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
@@ -176,6 +177,20 @@ const AppContent = () => {
                     </AdminRoute>
                   }
                 />
+                <Route
+                  path="/movies/:id/theaters"
+                  element={
+                    <AdminRoute>
+                      <MovieTheaterAssignment />
+                    </AdminRoute>
+                  }
+                />
+
+                <Route
+                  path="/movies/:id/theaters"
+                  element={<MovieTheaterAssignment />}
+                />
+
                 <Route
                   path="/reservations/create/:id"
                   element={

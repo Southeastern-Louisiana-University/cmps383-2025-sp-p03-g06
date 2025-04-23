@@ -98,6 +98,11 @@ export interface MovieDTO {
   ratingScore?: number;
 }
 
+export interface TheaterMovieDTO {
+  movieId: number;
+  theaterId: number;
+}
+
 export interface ShowtimeDTO {
   id: number;
   movieId: number;
@@ -469,6 +474,49 @@ export const theaterApi = {
       );
     }
   },
+
+  getMoviesByTheater: async (theaterId: number): Promise<number[]> => {
+    try {
+      return await axiosWithRetry<number[]>({
+        url: `/theater-movies/theater/${theaterId}`,
+        method: "GET",
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch movies for this theater. Please try again later."
+      );
+    }
+  },
+  assignMovieToTheater: async (data: TheaterMovieDTO): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/theater-movies/assign`,
+        method: "POST",
+        data,
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to assign movie to theater. Please try again later."
+      );
+    }
+  },
+
+  unassignMovieFromTheater: async (data: TheaterMovieDTO): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/theater-movies/unassign`,
+        method: "DELETE",
+        data,
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to unassign movie from theater. Please try again later."
+      );
+    }
+  },
 };
 
 // Movie API methods
@@ -509,6 +557,58 @@ export const movieApi = {
       return handleApiError(
         error,
         "Failed to fetch movie details. Please try again later."
+      );
+    }
+  },
+
+  getTheatersByMovie: async (movieId: number): Promise<number[]> => {
+    try {
+      return await axiosWithRetry<number[]>({
+        url: `/theater-movies/movie/${movieId}`,
+        method: "GET",
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch theaters for this movie. Please try again later."
+      );
+    }
+  },
+
+  // Assign a theater to a movie - using the existing structure of theater-movies
+  assignTheaterToMovie: async (
+    movieId: number,
+    theaterId: number
+  ): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/theater-movies/assign`,
+        method: "POST",
+        data: { movieId, theaterId },
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to assign theater to movie. Please try again later."
+      );
+    }
+  },
+
+  // Unassign a theater from a movie - using the existing structure of theater-movies
+  unassignTheaterFromMovie: async (
+    movieId: number,
+    theaterId: number
+  ): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/theater-movies/unassign`,
+        method: "DELETE",
+        data: { movieId, theaterId },
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to unassign theater from movie. Please try again later."
       );
     }
   },
