@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 
 const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const seatsPerRow = 10;
@@ -8,7 +8,7 @@ const generateDummySeats = () => {
     const seats = [];
     for (let row = 0; row < rowLabels.length; row++) {
         for (let seatNum = 1; seatNum <= seatsPerRow; seatNum++) {
-            const isAvailable = Math.random() > 0.2; 
+            const isAvailable = Math.random() > 0.2;
             seats.push({
                 id: `${rowLabels[row]}-${seatNum}`,
                 row: rowLabels[row],
@@ -20,17 +20,17 @@ const generateDummySeats = () => {
     return seats;
 };
 
-    export default function SeatSelectionScreen() {
-        const [selectedSeats, setSelectedSeats] = useState([]);
-        const availableSeats = generateDummySeats();
+export default function SeatSelectionScreen() {
+    const [selectedSeats, setSelectedSeats] = useState([]);
+    const availableSeats = generateDummySeats();
 
-        const toggleSeatSelection = (seatId) => {
-            if (selectedSeats.includes(seatId)) {
-                setSelectedSeats(selectedSeats.filter(id => id !== seatId));
-            } else {
-                setSelectedSeats([...selectedSeats, seatId]);
-            }
-        };
+    const toggleSeatSelection = (seatId) => {
+        if (selectedSeats.includes(seatId)) {
+            setSelectedSeats(selectedSeats.filter(id => id !== seatId));
+        } else {
+            setSelectedSeats([...selectedSeats, seatId]);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -63,6 +63,12 @@ const generateDummySeats = () => {
                     ))}
                 </View>
             </ScrollView>
+
+            {/* Reservation Summary UI */}
+            <View style={styles.reservationSummary}>
+                <Text>{selectedSeats.length} {selectedSeats.length === 1 ? 'Seat' : 'Seats'} Selected</Text>
+                <Text>{selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}</Text>
+            </View>
         </SafeAreaView>
     );
 }
@@ -112,5 +118,9 @@ const styles = StyleSheet.create({
     seatLabel: {
         color: '#FFFFFF',
         fontSize: 10,
+    },
+    reservationSummary: {
+        padding: 16,
+        backgroundColor: '#1E1E1E',
     },
 });
