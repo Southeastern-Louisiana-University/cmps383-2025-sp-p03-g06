@@ -1,4 +1,6 @@
 // services/api/types.ts
+import { ImageSourcePropType } from "react-native";
+
 export interface Movie {
   id: number;
   title: string;
@@ -7,7 +9,7 @@ export interface Movie {
   durationMinutes: number;
   genres: string[];
   releaseDate: string;
-  posterUrl?: string;
+  posterUrl?: ImageSourcePropType | null;
 }
 
 /* This file defines TypeScript interfaces that describe the shape of data
