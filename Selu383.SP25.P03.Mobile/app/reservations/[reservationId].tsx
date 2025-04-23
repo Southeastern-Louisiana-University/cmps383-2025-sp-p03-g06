@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 
 const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const seatsPerRow = 10;
@@ -30,6 +30,19 @@ export default function SeatSelectionScreen() {
         } else {
             setSelectedSeats([...selectedSeats, seatId]);
         }
+    };
+
+    const handleReserveSeats = () => {
+        if (selectedSeats.length === 0) {
+            Alert.alert('Select Seats', 'Please select at least one seat to reserve.');
+            return;
+        }
+
+        Alert.alert(
+            'Seats Reserved',
+            `You have successfully reserved ${selectedSeats.length} seats: ${selectedSeats.join(', ')}`,
+            [{ text: 'OK', onPress: () => console.log('Go back to theaters') }]
+        );
     };
 
     return (
@@ -64,10 +77,17 @@ export default function SeatSelectionScreen() {
                 </View>
             </ScrollView>
 
-            {/* Reservation Summary UI */}
             <View style={styles.reservationSummary}>
                 <Text>{selectedSeats.length} {selectedSeats.length === 1 ? 'Seat' : 'Seats'} Selected</Text>
                 <Text>{selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}</Text>
+
+                <TouchableOpacity
+                    style={[styles.reserveButton, selectedSeats.length === 0 && styles.disabledButton]}
+                    disabled={selectedSeats.length === 0}
+                    onPress={handleReserveSeats}
+                >
+                    <Text style={styles.reserveButtonText}>Reserve Seats</Text>
+                </TouchableOpacity>
             </View>
         </SafeAreaView>
     );
@@ -122,5 +142,18 @@ const styles = StyleSheet.create({
     reservationSummary: {
         padding: 16,
         backgroundColor: '#1E1E1E',
+    },
+    reserveButton: {
+        backgroundColor: '#c70036',
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    disabledButton: {
+        backgroundColor: '#555',
+    },
+    reserveButtonText: {
+        color: '#FFF',
+        fontWeight: 'bold',
     },
 });
