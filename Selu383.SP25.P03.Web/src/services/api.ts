@@ -92,6 +92,7 @@ export interface MovieDTO {
   durationMinutes: number;
   rating: string;
   posterImageUrl: string;
+  trailerUrl?: string;
   releaseDate: string;
   genres: string[];
   ratingScore?: number;

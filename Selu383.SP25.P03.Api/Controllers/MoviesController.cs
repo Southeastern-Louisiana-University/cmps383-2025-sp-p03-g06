@@ -29,6 +29,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     DurationMinutes = m.DurationMinutes,
                     Rating = m.Rating,
                     PosterImageUrl = m.PosterImageUrl,
+                    TrailerUrl = m.TrailerUrl,
                     ReleaseDate = m.ReleaseDate,
                     Genres = new List<string>()
                 })
@@ -77,6 +78,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     DurationMinutes = m.DurationMinutes,
                     Rating = m.Rating,
                     PosterImageUrl = m.PosterImageUrl,
+                    TrailerUrl = m.TrailerUrl,
                     ReleaseDate = m.ReleaseDate,
                     Genres = new List<string>()
                 })
@@ -113,6 +115,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 DurationMinutes = movieDto.DurationMinutes,
                 Rating = movieDto.Rating,
                 PosterImageUrl = movieDto.PosterImageUrl,
+                TrailerUrl = movieDto.TrailerUrl,
                 ReleaseDate = movieDto.ReleaseDate
             };
 
@@ -148,6 +151,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
                 PosterImageUrl = movie.PosterImageUrl,
+                TrailerUrl = movie.TrailerUrl,
                 ReleaseDate = movie.ReleaseDate,
                 Genres = movieDto.Genres ?? []
             });
@@ -176,6 +180,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             movie.DurationMinutes = movieDto.DurationMinutes;
             movie.Rating = movieDto.Rating;
             movie.PosterImageUrl = movieDto.PosterImageUrl;
+            movie.TrailerUrl = movieDto.TrailerUrl;
             movie.ReleaseDate = movieDto.ReleaseDate;
 
             if (movieDto.Genres != null)
@@ -267,6 +272,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     DurationMinutes = m.DurationMinutes,
                     Rating = m.Rating,
                     PosterImageUrl = m.PosterImageUrl,
+                    TrailerUrl = m.TrailerUrl,
                     ReleaseDate = m.ReleaseDate,
                     Genres = new List<string>()
                 })

@@ -16,6 +16,7 @@ import {
   Tabs,
   Paper,
   Divider,
+  Modal,
   useMantineColorScheme,
 } from "@mantine/core";
 import {
@@ -23,6 +24,7 @@ import {
   IconCalendar,
   IconTicket,
   IconTheater,
+  IconPlayerPlay,
 } from "@tabler/icons-react";
 
 import { movieApi, showtimeApi, MovieDTO, ShowtimeDTO } from "../services/api";
@@ -34,6 +36,7 @@ const MovieShowtimes = () => {
   const [showtimes, setShowtimes] = useState<ShowtimeDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [trailerOpen, setTrailerOpen] = useState(false);
   useMantineColorScheme();
 
   // Define main ticket color and lighter price color
@@ -62,6 +65,19 @@ const MovieShowtimes = () => {
 
     fetchMovieAndShowtimes();
   }, [id]);
+
+  // Safely parse YouTube ID from URL - fixed return type to string | undefined
+  const getYoutubeEmbedUrl = (url: string | undefined): string | undefined => {
+    if (!url) return undefined;
+
+    // Handle various YouTube URL formats
+    const regExp =
+      /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const match = url.match(regExp);
+    const videoId = match && match[7].length === 11 ? match[7] : null;
+
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : undefined;
+  };
 
   if (loading) {
     return (
@@ -124,12 +140,31 @@ const MovieShowtimes = () => {
             }}
           >
             <Card.Section>
-              <Image
-                src={movie.posterImageUrl || "/images/default-movie.jpg"}
-                height={350}
-                alt={movie.title}
-                fallbackSrc="https://placehold.co/400x600/gray/white?text=No+Poster"
-              />
+              <div style={{ position: "relative" }}>
+                <Image
+                  src={movie.posterImageUrl || "/images/default-movie.jpg"}
+                  height={350}
+                  alt={movie.title}
+                  fallbackSrc="https://placehold.co/400x600/gray/white?text=No+Poster"
+                />
+                {movie.trailerUrl && (
+                  <Button
+                    size="sm"
+                    variant="filled"
+                    color="red"
+                    leftSection={<IconPlayerPlay size={16} />}
+                    onClick={() => setTrailerOpen(true)}
+                    style={{
+                      position: "absolute",
+                      bottom: "10px",
+                      right: "10px",
+                      zIndex: 2,
+                    }}
+                  >
+                    Watch Trailer
+                  </Button>
+                )}
+              </div>
             </Card.Section>
 
             <Title order={3} mt="md" mb="xs">
@@ -402,6 +437,40 @@ const MovieShowtimes = () => {
           </Paper>
         </Grid.Col>
       </Grid>
+
+      {/* Trailer Modal */}
+      <Modal
+        opened={trailerOpen}
+        onClose={() => setTrailerOpen(false)}
+        title={`${movie.title} - Official Trailer`}
+        size="xl"
+        centered
+      >
+        {movie.trailerUrl && getYoutubeEmbedUrl(movie.trailerUrl) ? (
+          <div
+            style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}
+          >
+            <iframe
+              src={getYoutubeEmbedUrl(movie.trailerUrl)}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                border: 0,
+              }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title={`${movie.title} Trailer`}
+            ></iframe>
+          </div>
+        ) : (
+          <Text ta="center" c="dimmed">
+            Trailer not available or URL is invalid.
+          </Text>
+        )}
+      </Modal>
     </Container>
   );
 };

@@ -19,17 +19,17 @@ const Footer = () => {
   const socialLinks = [
     {
       icon: <IconBrandInstagram size={24} />,
-      url: "https://instagram.com/lionsdencinemas", // Change when official account is created
+      url: "https://instagram.com", // Change when official account is created
       label: "Instagram",
     },
     {
       icon: <IconBrandFacebook size={24} />,
-      url: "https://facebook.com/lionsdencinemas", // Change when official account is created
+      url: "https://facebook.com", // Change when official account is created
       label: "Facebook",
     },
     {
       icon: <IconBrandX size={24} />,
-      url: "https://x.com/lionsdencinemas", // Change when official account is created
+      url: "https://x.com", // Change when official account is created
       label: "X",
     },
   ];

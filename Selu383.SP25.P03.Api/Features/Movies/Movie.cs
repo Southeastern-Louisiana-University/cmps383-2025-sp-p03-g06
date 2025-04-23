@@ -22,6 +22,8 @@ namespace Selu383.SP25.P03.Api.Features.Movies
 
         public string? PosterImageUrl { get; set; }
 
+        public string? TrailerUrl { get; set; } //add trailer
+
         public DateTime ReleaseDate { get; set; }
 
         // Navigation properties

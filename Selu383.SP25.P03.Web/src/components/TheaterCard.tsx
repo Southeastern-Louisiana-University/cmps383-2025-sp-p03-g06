@@ -21,7 +21,7 @@ import {
   IconSofa,
   IconPencil,
   IconTrash,
-  IconEye,
+  IconMovie,
   IconDots,
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
@@ -129,13 +129,13 @@ const TheaterCard = memo(({ theater, onDelete, isAdmin }: TheaterCardProps) => {
       <Group justify="space-between" mt="auto" className="card-actions">
         <Button
           component={Link}
-          to={`/theaters/${theater.id}`}
+          to={`/movies`}
           variant="dark"
           color={isDark ? "red" : "red"}
           size="sm"
-          leftSection={<IconEye size={16} />}
+          leftSection={<IconMovie size={16} />}
         >
-          View Details
+          View Movies
         </Button>
 
         {isAdmin && (

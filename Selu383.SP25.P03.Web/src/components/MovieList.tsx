@@ -18,6 +18,7 @@ import {
   Select,
   TextInput,
   Box,
+  Modal,
 } from "@mantine/core";
 import {
   IconClock,
@@ -26,6 +27,7 @@ import {
   IconSearch,
   IconFilter,
   IconSortAscending,
+  IconPlayerPlay,
 } from "@tabler/icons-react";
 
 import { movieApi, MovieDTO } from "../services/api";
@@ -54,6 +56,7 @@ const MovieList = () => {
   const [filteredMovies, setFilteredMovies] = useState<MovieDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTrailer, setSelectedTrailer] = useState<MovieDTO | null>(null);
   useMantineColorScheme();
 
   // Filtering/sorting states
@@ -62,6 +65,7 @@ const MovieList = () => {
   const [ratingFilter, setRatingFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string | null>("newest");
 
+  // Fetch movies
   useEffect(() => {
     const fetchMovies = async () => {
       try {
@@ -79,11 +83,10 @@ const MovieList = () => {
     fetchMovies();
   }, []);
 
-  // Filter and sort movies when filters change
+  // Filter and sort
   useEffect(() => {
     let result = [...movies];
 
-    // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -93,7 +96,6 @@ const MovieList = () => {
       );
     }
 
-    // Apply genre filter
     if (genreFilter) {
       result = result.filter((movie) =>
         movie.genres.some(
@@ -102,12 +104,10 @@ const MovieList = () => {
       );
     }
 
-    // Apply rating filter
     if (ratingFilter) {
       result = result.filter((movie) => movie.rating === ratingFilter);
     }
 
-    // Apply sorting
     if (sortBy) {
       switch (sortBy) {
         case "newest":
@@ -142,25 +142,32 @@ const MovieList = () => {
     setFilteredMovies(result);
   }, [movies, searchQuery, genreFilter, ratingFilter, sortBy]);
 
-  // Get all unique genres from movies
+  // Unique filters data
   const allGenres = Array.from(
     new Set(movies.flatMap((movie) => movie.genres))
   ).map((genre) => ({ value: genre.toLowerCase(), label: genre }));
 
-  // Get all unique ratings from movies
   const allRatings = Array.from(new Set(movies.map((movie) => movie.rating)))
     .filter(Boolean)
     .map((rating) => ({ value: rating, label: rating }));
 
-  if (loading) {
+  // Convert YouTube URL to embed URL
+  const getYoutubeEmbedUrl = (url?: string) => {
+    if (!url) return null;
+    const regExp =
+      /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const match = url.match(regExp);
+    const id = match && match[7].length === 11 ? match[7] : null;
+    return id ? `https://www.youtube.com/embed/${id}` : null;
+  };
+
+  if (loading)
     return (
       <Center my="xl">
         <Loader size="lg" />
       </Center>
     );
-  }
-
-  if (error) {
+  if (error)
     return (
       <Container>
         <Text color="red" size="lg" ta="center" my="xl">
@@ -168,31 +175,26 @@ const MovieList = () => {
         </Text>
       </Container>
     );
-  }
 
   return (
     <Container size="xl" py="xl">
+      {/* Header */}
       <Paper
         p="lg"
         radius="md"
         mb="xl"
         style={{
-          background: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/images/theater-bg.jpg')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          background: "transparent",
           color: "white",
+          textAlign: "center",
         }}
       >
-        {/* Improved title */}
-        <Title order={1} ta="center" mb="md">
+        <Title order={1} style={{ fontWeight: 900 }}>
           Experience the Latest Movies at Lions Den Cinemas
         </Title>
-        <Text ta="center" size="lg" mb="lg">
-          Book your tickets for the newest releases at Lions Den Cinemas
-        </Text>
       </Paper>
 
-      {/* Filters and Search */}
+      {/* Filters */}
       <Paper shadow="sm" p="md" mb="xl" withBorder>
         <Grid>
           <Grid.Col span={{ base: 12, md: 4 }}>
@@ -244,6 +246,7 @@ const MovieList = () => {
         </Grid>
       </Paper>
 
+      {/* Movie Grid */}
       {filteredMovies.length === 0 ? (
         <Text ta="center" fz="lg" mt="xl">
           No movies match your search criteria. Try different filters.
@@ -261,18 +264,40 @@ const MovieList = () => {
                   display: "flex",
                   flexDirection: "column",
                   height: "100%",
-                  borderTop: `3px solid #e03131`, // Changed from gold to red
+                  borderTop: `3px solid #e03131`,
                 }}
               >
                 <Card.Section>
-                  {/* Ensure the movie poster shows fully */}
-                  <Image
-                    src={movie.posterImageUrl || "/images/default-movie.jpg"}
-                    height={250}
-                    alt={movie.title}
-                    fallbackSrc="https://placehold.co/400x600/gray/white?text=No+Poster"
-                    fit="contain"
-                  />
+                  <div style={{ position: "relative" }}>
+                    <Image
+                      src={movie.posterImageUrl || "/images/default-movie.jpg"}
+                      height={250}
+                      alt={movie.title}
+                      fallbackSrc="https://placehold.co/400x600/gray/white?text=No+Poster"
+                      fit="contain"
+                    />
+                    {movie.trailerUrl && (
+                      <Button
+                        size="xs"
+                        variant="filled"
+                        color="red"
+                        leftSection={<IconPlayerPlay size={14} />}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedTrailer(movie);
+                        }}
+                        style={{
+                          position: "absolute",
+                          bottom: "10px",
+                          right: "10px",
+                          zIndex: 2,
+                        }}
+                      >
+                        Watch Trailer
+                      </Button>
+                    )}
+                  </div>
                 </Card.Section>
 
                 <Group mt="md" mb="xs" justify="space-between">
@@ -280,14 +305,12 @@ const MovieList = () => {
                     {movie.title}
                   </Text>
                 </Group>
-
                 <Box mb="sm">
                   <MovieRating
                     rating={movie.rating}
                     score={movieRatings[movie.title] || 0}
                   />
                 </Box>
-
                 <Text size="sm" c="dimmed" lineClamp={3} mb="md">
                   {movie.description}
                 </Text>
@@ -296,25 +319,20 @@ const MovieList = () => {
                   <IconClock size={16} />
                   <Text size="sm">{movie.durationMinutes} minutes</Text>
                 </Group>
-
                 <Group my="xs">
                   <IconCalendar size={16} />
                   <Text size="sm">
                     Released: {new Date(movie.releaseDate).toLocaleDateString()}
                   </Text>
                 </Group>
-
                 <Group gap="xs" mt="md">
-                  {movie.genres.map((genre, index) => (
-                    <Badge key={index} size="sm" variant="light">
-                      {genre}
+                  {movie.genres.map((g, i) => (
+                    <Badge key={i} size="sm" variant="light">
+                      {g}
                     </Badge>
                   ))}
                 </Group>
-
                 <Divider my="md" />
-
-                {/* Updated button color (#c70036) with white text */}
                 <Button
                   fullWidth
                   mt="md"
@@ -323,10 +341,8 @@ const MovieList = () => {
                   styles={{
                     root: {
                       backgroundColor: "#c70036",
-                      color: "#ffffff",
-                      "&:hover": {
-                        backgroundColor: "#a00029",
-                      },
+                      color: "#fff",
+                      "&:hover": { backgroundColor: "#a00029" },
                     },
                   }}
                   leftSection={<IconTicket size={20} />}
@@ -338,6 +354,44 @@ const MovieList = () => {
           ))}
         </Grid>
       )}
+
+      {/* Trailer Modal */}
+      <Modal
+        opened={!!selectedTrailer}
+        onClose={() => setSelectedTrailer(null)}
+        title={
+          selectedTrailer ? `${selectedTrailer.title} - Official Trailer` : ""
+        }
+        size="xl"
+        centered
+      >
+        {selectedTrailer &&
+        selectedTrailer.trailerUrl &&
+        getYoutubeEmbedUrl(selectedTrailer.trailerUrl) ? (
+          <div
+            style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}
+          >
+            <iframe
+              src={getYoutubeEmbedUrl(selectedTrailer.trailerUrl)!}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                border: 0,
+              }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title={`${selectedTrailer.title} Trailer`}
+            />
+          </div>
+        ) : (
+          <Text ta="center" c="dimmed">
+            Trailer not available or URL is invalid.
+          </Text>
+        )}
+      </Modal>
     </Container>
   );
 };
