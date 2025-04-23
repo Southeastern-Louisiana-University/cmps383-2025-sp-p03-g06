@@ -45,11 +45,17 @@ const generateDummySeats = () => {
                                     const seatId = `${rowLabel}-${seatNum}`;
                                     const seat = availableSeats.find(s => s.id === seatId);
                                     const isAvailable = seat?.available;
+                                    const isSelected = selectedSeats.includes(seatId);
 
                                     return (
-                                        <View key={seatId} style={[styles.seat, !isAvailable && styles.unavailableSeat]}>
+                                        <TouchableOpacity
+                                            key={seatId}
+                                            style={[styles.seat, !isAvailable && styles.unavailableSeat, isSelected && styles.selectedSeat]}
+                                            onPress={() => isAvailable && toggleSeatSelection(seatId)}
+                                            disabled={!isAvailable}
+                                        >
                                             <Text style={styles.seatLabel}>{seatNum}</Text>
-                                        </View>
+                                        </TouchableOpacity>
                                     );
                                 })}
                             </View>
@@ -96,6 +102,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         margin: 3,
+    },
+    selectedSeat: {
+        backgroundColor: '#c70036',
     },
     unavailableSeat: {
         backgroundColor: '#222',
