@@ -15,7 +15,9 @@ import { Movie } from "@/services/api/moviesApi";
 export default function MovieScreen() {
   const { movieId } = useLocalSearchParams();
   const router = useRouter();
-
+  const [selectedTheaterId, setSelectedTheaterId] = useState<number | null>(
+    null
+  );
   const [movie, setMovie] = useState<Movie | null>(null);
   const [showtimes, setShowtimes] = useState<Showtime[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,10 @@ export default function MovieScreen() {
 
         const showtimeData = await showtimesApi.getByMovie(numericId);
         setShowtimes(showtimeData);
+
+        if (showtimeData.length > 0 && selectedTheaterId === null) {
+          setSelectedTheaterId(showtimeData[0].theaterId);
+        }
       } catch (error) {
         console.error("Failed to load movie or showtimes:", error);
       } finally {
@@ -44,12 +50,17 @@ export default function MovieScreen() {
     fetchData();
   }, [movieId]);
 
-  const groupedShowtimes = showtimes.reduce((acc, showtime) => {
-    const key = showtime.theaterName;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(showtime);
-    return acc;
-  }, {} as Record<string, Showtime[]>);
+  const uniqueTheaters = Array.from(
+    new Map(
+      showtimes.map((s) => [
+        s.theaterId,
+        {
+          id: s.theaterId,
+          name: s.theaterName,
+        },
+      ])
+    ).values()
+  );
 
   if (loading) {
     return (
@@ -78,29 +89,50 @@ export default function MovieScreen() {
       <Text style={styles.details}>Genres: {movie.genres.join(", ")}</Text>
       <Text style={styles.description}>{movie.description}</Text>
 
-      {/* Showtimes Grouped by Theater */}
-      <Text style={styles.sectionTitle}>Showtimes</Text>
-      {Object.entries(groupedShowtimes).map(([theaterName, times]) => (
-        <View key={theaterName} style={styles.theaterBlock}>
-          <Text style={styles.theaterTitle}>{theaterName}</Text>
-          <View style={styles.showtimeRow}>
-            {times.map((s) => (
-              <TouchableOpacity
-                key={s.id}
-                style={styles.showtimeButton}
-                onPress={() => router.push(`/reservations/${s.id}`)}
-              >
-                <Text style={styles.showtimeText}>
-                  {new Date(s.startTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      ))}
+      {/* Theater Tabs */}
+      <Text style={styles.sectionTitle}>Select Theater</Text>
+      <View style={styles.theaterTabs}>
+        {uniqueTheaters.map((theater) => (
+          <TouchableOpacity
+            key={theater.id}
+            onPress={() => setSelectedTheaterId(theater.id)}
+            style={[styles.theaterButton]}
+          >
+            <Text
+              style={[
+                styles.theaterButtonText,
+                selectedTheaterId === theater.id &&
+                  styles.activeTheaterButtonText, // ✅ text styles here
+              ]}
+            >
+              {theater.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Divider between theaters and showtimes */}
+      <View style={styles.divider} />
+
+      {/* Showtimes for Selected Theater */}
+      <View style={styles.showtimeRow}>
+        {showtimes
+          .filter((s) => s.theaterId === selectedTheaterId)
+          .map((s) => (
+            <TouchableOpacity
+              key={s.id}
+              style={styles.showtimeButton}
+              onPress={() => router.push(`/reservations/${s.id}`)}
+            >
+              <Text style={styles.showtimeText}>
+                {new Date(s.startTime).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </TouchableOpacity>
+          ))}
+      </View>
     </ScrollView>
   );
 }
@@ -144,14 +176,25 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     marginBottom: 8,
   },
-  theaterBlock: {
+  theaterTabs: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
     marginBottom: 16,
   },
-  theaterTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+  theaterButton: {
+    backgroundColor: "#2b2b2b",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    margin: 4,
+  },
+  activeTheaterButton: {
+    color: "#c70036",
+  },
+  theaterButtonText: {
     color: "#ffffff",
-    marginBottom: 4,
+    fontWeight: "bold",
   },
   showtimeRow: {
     flexDirection: "row",
@@ -169,5 +212,14 @@ const styles = StyleSheet.create({
   showtimeText: {
     color: "#ffffff",
     fontWeight: "bold",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#444", // subtle gray
+    marginVertical: 16,
+    opacity: 0.4,
+  },
+  activeTheaterButtonText: {
+    color: "#c70036", // Your brand red
   },
 });
