@@ -66,7 +66,7 @@ export default function NowShowingScreen() {
         )}
         contentContainerStyle={styles.list}
         numColumns={2} // 2-column grid for the movie cards
-        columnWrapperStyle={{ justifyContent: "flex-start", gap: 0, }} // Align movie cards in the row
+        columnWrapperStyle={{ justifyContent: "flex-start", gap: 0 }} // Align movie cards in the row
       />
     </View>
   );
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   list: {
-    paddingHorizontal: 4, 
+    paddingHorizontal: 4,
     paddingTop: 16,
     paddingBottom: 16,
     backgroundColor: "#121212",
