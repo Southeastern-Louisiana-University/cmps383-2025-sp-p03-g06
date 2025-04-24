@@ -20,7 +20,7 @@ namespace Selu383.SP25.P03.Api.Features.Concessions
         [MaxLength(50)]
         public string? Status { get; set; } // e.g., "Pending", "Preparing", "Delivered"
 
-        {MaxLength(50)]
+        [MaxLength(50)]
             public string? SeatNumber { get; set; } 
 
         // Navigation properties
