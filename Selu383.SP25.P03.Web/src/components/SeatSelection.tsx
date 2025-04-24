@@ -32,6 +32,7 @@ import {
   IconWheelchair,
   IconInfoCircle,
   IconCheckbox,
+  IconArrowLeft,
 } from "@tabler/icons-react";
 import { useAuth } from "../contexts/AuthContext";
 import { modals } from "@mantine/modals";
@@ -43,6 +44,7 @@ import {
   SeatDTO,
   GuestUserInfo,
   CreateReservationRequest,
+  ApiError,
 } from "../services/api";
 
 // Main color for the application
@@ -136,13 +138,6 @@ const SeatSelection = () => {
     fetchShowtimeAndSeats();
   }, [id]);
 
-  useEffect(() => {
-    if (!isAuthenticated && !loading) {
-      // Allow guest modal instead of redirect immediately
-      // navigate to login after modal cancellation
-    }
-  }, [isAuthenticated, loading]);
-
   const handleSeatClick = (seat: SeatDTO) => {
     if (!seat.isAvailable) return;
 
@@ -155,14 +150,21 @@ const SeatSelection = () => {
   const processReservation = async (guestInfo?: GuestUserInfo) => {
     try {
       setReservationInProgress(true);
+      setError(null);
+
+      if (!showtime) {
+        throw new Error("Showtime information is missing");
+      }
 
       const reservationData: CreateReservationRequest = {
-        showtimeId: showtime!.id,
+        showtimeId: showtime.id,
         seatIds: selectedSeats.map((seat) => seat.id),
         ...(guestInfo && { guestInfo }),
       };
 
+      console.log("Creating reservation with data:", reservationData);
       const created = await reservationApi.createReservation(reservationData);
+      console.log("Reservation created successfully:", created);
 
       modals.open({
         title: <Text fw={700}>Reservation Confirmed!</Text>,
@@ -202,7 +204,15 @@ const SeatSelection = () => {
       });
     } catch (error) {
       console.error("Error creating reservation:", error);
-      setError("Failed to create reservation. Please try again.");
+
+      // Enhanced error handling
+      if (error instanceof ApiError && error.message) {
+        setError(error.message);
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Failed to create reservation. Please try again.");
+      }
     } finally {
       setReservationInProgress(false);
     }
@@ -240,7 +250,13 @@ const SeatSelection = () => {
       setGuestModalOpen(false);
     } catch (error) {
       console.error("Guest checkout failed:", error);
-      setError("Failed to process guest checkout. Please try again.");
+
+      // Don't hide the specific error message
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Failed to process guest checkout. Please try again.");
+      }
     } finally {
       setProcessingGuest(false);
     }
@@ -254,7 +270,7 @@ const SeatSelection = () => {
     );
   }
 
-  if (error) {
+  if (error && !showtime) {
     return (
       <Container>
         <Alert
@@ -265,6 +281,13 @@ const SeatSelection = () => {
         >
           {error}
         </Alert>
+        <Button
+          variant="outline"
+          onClick={() => navigate(-1)}
+          leftSection={<IconArrowLeft size={16} />}
+        >
+          Go Back
+        </Button>
       </Container>
     );
   }
@@ -280,6 +303,13 @@ const SeatSelection = () => {
         >
           Showtime not found
         </Alert>
+        <Button
+          variant="outline"
+          onClick={() => navigate(-1)}
+          leftSection={<IconArrowLeft size={16} />}
+        >
+          Go Back
+        </Button>
       </Container>
     );
   }
@@ -308,6 +338,19 @@ const SeatSelection = () => {
         <Title order={3} mb="md">
           Select Your Seats
         </Title>
+
+        {error && (
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Error"
+            color="red"
+            mb="md"
+            onClose={() => setError(null)}
+            withCloseButton
+          >
+            {error}
+          </Alert>
+        )}
 
         <Grid>
           <Grid.Col span={{ base: 12, md: 7 }}>
@@ -510,7 +553,12 @@ const SeatSelection = () => {
           />
 
           {error && (
-            <Alert color="red" title="Error">
+            <Alert
+              color="red"
+              title="Error"
+              withCloseButton
+              onClose={() => setError(null)}
+            >
               {error}
             </Alert>
           )}

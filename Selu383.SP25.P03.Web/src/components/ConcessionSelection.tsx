@@ -30,7 +30,7 @@ import {
   IconBrandCashapp,
 } from "@tabler/icons-react";
 
-import { useAuth } from "../contexts/AuthContext"; // ← new
+import { useAuth } from "../contexts/AuthContext";
 
 import {
   ConcessionItemDTO,
@@ -47,7 +47,7 @@ const ConcessionSelection = () => {
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { isAuthenticated, isGuest } = useAuth(); // ← new
+  const { isAuthenticated, isGuest } = useAuth();
 
   const [reservation, setReservation] = useState<ReservationDTO | null>(null);
   const [categories, setCategories] = useState<ConcessionCategoryDTO[]>([]);
@@ -61,23 +61,46 @@ const ConcessionSelection = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  // ← updated effect
+  // Store information about whether this is a guest checkout flow
+  const [isGuestCheckout, setIsGuestCheckout] = useState(false);
+
   useEffect(() => {
     const fetchReservationAndConcessions = async () => {
       try {
         if (!id) throw new Error("Reservation ID is required");
 
-        const [reservationData, categoriesData, itemsData] = await Promise.all([
-          reservationApi.getReservationById(parseInt(id)),
-          concessionApi.getCategories(),
-          concessionApi.getItems(),
-        ]);
+        // Instead of checking authentication, just try to fetch the reservation
+        try {
+          const reservationData = await reservationApi.getReservationById(
+            parseInt(id)
+          );
+          setReservation(reservationData);
 
-        setReservation(reservationData);
-        setCategories(categoriesData);
-        setItems(itemsData);
-        if (categoriesData.length > 0) {
-          setActiveCategory(categoriesData[0].id.toString());
+          // If we successfully got the reservation as a guest, note this
+          if (!isAuthenticated) {
+            setIsGuestCheckout(true);
+          }
+
+          // Fetch concession data regardless of authentication status
+          const categoriesData = await concessionApi.getCategories();
+          const itemsData = await concessionApi.getItems();
+
+          setCategories(categoriesData);
+          setItems(itemsData);
+          if (categoriesData.length > 0) {
+            setActiveCategory(categoriesData[0].id.toString());
+          }
+        } catch (err) {
+          // If we can't fetch the reservation, redirect to login
+          // but only if the user isn't authenticated
+          console.error("Error fetching reservation:", err);
+          if (!isAuthenticated && !isGuest) {
+            navigate("/login", {
+              state: { redirectTo: `/concessions/${id}` },
+            });
+            return;
+          }
+          throw err;
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -87,14 +110,7 @@ const ConcessionSelection = () => {
       }
     };
 
-    if (isAuthenticated || isGuest) {
-      fetchReservationAndConcessions();
-    } else {
-      // redirect guests who aren’t “logged in” yet
-      navigate("/login", {
-        state: { redirectTo: `/concessions/${id}` },
-      });
-    }
+    fetchReservationAndConcessions();
   }, [id, isAuthenticated, isGuest, navigate]);
 
   const handleQuantityChange = (itemId: number, quantity: number) => {
@@ -149,11 +165,23 @@ const ConcessionSelection = () => {
         ...ci,
         specialInstructions: specialInstructions[ci.concessionItemId] || "",
       }));
+
       await concessionApi.createOrder({
         reservationId: reservation.id,
         items: finalCart,
       });
-      navigate("/my-reservations");
+
+      // If it's a guest checkout, we can't redirect to "my-reservations"
+      if (isGuestCheckout) {
+        navigate("/", {
+          state: {
+            message:
+              "Your order has been placed! You'll receive a confirmation email.",
+          },
+        });
+      } else {
+        navigate("/my-reservations");
+      }
     } catch (err) {
       console.error("Error creating order:", err);
       setError("Failed to create your order. Please try again.");
@@ -162,7 +190,19 @@ const ConcessionSelection = () => {
     }
   };
 
-  const handleSkip = () => navigate("/my-reservations");
+  const handleSkip = () => {
+    // If it's a guest checkout, we can't redirect to "my-reservations"
+    if (isGuestCheckout) {
+      navigate("/", {
+        state: {
+          message:
+            "Your reservation is confirmed! You'll receive a confirmation email.",
+        },
+      });
+    } else {
+      navigate("/my-reservations");
+    }
+  };
 
   if (loading) {
     return (
@@ -183,7 +223,10 @@ const ConcessionSelection = () => {
         >
           {error}
         </Alert>
-        <Button onClick={() => navigate(-1)} leftSection={<IconArrowLeft />}>
+        <Button
+          onClick={() => navigate(-1)}
+          leftSection={<IconArrowLeft size={16} />}
+        >
           Go Back
         </Button>
       </Container>

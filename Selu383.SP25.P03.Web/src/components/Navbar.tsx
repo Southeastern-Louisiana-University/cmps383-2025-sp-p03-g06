@@ -249,6 +249,36 @@ const Navbar = () => {
                   >
                     Movies
                   </Button>
+                  <Button
+                    component={NavLink}
+                    to="/theaters"
+                    variant={activeLink("/theaters") ? "filled" : "subtle"}
+                    color="primary"
+                    leftSection={<IconTheater size={18} />}
+                    style={{ color: "white" }}
+                  >
+                    Theaters
+                  </Button>
+
+                  <Button
+                    component={Link}
+                    to="/signup"
+                    variant="outline"
+                    leftSection={<IconUserPlus size={18} />}
+                    style={{
+                      borderColor: redButtonColor,
+                      color: redButtonColor,
+                    }}
+                    styles={{
+                      root: {
+                        "&:hover": {
+                          backgroundColor: `${redButtonColor}10`,
+                        },
+                      },
+                    }}
+                  >
+                    Sign Up
+                  </Button>
 
                   <Button
                     onClick={modalHandlers.open}

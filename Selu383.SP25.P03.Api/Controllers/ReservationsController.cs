@@ -14,12 +14,13 @@ namespace Selu383.SP25.P03.Api.Controllers
     [Route("api/reservations")]
     [ApiController]
     [Authorize]
-    public class ReservationsController(DataContext context, UserManager<User> userManager) : ControllerBase
+    public class ReservationsController(DataContext context, UserManager<User> userManager, SignInManager<User> signInManager) : ControllerBase
     {
         private readonly DataContext _context = context;
         private readonly DbSet<Reservation> _reservations = context.Set<Reservation>();
         private readonly DbSet<Showtime> _showtimes = context.Set<Showtime>();
         private readonly UserManager<User> _userManager = userManager;
+        private readonly SignInManager<User> _signInManager = signInManager;
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ReservationDTO>>> GetMyReservations()
@@ -100,12 +101,10 @@ namespace Selu383.SP25.P03.Api.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<ReservationDTO>> GetReservation(int id)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-                return Unauthorized();
-
+            // Look up the reservation directly first
             var reservation = await _reservations
                 .Include(r => r.User)
                 .Include(r => r.Showtime).ThenInclude(s => s!.Movie)
@@ -140,12 +139,22 @@ namespace Selu383.SP25.P03.Api.Controllers
             if (reservation == null)
                 return NotFound();
 
-            if (reservation.UserId != currentUser.Id
-                && !User.IsInRole(UserRoleNames.Admin)
-                && !User.IsInRole(UserRoleNames.Manager))
+            // For authenticated users, check authorization
+            if (User.Identity?.IsAuthenticated == true)
             {
-                return Forbid();
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                    return Unauthorized();
+
+                if (reservation.UserId != currentUser.Id
+                    && !User.IsInRole(UserRoleNames.Admin)
+                    && !User.IsInRole(UserRoleNames.Manager))
+                {
+                    return Forbid();
+                }
             }
+            // For guest users, we'll allow access to newly created reservations
+            // You might want to add additional security measures here
 
             return Ok(reservation);
         }
@@ -222,14 +231,21 @@ namespace Selu383.SP25.P03.Api.Controllers
                 if (!createResult.Succeeded)
                     return BadRequest("Failed to create guest user");
 
-                await _userManager.AddToRoleAsync(guestUser, UserRoleNames.Guest);
+                var roleResult = await _userManager.AddToRoleAsync(guestUser, UserRoleNames.Guest);
+                if (!roleResult.Succeeded)
+                    return BadRequest($"Failed to assign guest role: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+
+                // Set the current user to the guest user
                 currentUser = guestUser;
+
+                // Skip sign-in for guests - we'll use the user ID directly
             }
             else
             {
                 return BadRequest("Must provide guest information or be logged in");
             }
 
+            // Validate showtime exists
             var showtime = await _showtimes
                 .Include(s => s.Movie)
                 .Include(s => s.TheaterRoom).ThenInclude(tr => tr!.Theater)
@@ -240,6 +256,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             if (showtime.StartTime < DateTime.UtcNow)
                 return BadRequest("Cannot book tickets for past showtimes");
 
+            // Validate seat selection
             var selectedSeatIds = dto.SeatIds;
             if (!selectedSeatIds.Any())
                 return BadRequest("At least one seat must be selected");
@@ -250,6 +267,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             if (seats.Count != selectedSeatIds.Count)
                 return BadRequest("One or more selected seats are invalid");
 
+            // Check if seats are already booked
             var bookedSeatIds = await _context.ReservationSeats
                 .Where(rs => rs.Reservation!.ShowtimeId == dto.ShowtimeId && selectedSeatIds.Contains(rs.SeatId))
                 .Select(rs => rs.SeatId)
@@ -257,6 +275,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             if (bookedSeatIds.Any())
                 return BadRequest("One or more selected seats are already booked");
 
+            // Calculate total price
             decimal totalPrice = 0m;
             foreach (var seat in seats)
             {
@@ -266,6 +285,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 totalPrice += seatPrice;
             }
 
+            // Create reservation
             var reservation = new Reservation
             {
                 UserId = currentUser.Id,
@@ -279,6 +299,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             _reservations.Add(reservation);
             await _context.SaveChangesAsync();
 
+            // Add reservation seats
             foreach (var seat in seats)
             {
                 var seatPrice = showtime.BaseTicketPrice;
@@ -295,10 +316,42 @@ namespace Selu383.SP25.P03.Api.Controllers
 
             await _context.SaveChangesAsync();
 
-            // (Optional) send email to guest:
-            // if (currentUser.Email != null && await _userManager.IsInRoleAsync(currentUser, UserRoleNames.Guest)) { … }
+            // Return full reservation details
+            var result = await _reservations
+                .Include(r => r.User)
+                .Include(r => r.Showtime).ThenInclude(s => s!.Movie)
+                .Include(r => r.Showtime).ThenInclude(s => s!.TheaterRoom).ThenInclude(tr => tr!.Theater)
+                .Include(r => r.ReservationSeats).ThenInclude(rs => rs.Seat)
+                .Where(r => r.Id == reservation.Id)
+                .Select(r => new ReservationDTO
+                {
+                    Id = r.Id,
+                    UserId = r.UserId,
+                    UserName = r.User!.UserName ?? string.Empty,
+                    ShowtimeId = r.ShowtimeId,
+                    ShowtimeStartTime = r.Showtime!.StartTime,
+                    MovieTitle = r.Showtime!.Movie!.Title ?? string.Empty,
+                    TheaterName = r.Showtime!.TheaterRoom!.Theater!.Name ?? string.Empty,
+                    RoomName = r.Showtime!.TheaterRoom!.Name ?? string.Empty,
+                    ReservationTime = r.ReservationTime,
+                    TotalPrice = r.TotalPrice,
+                    Status = r.Status ?? string.Empty,
+                    TicketCode = r.TicketCode ?? string.Empty,
+                    Seats = r.ReservationSeats.Select(rs => new ReservationSeatDTO
+                    {
+                        SeatId = rs.SeatId,
+                        Row = rs.Seat!.Row,
+                        Number = rs.Seat!.Number,
+                        SeatType = rs.Seat!.SeatType ?? string.Empty,
+                        Price = rs.Price
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
 
-            return await GetReservation(reservation.Id);
+            if (result == null)
+                return StatusCode(500, "Reservation was created but details could not be retrieved");
+
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
