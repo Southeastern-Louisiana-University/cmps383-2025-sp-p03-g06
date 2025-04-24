@@ -96,11 +96,7 @@ const Navbar = () => {
                 gap: "12px",
               }}
             >
-              <IconMovie
-                size={32}
-                color={theme.colors.brand[5]}
-                stroke={1.5}
-              />
+              <IconMovie size={32} color={redButtonColor} stroke={1.5} />
 
               <Text
                 fw={700}

@@ -35,13 +35,13 @@ export default function NowShowingScreen() {
         });
 
         setMovies(moviesWithPosters);
+          
       } catch (error) {
         console.error("Failed to load movies:", error);
       } finally {
         setLoading(false);
       }
     }
-
     loadMovies();
   }, []);
 
@@ -64,6 +64,7 @@ export default function NowShowingScreen() {
             onPress={() => router.push(`/movies/${item.id}`)}
           />
         )}
+
         contentContainerStyle={styles.list}
         numColumns={2} // 2-column grid for the movie cards
         columnWrapperStyle={{ justifyContent: "flex-start", gap: 0 }} // Align movie cards in the row
