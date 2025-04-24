@@ -32,7 +32,7 @@ import { reservationApi, ReservationDTO } from "../services/api";
 
 const MyReservations = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isGuest } = useAuth();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -41,8 +41,8 @@ const MyReservations = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!isAuthenticated && !loading) {
+    // Only force-login if neither signed-in nor guest
+    if (!isAuthenticated && !isGuest && !loading) {
       navigate("/login", { state: { redirectTo: "/my-reservations" } });
       return;
     }
@@ -59,7 +59,7 @@ const MyReservations = () => {
       }
     };
 
-    if (isAuthenticated) {
+    if (isAuthenticated || isGuest) {
       fetchReservations();
     }
   }, [isAuthenticated, navigate, loading]);

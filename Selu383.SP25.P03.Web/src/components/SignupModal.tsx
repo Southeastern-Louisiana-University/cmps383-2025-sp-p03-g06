@@ -1,9 +1,10 @@
+// src/components/SignupModal.tsx
 import { Modal } from "@mantine/core";
-import Login from "./Login";
+import SignUp from "./SignUp";
 
 type Props = { opened: boolean; onClose: () => void };
 
-const LoginSignupModal = ({ opened, onClose }: Props) => (
+const SignupModal = ({ opened, onClose }: Props) => (
   <Modal
     opened={opened}
     onClose={onClose}
@@ -11,8 +12,8 @@ const LoginSignupModal = ({ opened, onClose }: Props) => (
     size="md"
     overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
   >
-    <Login />
+    <SignUp />
   </Modal>
 );
 
-export default LoginSignupModal;
+export default SignupModal;

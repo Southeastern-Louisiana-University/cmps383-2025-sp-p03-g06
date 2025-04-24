@@ -1,3 +1,4 @@
+// src/components/SeatSelection.tsx
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
@@ -23,10 +24,10 @@ import {
 } from "@mantine/core";
 import {
   IconAlertCircle,
-  IconTicket,
-  IconClock,
   IconMovie,
   IconTheater,
+  IconClock,
+  IconTicket,
   IconArmchair,
   IconArmchair2,
   IconWheelchair,
@@ -97,7 +98,7 @@ const SeatLegend = () => (
 const SeatSelection = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, createGuestSession } = useAuth();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -162,9 +163,7 @@ const SeatSelection = () => {
         ...(guestInfo && { guestInfo }),
       };
 
-      console.log("Creating reservation with data:", reservationData);
       const created = await reservationApi.createReservation(reservationData);
-      console.log("Reservation created successfully:", created);
 
       modals.open({
         title: <Text fw={700}>Reservation Confirmed!</Text>,
@@ -205,7 +204,6 @@ const SeatSelection = () => {
     } catch (error) {
       console.error("Error creating reservation:", error);
 
-      // Enhanced error handling
       if (error instanceof ApiError && error.message) {
         setError(error.message);
       } else if (error instanceof Error) {
@@ -246,12 +244,13 @@ const SeatSelection = () => {
 
     setProcessingGuest(true);
     try {
+      // spin up a guest session so ProtectedRoute/MyReservations will work
+      await createGuestSession(guestEmail, guestPhone);
+      // now reserve seats just like a logged-in user
       await processReservation({ email: guestEmail, phoneNumber: guestPhone });
       setGuestModalOpen(false);
     } catch (error) {
       console.error("Guest checkout failed:", error);
-
-      // Don't hide the specific error message
       if (error instanceof Error) {
         setError(error.message);
       } else {
@@ -402,8 +401,8 @@ const SeatSelection = () => {
           <Alert color={MAIN_COLOR} mb="md">
             <Group justify="space-between">
               <Text>
-                {selectedSeats.length} seat{selectedSeats.length !== 1 && "s"}{" "}
-                selected
+                {selectedSeats.length} seat
+                {selectedSeats.length !== 1 && "s"} selected
               </Text>
               <Text fw={700}>Total: ${totalPrice.toFixed(2)}</Text>
             </Group>
@@ -432,20 +431,24 @@ const SeatSelection = () => {
                     );
                     let color = seat.isAvailable ? "#aaa" : "#555";
                     let seatIcon = <IconArmchair size={24} />;
-                    if (seat.seatType === "Premium")
+                    if (seat.seatType === "Premium") {
                       seatIcon = <IconArmchair size={24} />;
-                    if (seat.seatType === "VIP")
-                      seatIcon = <IconArmchair2 size={24} />;
-                    if (seat.seatType === "Accessible")
-                      seatIcon = <IconWheelchair size={24} />;
-                    if (seat.seatType === "Premium")
                       color = isSelected ? MAIN_COLOR : "#d4af37";
-                    if (seat.seatType === "VIP")
+                    }
+                    if (seat.seatType === "VIP") {
+                      seatIcon = <IconArmchair2 size={24} />;
                       color = isSelected ? MAIN_COLOR : "#7a5af5";
-                    if (seat.seatType === "Accessible")
+                    }
+                    if (seat.seatType === "Accessible") {
+                      seatIcon = <IconWheelchair size={24} />;
                       color = isSelected ? MAIN_COLOR : "#e03131";
-                    if (!seat.isAvailable) color = "#555";
-                    if (seat.isAvailable && isSelected) color = MAIN_COLOR;
+                    }
+                    if (!seat.isAvailable) {
+                      color = "#555";
+                    }
+                    if (seat.isAvailable && isSelected) {
+                      color = MAIN_COLOR;
+                    }
 
                     return (
                       <Tooltip
@@ -503,7 +506,7 @@ const SeatSelection = () => {
             variant="outline"
             color={MAIN_COLOR}
             onClick={() => navigate(-1)}
-            leftSection={<IconAlertCircle size={16} />}
+            leftSection={<IconArrowLeft size={16} />}
           >
             Go Back
           </Button>

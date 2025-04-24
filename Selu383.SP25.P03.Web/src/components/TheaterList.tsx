@@ -1,9 +1,11 @@
 // src/components/TheaterList.tsx
 import { useState, useEffect, ChangeEvent } from "react";
+import { Link } from "react-router-dom";
 import { theaterApi, TheaterDTO } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
-import { Link } from "react-router-dom";
+
 import {
+  Box,
   Container,
   Title,
   Text,
@@ -17,26 +19,34 @@ import {
   Badge,
   ScrollArea,
   Table,
-  Box,
+  Paper,
+  Group,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import {
   IconAlertCircle,
-  IconPlus,
   IconSearch,
   IconArrowsSort,
   IconTheater,
   IconLayoutGrid,
   IconTable as IconTableView,
   IconMapPin,
+  IconPlus,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 
 const TheaterList = () => {
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const { isAdmin } = useAuth();
   const [theaters, setTheaters] = useState<TheaterDTO[]>([]);
   const [filtered, setFiltered] = useState<TheaterDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAdmin } = useAuth();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("name-asc");
   const [filtersVisible, { toggle: toggleFilters }] = useDisclosure(false);
@@ -74,7 +84,7 @@ const TheaterList = () => {
   const handleDelete = async (id: number) => {
     try {
       await theaterApi.deleteTheater(id);
-      setTheaters((t) => t.filter((x) => x.id !== id));
+      setTheaters((prev) => prev.filter((t) => t.id !== id));
     } catch {
       setError("Failed to delete theater");
     }
@@ -87,6 +97,7 @@ const TheaterList = () => {
           backgroundColor: "var(--background-darker)",
           minHeight: "100vh",
           paddingTop: 48,
+          textAlign: "center",
         }}
       >
         <Loader size="md" />
@@ -102,64 +113,36 @@ const TheaterList = () => {
         minHeight: "100vh",
       }}
     >
-      <Container size="xl" style={{ marginTop: 48 }}>
-        <Box
+      <Container size="xl" style={{ paddingTop: 48, paddingBottom: 48 }}>
+        {/* ——— Section Header ——— */}
+        <Paper
+          withBorder
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 16,
+            borderLeft: `4px solid ${theme.colors.red[6]}`,
+            backgroundColor: isDark ? theme.colors.dark[7] : theme.white,
+            padding: 16,
+            marginBottom: 24,
           }}
         >
-          <Box style={{ display: "flex", alignItems: "center" }}>
-            <IconTheater size={32} color="#e03131" />
-            <Title
-              order={2}
-              style={{ color: "#fff", marginLeft: 8, fontSize: "1.8rem" }}
-            >
-              Our Theaters
-            </Title>
-          </Box>
+          <Group style={{ alignItems: "center", gap: theme.spacing.sm }}>
+            <IconTheater size={32} color={theme.colors.red[6]} />
+            <Title order={2}>Our Theaters</Title>
+          </Group>
+        </Paper>
 
-          <Box style={{ display: "flex" }}>
-            <Button
-              variant={viewMode === "grid" ? "filled" : "outline"}
-              onClick={() => setViewMode("grid")}
-              size="xs"
-            >
-              <IconLayoutGrid size={16} />
-            </Button>
-            <Button
-              variant={viewMode === "table" ? "filled" : "outline"}
-              onClick={() => setViewMode("table")}
-              size="xs"
-              style={{ marginLeft: 8 }}
-            >
-              <IconTableView size={16} />
-            </Button>
-          </Box>
-        </Box>
-
-        {error && (
-          <Alert
-            icon={<IconAlertCircle size={16} />}
-            title="Error"
-            color="red"
-            style={{ marginBottom: 16 }}
-          >
-            {error}
-          </Alert>
-        )}
-
-        <Box style={{ marginBottom: 24 }}>
-          <Box
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: filtersVisible ? 16 : 0,
-            }}
-          >
-            <IconSearch size={16} style={{ marginRight: 8 }} />
+        {/* ——— Search & Filters ——— */}
+        <Paper
+          withBorder
+          style={{
+            backgroundColor: isDark
+              ? theme.colors.dark[7]
+              : theme.colors.gray[1],
+            padding: 16,
+            marginBottom: 24,
+          }}
+        >
+          <Group style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <IconSearch size={16} />
             <TextInput
               placeholder="Search theaters…"
               value={searchQuery}
@@ -168,19 +151,21 @@ const TheaterList = () => {
               }
               style={{ flex: 1 }}
             />
-            <Button
-              variant="subtle"
-              onClick={toggleFilters}
-              size="xs"
-              style={{ marginLeft: 8 }}
-            >
+            <Button variant="subtle" size="xs" onClick={toggleFilters}>
               {filtersVisible ? "Hide filters" : "Show filters"}
             </Button>
-          </Box>
+          </Group>
 
           {filtersVisible && (
-            <Box style={{ display: "flex", alignItems: "center" }}>
-              <IconArrowsSort size={16} style={{ marginRight: 8 }} />
+            <Group
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 16,
+              }}
+            >
+              <IconArrowsSort size={16} />
               <Select
                 placeholder="Sort by"
                 data={[
@@ -193,10 +178,11 @@ const TheaterList = () => {
                 onChange={(v) => setSortBy(v || "name-asc")}
                 style={{ minWidth: 200 }}
               />
-            </Box>
+            </Group>
           )}
-        </Box>
+        </Paper>
 
+        {/* ——— “Add Theater” (admin only) ——— */}
         {isAdmin && (
           <Box
             style={{
@@ -210,25 +196,55 @@ const TheaterList = () => {
               to="/theaters/new"
               color="green"
               size="sm"
-              style={{ display: "flex", alignItems: "center" }}
+              leftSection={<IconPlus size={16} />}
             >
-              <IconPlus size={16} style={{ marginRight: 8 }} />
               Add Theater
             </Button>
           </Box>
         )}
 
+        {/* ——— View Mode Toggle ——— */}
+        <Box
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginBottom: 16,
+          }}
+        >
+          <Button
+            variant={viewMode === "grid" ? "filled" : "outline"}
+            size="xs"
+            onClick={() => setViewMode("grid")}
+          >
+            <IconLayoutGrid size={16} />
+          </Button>
+          <Button
+            variant={viewMode === "table" ? "filled" : "outline"}
+            size="xs"
+            style={{ marginLeft: 8 }}
+            onClick={() => setViewMode("table")}
+          >
+            <IconTableView size={16} />
+          </Button>
+        </Box>
+
+        {/* ——— Error Banner ——— */}
+        {error && (
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Error"
+            color="red"
+            style={{ marginBottom: 24 }}
+          >
+            {error}
+          </Alert>
+        )}
+
+        {/* ——— Grid View ——— */}
         {viewMode === "grid" && (
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing={24}>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} style={{ gap: 24 }}>
             {filtered.map((t) => (
-              <Card
-                key={t.id}
-                shadow="md"
-                p="lg"
-                radius="md"
-                withBorder
-                style={{ background: "rgba(255,255,255,0.9)" }}
-              >
+              <Card key={t.id} shadow="md" p="lg" radius="md" withBorder>
                 <Box
                   style={{
                     display: "flex",
@@ -236,8 +252,8 @@ const TheaterList = () => {
                     marginBottom: 16,
                   }}
                 >
-                  <Text style={{ fontWeight: 500 }}>{t.name}</Text>
-                  <Badge variant="light" color="red">
+                  <Text fw={500}>{t.name}</Text>
+                  <Badge color="red" variant="light">
                     {t.seatCount} seats
                   </Badge>
                 </Box>
@@ -279,6 +295,7 @@ const TheaterList = () => {
           </SimpleGrid>
         )}
 
+        {/* ——— Table View ——— */}
         {viewMode === "table" && (
           <ScrollArea style={{ marginBottom: 24 }}>
             <Table highlightOnHover verticalSpacing="sm">
@@ -295,21 +312,19 @@ const TheaterList = () => {
                   <tr key={t.id}>
                     <td>{t.name}</td>
                     <td>
-                      <Box style={{ display: "flex", alignItems: "center" }}>
+                      <Group style={{ alignItems: "center", gap: 4 }}>
                         <IconMapPin size={14} />
-                        <Text size="sm" style={{ marginLeft: 4 }}>
-                          {t.address}
-                        </Text>
-                      </Box>
+                        <Text size="sm">{t.address}</Text>
+                      </Group>
                     </td>
                     <td>
-                      <Badge variant="light" color="red">
+                      <Badge color="red" variant="light">
                         {t.seatCount}
                       </Badge>
                     </td>
                     {isAdmin && (
                       <td>
-                        <Box style={{ display: "flex", alignItems: "center" }}>
+                        <Group style={{ gap: 8 }}>
                           <Button
                             component={Link}
                             to={`/theaters/${t.id}/movies`}
@@ -321,12 +336,11 @@ const TheaterList = () => {
                             variant="outline"
                             color="red"
                             size="xs"
-                            style={{ marginLeft: 8 }}
                             onClick={() => handleDelete(t.id)}
                           >
                             Delete
                           </Button>
-                        </Box>
+                        </Group>
                       </td>
                     )}
                   </tr>

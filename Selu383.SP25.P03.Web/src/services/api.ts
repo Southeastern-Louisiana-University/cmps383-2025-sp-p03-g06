@@ -205,7 +205,10 @@ export interface GuestUserInfo {
 export interface CreateReservationRequest {
   showtimeId: number;
   seatIds: number[];
-  guestInfo?: GuestUserInfo;
+  guestInfo?: {
+    email: string;
+    phoneNumber?: string;
+  };
 }
 
 // Custom error class for API errors
@@ -746,6 +749,19 @@ export const reservationApi = {
       return handleApiError(
         error,
         "Failed to create reservation. Please try again later."
+      );
+    }
+  },
+  cancelReservation: async (id: number): Promise<void> => {
+    try {
+      await axiosWithRetry({
+        url: `/reservations/${id}`,
+        method: "DELETE",
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to cancel reservation. Please try again later."
       );
     }
   },

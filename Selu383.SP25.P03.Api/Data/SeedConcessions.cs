@@ -2,6 +2,7 @@
 // Data/SeedConcessions.cs
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Features.Concessions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Selu383.SP25.P03.Api.Data
 {
@@ -38,46 +39,50 @@ namespace Selu383.SP25.P03.Api.Data
             // Add concession items
             var items = new List<ConcessionItem>
     {
-        // Snacks
-        new()
-        {
-            Name = "Small Popcorn",
-            Description = "Freshly popped popcorn, small size",
-            Price = 5.99m,
-            CategoryId = snacksCategory.Id,  // Use the actual ID
-            IsAvailable = true
-        },
-        new()
-        {
-            Name = "Large Popcorn",
-            Description = "Freshly popped popcorn, large size with free refill",
-            Price = 8.99m,
-            CategoryId = snacksCategory.Id,  // Use the actual ID
-            IsAvailable = true
-        },
-        new()
-        {
-            Name = "Nachos",
-            Description = "Crispy nachos with cheese sauce",
-            Price = 6.99m,
-            CategoryId = snacksCategory.Id,  // Use the actual ID
-            IsAvailable = true
-        },
-        new()
-        {
-            Name = "Hot Dog",
-            Description = "Classic hot dog with your choice of condiments",
-            Price = 7.49m,
-            CategoryId = snacksCategory.Id,  // Use the actual ID
-            IsAvailable = true
-        },
-
+// Snacks
+new()
+{
+    Name = "Small Popcorn",
+    Description = "Freshly popped popcorn, small size",
+    Price = 5.99m,
+    ImageUrl = "/images/food/small-popcorn.jpg", // Use this format
+    CategoryId = snacksCategory.Id,
+    IsAvailable = true
+},
+new()
+{
+    Name = "Large Popcorn",
+    Description = "Freshly popped popcorn, large size with free refill",
+    Price = 8.99m,
+    ImageUrl = "/images/food/large-popcorn.jpg", // Consistent naming
+    CategoryId = snacksCategory.Id,
+    IsAvailable = true
+},
+new()
+{
+    Name = "Nachos",
+    Description = "Crispy nachos with cheese sauce",
+    Price = 6.99m,
+    ImageUrl = "/images/food/nachos.jpg",
+    CategoryId = snacksCategory.Id,
+    IsAvailable = true
+},
+new()
+{
+    Name = "Hot Dog",
+    Description = "Classic hot dog with your choice of condiments",
+    Price = 7.49m,
+    ImageUrl = "/images/food/hot-dog.jpg",
+    CategoryId = snacksCategory.Id,
+    IsAvailable = true
+},
         // Beverages
         new()
         {
             Name = "Small Soda",
             Description = "Small fountain drink, your choice of flavor",
             Price = 4.49m,
+            ImageUrl = "/images/concessions/smallsoda.jpg",
             CategoryId = beveragesCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -86,6 +91,7 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Large Soda",
             Description = "Large fountain drink with free refill",
             Price = 6.49m,
+            ImageUrl = "/images/concessions/largesoda.jpg",
             CategoryId = beveragesCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -94,6 +100,7 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Bottled Water",
             Description = "16oz bottled water",
             Price = 3.99m,
+            ImageUrl = "/images/concessions/water.jpg",
             CategoryId = beveragesCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -102,6 +109,7 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Coffee",
             Description = "Freshly brewed coffee",
             Price = 4.99m,
+            ImageUrl = "/images/concessions/coffee.jpg",
             CategoryId = beveragesCategory.Id,  // Use the actual ID
             IsAvailable = true
         },

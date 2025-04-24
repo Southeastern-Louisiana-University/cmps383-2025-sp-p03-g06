@@ -215,11 +215,7 @@ const AppContent = () => {
                 />
                 <Route
                   path="/concessions/:id"
-                  element={
-                    <ProtectedRoute>
-                      <ConcessionSelection />
-                    </ProtectedRoute>
-                  }
+                  element={<ConcessionSelection />}
                 />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

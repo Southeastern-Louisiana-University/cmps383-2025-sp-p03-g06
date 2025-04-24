@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import LoginSignupModal from "./LoginSignupModal";
+import SignupModal from "./SignupModal";
 
 import {
   Box,
@@ -30,8 +31,11 @@ import { useDisclosure } from "@mantine/hooks";
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const [modalOpened, modalHandlers] = useDisclosure(false);
-  const closeModal = modalHandlers.close;
+  const [loginOpened, { open: openLogin, close: closeLogin }] =
+    useDisclosure(false);
+  const [signupOpened, { open: openSignup, close: closeSignup }] =
+    useDisclosure(false);
+
   const location = useLocation();
 
   const [opened, { toggle, close }] = useDisclosure(false);
@@ -261,32 +265,25 @@ const Navbar = () => {
                   </Button>
 
                   <Button
-                    component={Link}
-                    to="/signup"
-                    variant="outline"
+                    variant="filled"
+                    style={{ backgroundColor: redButtonColor }}
                     leftSection={<IconUserPlus size={18} />}
+                    onClick={openLogin}
+                  >
+                    {" "}
+                    Sign In
+                  </Button>
+
+                  <Button
+                    variant="outline"
                     style={{
                       borderColor: redButtonColor,
                       color: redButtonColor,
                     }}
-                    styles={{
-                      root: {
-                        "&:hover": {
-                          backgroundColor: `${redButtonColor}10`,
-                        },
-                      },
-                    }}
+                    leftSection={<IconUser size={18} />}
+                    onClick={openSignup}
                   >
                     Sign Up
-                  </Button>
-
-                  <Button
-                    onClick={modalHandlers.open}
-                    variant="filled"
-                    style={{ backgroundColor: redButtonColor }}
-                    leftSection={<IconUserPlus size={18} />}
-                  >
-                    Sign In
                   </Button>
                 </>
               )}
@@ -302,7 +299,8 @@ const Navbar = () => {
             size="sm"
           />
         </Group>
-        <LoginSignupModal opened={modalOpened} onClose={closeModal} />
+        <LoginSignupModal opened={loginOpened} onClose={closeLogin} />
+        <SignupModal opened={signupOpened} onClose={closeSignup} />
       </Box>
 
       {/* Mobile drawer */}
@@ -411,7 +409,7 @@ const Navbar = () => {
               </Button>
 
               <Button
-                onClick={modalHandlers.open}
+                onClick={openLogin}
                 variant="filled"
                 style={{ backgroundColor: redButtonColor }}
                 leftSection={<IconUserPlus size={18} />}
