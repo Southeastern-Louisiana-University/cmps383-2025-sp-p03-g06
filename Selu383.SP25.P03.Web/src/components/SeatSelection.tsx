@@ -40,6 +40,9 @@ import {
   SeatDTO,
 } from "../services/api";
 
+// Main color for the application
+const MAIN_COLOR = "#c70036";
+
 // Helper function to group seats by row
 const groupSeatsByRow = (seats: SeatDTO[]) => {
   return seats.reduce((acc, seat) => {
@@ -63,7 +66,7 @@ const SeatLegend = () => {
         <Text size="sm">Available</Text>
       </Group>
       <Group mb="xs">
-        <IconArmchair color="#0d6832" size={20} />
+        <IconArmchair color={MAIN_COLOR} size={20} />
         <Text size="sm">Selected</Text>
       </Group>
       <Group mb="xs">
@@ -175,29 +178,34 @@ const SeatSelection = () => {
         children: (
           <>
             <Text mb="md">
-              Your tickets have been reserved successfully. Your reservation
-              code is:
-            </Text>
-            <Text ta="center" fw={700} size="xl" mb="md">
-              {createdReservation.ticketCode}
-            </Text>
-            <Text size="sm" c="dimmed" mb="md">
-              Please keep this code to access your tickets at the theater.
+              Your seats have been reserved successfully! Would you like to add
+              concessions to your order?
             </Text>
             <Group justify="center" mt="md">
               <Button
+                variant="outline"
+                color={MAIN_COLOR}
                 onClick={() => {
                   modals.closeAll();
                   navigate("/my-reservations");
                 }}
               >
-                View My Reservations
+                Skip
+              </Button>
+              <Button
+                color={MAIN_COLOR}
+                onClick={() => {
+                  modals.closeAll();
+                  navigate(`/concessions/${createdReservation.id}`);
+                }}
+              >
+                Add Food & Drinks
               </Button>
             </Group>
           </>
         ),
         onClose: () => {
-          navigate("/my-reservations");
+          navigate(`/concessions/${createdReservation.id}`);
         },
       });
     } catch (error) {
@@ -211,7 +219,7 @@ const SeatSelection = () => {
   if (loading) {
     return (
       <Center my="xl">
-        <Loader size="lg" />
+        <Loader size="lg" color={MAIN_COLOR} />
       </Center>
     );
   }
@@ -248,7 +256,9 @@ const SeatSelection = () => {
 
   // Group seats by row for display
   const seatsByRow = groupSeatsByRow(seats);
-  const sortedRows = Object.keys(seatsByRow).sort();
+  const sortedRows = Object.keys(seatsByRow)
+    .sort() // ["A","B","C",…]
+    .reverse(); // […,"C","B","A"]
 
   // Calculate total price
   const basePrice = showtime.baseTicketPrice;
@@ -271,7 +281,7 @@ const SeatSelection = () => {
         withBorder
         mb="xl"
         style={{
-          borderTop: `3px solid ${isDark ? "#d4af37" : "#0d6832"}`,
+          borderTop: `3px solid ${MAIN_COLOR}`,
         }}
       >
         <Title order={3} mb="md">
@@ -281,19 +291,19 @@ const SeatSelection = () => {
         <Grid>
           <Grid.Col span={{ base: 12, md: 7 }}>
             <Group mb="md">
-              <IconMovie size={20} />
+              <IconMovie size={20} style={{ color: MAIN_COLOR }} />
               <Text fw={500}>{showtime.movieTitle}</Text>
             </Group>
 
             <Group mb="md">
-              <IconTheater size={20} />
+              <IconTheater size={20} style={{ color: MAIN_COLOR }} />
               <Text>
                 {showtime.theaterName} - {showtime.theaterRoomName}
               </Text>
             </Group>
 
             <Group mb="md">
-              <IconClock size={20} />
+              <IconClock size={20} style={{ color: MAIN_COLOR }} />
               <Text>
                 {new Date(showtime.startTime).toLocaleDateString()}{" "}
                 {new Date(showtime.startTime).toLocaleTimeString([], {
@@ -309,10 +319,13 @@ const SeatSelection = () => {
             </Group>
 
             <Group mb="md">
-              <IconTicket size={20} />
+              <IconTicket size={20} style={{ color: MAIN_COLOR }} />
               <Text>Base Price: ${showtime.baseTicketPrice.toFixed(2)}</Text>
               <Tooltip label="Premium seats cost 1.5x base price. VIP seats cost 2x base price.">
-                <IconInfoCircle size={16} style={{ cursor: "pointer" }} />
+                <IconInfoCircle
+                  size={16}
+                  style={{ cursor: "pointer", color: MAIN_COLOR }}
+                />
               </Tooltip>
             </Group>
           </Grid.Col>
@@ -325,7 +338,7 @@ const SeatSelection = () => {
         <Divider my="md" />
 
         {selectedSeats.length > 0 && (
-          <Alert color="blue" mb="md">
+          <Alert color={MAIN_COLOR} mb="md">
             <Group justify="space-between">
               <Text>
                 {selectedSeats.length} seat{selectedSeats.length !== 1 && "s"}{" "}
@@ -344,19 +357,6 @@ const SeatSelection = () => {
           ta="center"
           mb="xl"
         >
-          <Text
-            fw={500}
-            mb="xl"
-            px="xl"
-            py="sm"
-            bg={isDark ? "dark.6" : "gray.2"}
-            style={{
-              borderRadius: "4px",
-            }}
-          >
-            SCREEN
-          </Text>
-
           <Box mt="xl" mb="xl">
             {sortedRows.map((row) => (
               <Group key={row} gap="xs" mb="xs" justify="center">
@@ -369,19 +369,21 @@ const SeatSelection = () => {
                     const isSelected = selectedSeats.some(
                       (s) => s.id === seat.id
                     );
-                    let seatIcon = <IconArmchair size={24} />;
+                    let seatIcon;
                     let color = seat.isAvailable ? "#aaa" : "#555";
 
                     if (seat.seatType === "Premium") {
-                      color = isSelected ? "#0d6832" : "#d4af37";
+                      color = isSelected ? MAIN_COLOR : "#d4af37";
+                      seatIcon = <IconArmchair size={24} />;
                     } else if (seat.seatType === "VIP") {
+                      color = isSelected ? MAIN_COLOR : "#7a5af5";
                       seatIcon = <IconArmchair2 size={24} />;
-                      color = isSelected ? "#0d6832" : "#7a5af5";
                     } else if (seat.seatType === "Accessible") {
+                      color = isSelected ? MAIN_COLOR : "#e03131";
                       seatIcon = <IconWheelchair size={24} />;
-                      color = isSelected ? "#0d6832" : "#e03131";
-                    } else if (isSelected) {
-                      color = "#0d6832";
+                    } else {
+                      seatIcon = <IconArmchair size={24} />;
+                      if (isSelected) color = MAIN_COLOR;
                     }
 
                     let price = basePrice;
@@ -421,11 +423,26 @@ const SeatSelection = () => {
               </Group>
             ))}
           </Box>
+
+          <Text
+            fw={500}
+            mt="xl"
+            px="xl"
+            py="sm"
+            bg={MAIN_COLOR}
+            style={{
+              borderRadius: "4px",
+              color: "white",
+            }}
+          >
+            SCREEN
+          </Text>
         </Paper>
 
         <Group justify="apart">
           <Button
             variant="outline"
+            color={MAIN_COLOR}
             onClick={() => navigate(-1)}
             leftSection={<IconAlertCircle size={16} />}
           >
@@ -433,7 +450,7 @@ const SeatSelection = () => {
           </Button>
           <Button
             onClick={handleCreateReservation}
-            color={isDark ? "yellow" : "green"}
+            color={MAIN_COLOR}
             leftSection={<IconCheckbox size={16} />}
             loading={reservationInProgress}
             disabled={selectedSeats.length === 0}

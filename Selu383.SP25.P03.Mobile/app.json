@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.selu383.sp25.p03.g06"
+      "package": "com.selu383.sp25.p02.g0m"
     },
     "web": {
       "bundler": "metro",

@@ -65,7 +65,7 @@ const TheaterCard = memo(({ theater, onDelete, isAdmin }: TheaterCardProps) => {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        borderTop: `3px solid ${isDark ? "#d4af37" : "#0d6832"}`,
+        borderTop: `3px solid #e03131`, // Changed from gold to red
         background: isDark
           ? "rgba(37, 38, 43, 0.95)"
           : "rgba(255, 255, 255, 0.95)",
@@ -85,7 +85,7 @@ const TheaterCard = memo(({ theater, onDelete, isAdmin }: TheaterCardProps) => {
 
       <Group gap="xs" mb="xs">
         <ThemeIcon
-          color={isDark ? "yellow" : "green"}
+          color={isDark ? "red" : "red"}
           variant="light"
           size="sm"
           radius="xl"
@@ -104,7 +104,7 @@ const TheaterCard = memo(({ theater, onDelete, isAdmin }: TheaterCardProps) => {
 
       <Group gap="xs" mb="md">
         <ThemeIcon
-          color={isDark ? "yellow" : "green"}
+          color={isDark ? "red" : "red"}
           variant="light"
           size="sm"
           radius="xl"
@@ -130,8 +130,8 @@ const TheaterCard = memo(({ theater, onDelete, isAdmin }: TheaterCardProps) => {
         <Button
           component={Link}
           to={`/theaters/${theater.id}`}
-          variant="light"
-          color={isDark ? "yellow" : "green"}
+          variant="dark"
+          color={isDark ? "red" : "red"}
           size="sm"
           leftSection={<IconEye size={16} />}
         >

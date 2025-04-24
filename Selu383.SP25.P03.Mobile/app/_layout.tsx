@@ -1,41 +1,33 @@
-﻿import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { AuthProvider } from '../contexts/AuthContext'; // ✅ make sure this path is correct
-
-SplashScreen.preventAutoHideAsync();
+import React from "react";
+import { Stack } from "expo-router";
+import { View, SafeAreaView, StyleSheet } from "react-native";
+import { TopNavBar } from "../navigation/TopNavBar";
+import { BottomNavBar } from "../navigation/BottomNavBar";
 
 export default function RootLayout() {
-    const colorScheme = useColorScheme();
-    const [loaded] = useFonts({
-        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    });
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <TopNavBar />
 
-    useEffect(() => {
-        if (loaded) {
-            SplashScreen.hideAsync();
-        }
-    }, [loaded]);
+      <View style={styles.content}>
+        <Stack
+          screenOptions={{
+            headerShown: false, // Hide native headers
+          }}
+        />
+      </View>
 
-    if (!loaded) {
-        return null;
-    }
-
-    return (
-        <AuthProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                <Stack>
-                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                    <Stack.Screen name="+not-found" />
-                </Stack>
-                <StatusBar style="auto" />
-            </ThemeProvider>
-        </AuthProvider>
-    );
+      <BottomNavBar />
+    </SafeAreaView>
+  );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#121212", // for dark theme
+  },
+  content: {
+    flex: 1,
+  },
+});

@@ -1,4 +1,3 @@
-// src/components/MovieList.tsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -15,26 +14,60 @@ import {
   Center,
   useMantineColorScheme,
   Divider,
-  Rating,
-  Flex,
   Paper,
+  Select,
+  TextInput,
+  Box,
 } from "@mantine/core";
-import { IconClock, IconCalendar, IconTicket } from "@tabler/icons-react";
+import {
+  IconClock,
+  IconCalendar,
+  IconTicket,
+  IconSearch,
+  IconFilter,
+  IconSortAscending,
+} from "@tabler/icons-react";
 
 import { movieApi, MovieDTO } from "../services/api";
+import MovieRating from "./MovieRating";
+
+// Map of movie titles to their ratings in the range of 0-10
+const movieRatings: Record<string, number> = {
+  "Snow White": 1.5,
+  "Death of a Unicorn": 6.4,
+  Novocaine: 6.7,
+  "Mickey 17": 7.0,
+  "A Working Man": 6.2,
+  "The Woman in the Yard": 5.6,
+  "The Day the Earth Blew Up: A Looney Tunes Movie": 7.0,
+  "Dog Man": 6.3,
+  "The Monkey": 6.2,
+  "Paddington in Peru": 6.7,
+  "Captain America: Brave New World": 5.9,
+  "Mufasa: The Lion King": 6.6,
+  Locked: 6.3,
+  "One of Them Days": 6.6,
+};
 
 const MovieList = () => {
   const [movies, setMovies] = useState<MovieDTO[]>([]);
+  const [filteredMovies, setFilteredMovies] = useState<MovieDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { colorScheme } = useMantineColorScheme();
-  const isDark = colorScheme === "dark";
+  useMantineColorScheme();
+
+  // Filtering/sorting states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [genreFilter, setGenreFilter] = useState<string | null>(null);
+  const [ratingFilter, setRatingFilter] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string | null>("newest");
 
   useEffect(() => {
     const fetchMovies = async () => {
       try {
         const data = await movieApi.getAllMovies();
         setMovies(data);
+        setFilteredMovies(data);
       } catch (error) {
         setError("Failed to fetch movies");
         console.error("Error fetching movies:", error);
@@ -45,6 +78,79 @@ const MovieList = () => {
 
     fetchMovies();
   }, []);
+
+  // Filter and sort movies when filters change
+  useEffect(() => {
+    let result = [...movies];
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (movie) =>
+          movie.title.toLowerCase().includes(query) ||
+          movie.description.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply genre filter
+    if (genreFilter) {
+      result = result.filter((movie) =>
+        movie.genres.some(
+          (genre) => genre.toLowerCase() === genreFilter.toLowerCase()
+        )
+      );
+    }
+
+    // Apply rating filter
+    if (ratingFilter) {
+      result = result.filter((movie) => movie.rating === ratingFilter);
+    }
+
+    // Apply sorting
+    if (sortBy) {
+      switch (sortBy) {
+        case "newest":
+          result.sort(
+            (a, b) =>
+              new Date(b.releaseDate).getTime() -
+              new Date(a.releaseDate).getTime()
+          );
+          break;
+        case "oldest":
+          result.sort(
+            (a, b) =>
+              new Date(a.releaseDate).getTime() -
+              new Date(b.releaseDate).getTime()
+          );
+          break;
+        case "top-rated":
+          result.sort(
+            (a, b) =>
+              (movieRatings[b.title] || 0) - (movieRatings[a.title] || 0)
+          );
+          break;
+        case "title-az":
+          result.sort((a, b) => a.title.localeCompare(b.title));
+          break;
+        case "title-za":
+          result.sort((a, b) => b.title.localeCompare(a.title));
+          break;
+      }
+    }
+
+    setFilteredMovies(result);
+  }, [movies, searchQuery, genreFilter, ratingFilter, sortBy]);
+
+  // Get all unique genres from movies
+  const allGenres = Array.from(
+    new Set(movies.flatMap((movie) => movie.genres))
+  ).map((genre) => ({ value: genre.toLowerCase(), label: genre }));
+
+  // Get all unique ratings from movies
+  const allRatings = Array.from(new Set(movies.map((movie) => movie.rating)))
+    .filter(Boolean)
+    .map((rating) => ({ value: rating, label: rating }));
 
   if (loading) {
     return (
@@ -64,18 +170,6 @@ const MovieList = () => {
     );
   }
 
-  // Function to get star rating based on the MPAA rating
-  const getStarRating = (mpaaRating: string) => {
-    const ratings: Record<string, number> = {
-      G: 5,
-      PG: 4.5,
-      "PG-13": 4,
-      R: 3.5,
-      "NC-17": 3,
-    };
-    return ratings[mpaaRating] || 4;
-  };
-
   return (
     <Container size="xl" py="xl">
       <Paper
@@ -89,21 +183,74 @@ const MovieList = () => {
           color: "white",
         }}
       >
+        {/* Improved title */}
         <Title order={1} ta="center" mb="md">
-          Now Showing
+          Experience the Latest Movies at Lions Den Cinemas
         </Title>
         <Text ta="center" size="lg" mb="lg">
-          Book your tickets for the latest movies at Lions Den Cinemas
+          Book your tickets for the newest releases at Lions Den Cinemas
         </Text>
       </Paper>
 
-      {movies.length === 0 ? (
+      {/* Filters and Search */}
+      <Paper shadow="sm" p="md" mb="xl" withBorder>
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <TextInput
+              leftSection={<IconSearch size={16} />}
+              placeholder="Search movies..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              mb={{ base: "sm", md: 0 }}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+            <Select
+              placeholder="Filter by genre"
+              data={[{ value: "", label: "All Genres" }, ...allGenres]}
+              value={genreFilter}
+              onChange={setGenreFilter}
+              leftSection={<IconFilter size={16} />}
+              clearable
+              mb="sm"
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+            <Select
+              placeholder="Filter by rating"
+              data={[{ value: "", label: "All Ratings" }, ...allRatings]}
+              value={ratingFilter}
+              onChange={setRatingFilter}
+              leftSection={<IconFilter size={16} />}
+              clearable
+              mb="sm"
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+            <Select
+              placeholder="Sort by"
+              data={[
+                { value: "newest", label: "Newest First" },
+                { value: "oldest", label: "Oldest First" },
+                { value: "top-rated", label: "Top Rated" },
+                { value: "title-az", label: "Title (A-Z)" },
+                { value: "title-za", label: "Title (Z-A)" },
+              ]}
+              value={sortBy}
+              onChange={setSortBy}
+              leftSection={<IconSortAscending size={16} />}
+            />
+          </Grid.Col>
+        </Grid>
+      </Paper>
+
+      {filteredMovies.length === 0 ? (
         <Text ta="center" fz="lg" mt="xl">
-          No movies are currently available. Check back soon!
+          No movies match your search criteria. Try different filters.
         </Text>
       ) : (
         <Grid>
-          {movies.map((movie) => (
+          {filteredMovies.map((movie) => (
             <Grid.Col key={movie.id} span={{ base: 12, sm: 6, md: 4 }}>
               <Card
                 shadow="sm"
@@ -114,37 +261,32 @@ const MovieList = () => {
                   display: "flex",
                   flexDirection: "column",
                   height: "100%",
-                  borderTop: `3px solid ${isDark ? "#d4af37" : "#0d6832"}`,
+                  borderTop: `3px solid #e03131`, // Changed from gold to red
                 }}
               >
                 <Card.Section>
+                  {/* Ensure the movie poster shows fully */}
                   <Image
                     src={movie.posterImageUrl || "/images/default-movie.jpg"}
                     height={250}
                     alt={movie.title}
                     fallbackSrc="https://placehold.co/400x600/gray/white?text=No+Poster"
+                    fit="contain"
                   />
                 </Card.Section>
 
                 <Group mt="md" mb="xs" justify="space-between">
-                  <Text fw={500} size="lg">
+                  <Text fw={500} size="lg" lineClamp={1}>
                     {movie.title}
                   </Text>
-                  <Badge color={isDark ? "yellow" : "green"}>
-                    {movie.rating}
-                  </Badge>
                 </Group>
 
-                <Flex align="center" mb="sm">
-                  <Rating
-                    value={getStarRating(movie.rating)}
-                    readOnly
-                    fractions={2}
+                <Box mb="sm">
+                  <MovieRating
+                    rating={movie.rating}
+                    score={movieRatings[movie.title] || 0}
                   />
-                  <Text size="sm" ml="xs">
-                    ({(Math.random() * 300 + 100).toFixed(0)} reviews)
-                  </Text>
-                </Flex>
+                </Box>
 
                 <Text size="sm" c="dimmed" lineClamp={3} mb="md">
                   {movie.description}
@@ -172,12 +314,21 @@ const MovieList = () => {
 
                 <Divider my="md" />
 
+                {/* Updated button color (#c70036) with white text */}
                 <Button
                   fullWidth
                   mt="md"
                   component={Link}
                   to={`/movies/${movie.id}/showtimes`}
-                  color={isDark ? "yellow" : "green"}
+                  styles={{
+                    root: {
+                      backgroundColor: "#c70036",
+                      color: "#ffffff",
+                      "&:hover": {
+                        backgroundColor: "#a00029",
+                      },
+                    },
+                  }}
                   leftSection={<IconTicket size={20} />}
                 >
                   View Showtimes

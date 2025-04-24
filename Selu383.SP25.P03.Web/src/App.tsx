@@ -14,6 +14,8 @@ import TheaterList from "./components/TheaterList";
 import TheaterForm from "./components/TheaterForm";
 import Navbar from "./components/Navbar";
 import LandingPage from "./components/LandingPage";
+import ConcessionSelection from "./components/ConcessionSelection";
+
 import {
   MantineProvider,
   createTheme,
@@ -108,16 +110,28 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 const theme = createTheme({
   colors: {
     brand: [
-      "#fce4e8", // lightest shade
-      "#f9c9d1",
-      "#f6aeba",
-      "#f294a3",
-      "#ef798c",
-      "#eb5f75",
-      "#e7455e",
-      "#e42b47",
-      "#e11230",
-      "#c70036", // darkest shade - your primary brand color
+      "#ffeaef", // primary-light
+      "#ffbfcd",
+      "#ff94ab",
+      "#ff698a",
+      "#ff3d68",
+      "#ff1147",
+      "#c70036", // primary-color (client's requested color)
+      "#a10029", // primary-dark
+      "#7a001f",
+      "#540015",
+    ],
+    secondary: [
+      "#e6e6e6", // secondary-light
+      "#cccccc",
+      "#b3b3b3",
+      "#999999",
+      "#808080",
+      "#666666",
+      "#2d2d2d", // secondary-color (dark)
+      "#1f1f1f", // secondary-dark
+      "#121212",
+      "#0a0a0a",
     ],
   },
   primaryColor: "brand",
@@ -212,6 +226,15 @@ const AppContent = () => {
                 />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
+
+                <Route
+                  path="/concessions/:id"
+                  element={
+                    <ProtectedRoute>
+                      <ConcessionSelection />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </PageTransition>
           </main>

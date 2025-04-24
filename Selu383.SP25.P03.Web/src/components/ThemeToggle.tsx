@@ -1,4 +1,4 @@
-// src/components/ThemeToggle.tsx - Enhanced with brand color
+// src/components/ThemeToggle.tsx - Updated with new color theme
 import { useState, useEffect } from "react";
 import {
   ActionIcon,
@@ -10,9 +10,10 @@ import { IconSun, IconMoon } from "@tabler/icons-react";
 
 interface ThemeToggleProps {
   fullWidth?: boolean;
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
 }
 
-const ThemeToggle = ({ fullWidth = false }: ThemeToggleProps) => {
+const ThemeToggle = ({ fullWidth = false, size = "md" }: ThemeToggleProps) => {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
   const [mounted, setMounted] = useState(false);
@@ -33,8 +34,8 @@ const ThemeToggle = ({ fullWidth = false }: ThemeToggleProps) => {
   if (fullWidth) {
     return (
       <Button
-        variant={isDark ? "filled" : "filled"}
-        color={isDark ? "yellow" : "brand"}
+        variant={isDark ? "filled" : "outline"}
+        color={isDark ? "accent" : "primary"}
         leftSection={isDark ? <IconSun size={16} /> : <IconMoon size={16} />}
         onClick={toggleColorScheme}
         fullWidth
@@ -52,7 +53,7 @@ const ThemeToggle = ({ fullWidth = false }: ThemeToggleProps) => {
         color={isDark ? "#C49102" : "brand"}
         onClick={toggleColorScheme}
         aria-label="Toggle color scheme"
-        size="lg"
+        size={size}
         radius="md"
         className="theme-toggle-button"
         style={{
