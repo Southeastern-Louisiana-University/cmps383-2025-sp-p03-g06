@@ -155,12 +155,16 @@ const AppContent = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/" element={<LandingPage />} />
+
+                {/* These routes should be accessible without authentication */}
                 <Route path="/movies" element={<MovieList />} />
                 <Route
                   path="/movies/:id/showtimes"
                   element={<MovieShowtimes />}
                 />
                 <Route path="/theaters" element={<TheaterList />} />
+
+                {/* These admin routes should still be protected */}
                 <Route
                   path="/theaters/new"
                   element={
@@ -186,19 +190,13 @@ const AppContent = () => {
                   }
                 />
 
-                <Route
-                  path="/movies/:id/theaters"
-                  element={<MovieTheaterAssignment />}
-                />
-
+                {/* This is where you'd handle the protected vs. guest checkout */}
                 <Route
                   path="/reservations/create/:id"
-                  element={
-                    <ProtectedRoute>
-                      <SeatSelection />
-                    </ProtectedRoute>
-                  }
+                  element={<SeatSelection />} // No longer wrapped in ProtectedRoute
                 />
+
+                {/* These should still be protected */}
                 <Route
                   path="/my-reservations"
                   element={

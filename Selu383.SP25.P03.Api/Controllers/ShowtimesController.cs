@@ -11,6 +11,7 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/showtimes")]
     [ApiController]
+    [AllowAnonymous]
     public class ShowtimesController : ControllerBase
     {
         private readonly DataContext _context;

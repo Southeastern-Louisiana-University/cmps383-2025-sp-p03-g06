@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Container,
   Title,
@@ -15,6 +15,11 @@ import {
   Center,
   Tooltip,
   useMantineColorScheme,
+  Modal,
+  TextInput,
+  Checkbox,
+  Stack,
+  Anchor,
 } from "@mantine/core";
 import {
   IconAlertCircle,
@@ -30,14 +35,14 @@ import {
 } from "@tabler/icons-react";
 import { useAuth } from "../contexts/AuthContext";
 import { modals } from "@mantine/modals";
-
-// You'll need to add these types and API methods to your services/api.ts file
 import {
   showtimeApi,
   reservationApi,
   seatApi,
   ShowtimeDTO,
   SeatDTO,
+  GuestUserInfo,
+  CreateReservationRequest,
 } from "../services/api";
 
 // Main color for the application
@@ -55,42 +60,40 @@ const groupSeatsByRow = (seats: SeatDTO[]) => {
 };
 
 // Component for the seating map legend
-const SeatLegend = () => {
-  return (
-    <Paper p="md" withBorder>
-      <Text fw={500} mb="sm">
-        Seat Legend
-      </Text>
-      <Group mb="xs">
-        <IconArmchair color="#aaa" size={20} />
-        <Text size="sm">Available</Text>
-      </Group>
-      <Group mb="xs">
-        <IconArmchair color={MAIN_COLOR} size={20} />
-        <Text size="sm">Selected</Text>
-      </Group>
-      <Group mb="xs">
-        <IconArmchair color="#d4af37" size={20} />
-        <Text size="sm">Premium</Text>
-      </Group>
-      <Group mb="xs">
-        <IconArmchair2 color="#7a5af5" size={20} />
-        <Text size="sm">VIP</Text>
-      </Group>
-      <Group mb="xs">
-        <IconWheelchair color="#e03131" size={20} />
-        <Text size="sm">Accessible</Text>
-      </Group>
-      <Group mb="xs">
-        <IconArmchair color="#555" size={20} />
-        <Text size="sm">Unavailable</Text>
-      </Group>
-    </Paper>
-  );
-};
+const SeatLegend = () => (
+  <Paper p="md" withBorder>
+    <Text fw={500} mb="sm">
+      Seat Legend
+    </Text>
+    <Group mb="xs">
+      <IconArmchair color="#aaa" size={20} />
+      <Text size="sm">Available</Text>
+    </Group>
+    <Group mb="xs">
+      <IconArmchair color={MAIN_COLOR} size={20} />
+      <Text size="sm">Selected</Text>
+    </Group>
+    <Group mb="xs">
+      <IconArmchair color="#d4af37" size={20} />
+      <Text size="sm">Premium</Text>
+    </Group>
+    <Group mb="xs">
+      <IconArmchair2 color="#7a5af5" size={20} />
+      <Text size="sm">VIP</Text>
+    </Group>
+    <Group mb="xs">
+      <IconWheelchair color="#e03131" size={20} />
+      <Text size="sm">Accessible</Text>
+    </Group>
+    <Group mb="xs">
+      <IconArmchair color="#555" size={20} />
+      <Text size="sm">Unavailable</Text>
+    </Group>
+  </Paper>
+);
 
 const SeatSelection = () => {
-  const { id } = useParams<{ id: string }>(); // ID of the showtime
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { colorScheme } = useMantineColorScheme();
@@ -103,16 +106,21 @@ const SeatSelection = () => {
   const [error, setError] = useState<string | null>(null);
   const [reservationInProgress, setReservationInProgress] = useState(false);
 
+  // Guest checkout state
+  const [guestModalOpen, setGuestModalOpen] = useState(false);
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [processingGuest, setProcessingGuest] = useState(false);
+
   useEffect(() => {
     const fetchShowtimeAndSeats = async () => {
       if (!id) return;
 
       try {
-        // Fetch showtime details
         const showtimeData = await showtimeApi.getShowtimeById(parseInt(id));
         setShowtime(showtimeData);
 
-        // Fetch seats for the theater room
         const seatsData = await seatApi.getSeatsByRoomId(
           showtimeData.theaterRoomId
         );
@@ -129,49 +137,33 @@ const SeatSelection = () => {
   }, [id]);
 
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!isAuthenticated && !loading) {
-      navigate("/login", {
-        state: { redirectTo: `/reservations/create/${id}` },
-      });
+      // Allow guest modal instead of redirect immediately
+      // navigate to login after modal cancellation
     }
-  }, [isAuthenticated, loading, navigate, id]);
+  }, [isAuthenticated, loading]);
 
   const handleSeatClick = (seat: SeatDTO) => {
     if (!seat.isAvailable) return;
 
-    setSelectedSeats((prevSelectedSeats) => {
-      const isSeatSelected = prevSelectedSeats.some((s) => s.id === seat.id);
-      if (isSeatSelected) {
-        return prevSelectedSeats.filter((s) => s.id !== seat.id);
-      } else {
-        return [...prevSelectedSeats, seat];
-      }
+    setSelectedSeats((prev) => {
+      const exists = prev.some((s) => s.id === seat.id);
+      return exists ? prev.filter((s) => s.id !== seat.id) : [...prev, seat];
     });
   };
 
-  const handleCreateReservation = async () => {
-    if (selectedSeats.length === 0) {
-      setError("Please select at least one seat");
-      return;
-    }
-
-    if (!showtime) return;
-
+  const processReservation = async (guestInfo?: GuestUserInfo) => {
     try {
       setReservationInProgress(true);
 
-      // Create a reservation with the selected seats
-      const reservationData = {
-        showtimeId: showtime.id,
+      const reservationData: CreateReservationRequest = {
+        showtimeId: showtime!.id,
         seatIds: selectedSeats.map((seat) => seat.id),
+        ...(guestInfo && { guestInfo }),
       };
 
-      const createdReservation = await reservationApi.createReservation(
-        reservationData
-      );
+      const created = await reservationApi.createReservation(reservationData);
 
-      // Show confirmation modal
       modals.open({
         title: <Text fw={700}>Reservation Confirmed!</Text>,
         centered: true,
@@ -196,7 +188,7 @@ const SeatSelection = () => {
                 color={MAIN_COLOR}
                 onClick={() => {
                   modals.closeAll();
-                  navigate(`/concessions/${createdReservation.id}`);
+                  navigate(`/concessions/${created.id}`);
                 }}
               >
                 Add Food & Drinks
@@ -205,7 +197,7 @@ const SeatSelection = () => {
           </>
         ),
         onClose: () => {
-          navigate(`/concessions/${createdReservation.id}`);
+          navigate(`/concessions/${created.id}`);
         },
       });
     } catch (error) {
@@ -213,6 +205,44 @@ const SeatSelection = () => {
       setError("Failed to create reservation. Please try again.");
     } finally {
       setReservationInProgress(false);
+    }
+  };
+
+  const handleCreateReservation = async () => {
+    if (selectedSeats.length === 0) {
+      setError("Please select at least one seat");
+      return;
+    }
+
+    if (!showtime) return;
+
+    if (!isAuthenticated) {
+      setGuestModalOpen(true);
+      return;
+    }
+
+    await processReservation();
+  };
+
+  const handleGuestCheckout = async () => {
+    if (!guestEmail) {
+      setError("Email is required");
+      return;
+    }
+    if (!agreeToTerms) {
+      setError("You must agree to the terms and conditions");
+      return;
+    }
+
+    setProcessingGuest(true);
+    try {
+      await processReservation({ email: guestEmail, phoneNumber: guestPhone });
+      setGuestModalOpen(false);
+    } catch (error) {
+      console.error("Guest checkout failed:", error);
+      setError("Failed to process guest checkout. Please try again.");
+    } finally {
+      setProcessingGuest(false);
     }
   };
 
@@ -254,35 +284,26 @@ const SeatSelection = () => {
     );
   }
 
-  // Group seats by row for display
   const seatsByRow = groupSeatsByRow(seats);
-  const sortedRows = Object.keys(seatsByRow)
-    .sort() // ["A","B","C",…]
-    .reverse(); // […,"C","B","A"]
-
-  // Calculate total price
+  const sortedRows = Object.keys(seatsByRow).sort().reverse();
   const basePrice = showtime.baseTicketPrice;
   const totalPrice = selectedSeats.reduce((total, seat) => {
-    let seatPrice = basePrice;
-    if (seat.seatType === "Premium") {
-      seatPrice *= 1.5;
-    } else if (seat.seatType === "VIP") {
-      seatPrice *= 2;
-    }
-    return total + seatPrice;
+    let price = basePrice;
+    if (seat.seatType === "Premium") price *= 1.5;
+    if (seat.seatType === "VIP") price *= 2;
+    return total + price;
   }, 0);
 
   return (
     <Container size="xl" py="xl">
+      {/* Main reservation UI */}
       <Paper
         shadow="sm"
         p="xl"
         radius="md"
         withBorder
         mb="xl"
-        style={{
-          borderTop: `3px solid ${MAIN_COLOR}`,
-        }}
+        style={{ borderTop: `3px solid ${MAIN_COLOR}` }}
       >
         <Title order={3} mb="md">
           Select Your Seats
@@ -294,14 +315,12 @@ const SeatSelection = () => {
               <IconMovie size={20} style={{ color: MAIN_COLOR }} />
               <Text fw={500}>{showtime.movieTitle}</Text>
             </Group>
-
             <Group mb="md">
               <IconTheater size={20} style={{ color: MAIN_COLOR }} />
               <Text>
                 {showtime.theaterName} - {showtime.theaterRoomName}
               </Text>
             </Group>
-
             <Group mb="md">
               <IconClock size={20} style={{ color: MAIN_COLOR }} />
               <Text>
@@ -317,7 +336,6 @@ const SeatSelection = () => {
                 })}
               </Text>
             </Group>
-
             <Group mb="md">
               <IconTicket size={20} style={{ color: MAIN_COLOR }} />
               <Text>Base Price: ${showtime.baseTicketPrice.toFixed(2)}</Text>
@@ -369,26 +387,22 @@ const SeatSelection = () => {
                     const isSelected = selectedSeats.some(
                       (s) => s.id === seat.id
                     );
-                    let seatIcon;
                     let color = seat.isAvailable ? "#aaa" : "#555";
-
-                    if (seat.seatType === "Premium") {
-                      color = isSelected ? MAIN_COLOR : "#d4af37";
+                    let seatIcon = <IconArmchair size={24} />;
+                    if (seat.seatType === "Premium")
                       seatIcon = <IconArmchair size={24} />;
-                    } else if (seat.seatType === "VIP") {
-                      color = isSelected ? MAIN_COLOR : "#7a5af5";
+                    if (seat.seatType === "VIP")
                       seatIcon = <IconArmchair2 size={24} />;
-                    } else if (seat.seatType === "Accessible") {
-                      color = isSelected ? MAIN_COLOR : "#e03131";
+                    if (seat.seatType === "Accessible")
                       seatIcon = <IconWheelchair size={24} />;
-                    } else {
-                      seatIcon = <IconArmchair size={24} />;
-                      if (isSelected) color = MAIN_COLOR;
-                    }
-
-                    let price = basePrice;
-                    if (seat.seatType === "Premium") price *= 1.5;
-                    if (seat.seatType === "VIP") price *= 2;
+                    if (seat.seatType === "Premium")
+                      color = isSelected ? MAIN_COLOR : "#d4af37";
+                    if (seat.seatType === "VIP")
+                      color = isSelected ? MAIN_COLOR : "#7a5af5";
+                    if (seat.seatType === "Accessible")
+                      color = isSelected ? MAIN_COLOR : "#e03131";
+                    if (!seat.isAvailable) color = "#555";
+                    if (seat.isAvailable && isSelected) color = MAIN_COLOR;
 
                     return (
                       <Tooltip
@@ -397,22 +411,27 @@ const SeatSelection = () => {
                           seat.isAvailable
                             ? `${seat.row}${seat.number} - ${
                                 seat.seatType || "Standard"
-                              } - $${price.toFixed(2)}`
+                              } - $${(seat.seatType === "Premium"
+                                ? basePrice * 1.5
+                                : seat.seatType === "VIP"
+                                ? basePrice * 2
+                                : basePrice
+                              ).toFixed(2)}`
                             : "Seat not available"
                         }
                         position="top"
                       >
                         <Box
                           onClick={() =>
-                            seat.isAvailable ? handleSeatClick(seat) : null
+                            seat.isAvailable && handleSeatClick(seat)
                           }
                           style={{
                             cursor: seat.isAvailable
                               ? "pointer"
                               : "not-allowed",
                             color,
-                            transition: "all 0.2s ease",
                             transform: isSelected ? "scale(1.1)" : "scale(1)",
+                            transition: "all 0.2s ease",
                           }}
                         >
                           {seatIcon}
@@ -430,10 +449,7 @@ const SeatSelection = () => {
             px="xl"
             py="sm"
             bg={MAIN_COLOR}
-            style={{
-              borderRadius: "4px",
-              color: "white",
-            }}
+            style={{ borderRadius: "4px", color: "white" }}
           >
             SCREEN
           </Text>
@@ -449,8 +465,8 @@ const SeatSelection = () => {
             Go Back
           </Button>
           <Button
-            onClick={handleCreateReservation}
             color={MAIN_COLOR}
+            onClick={handleCreateReservation}
             leftSection={<IconCheckbox size={16} />}
             loading={reservationInProgress}
             disabled={selectedSeats.length === 0}
@@ -459,6 +475,70 @@ const SeatSelection = () => {
           </Button>
         </Group>
       </Paper>
+
+      {/* Guest Checkout Modal */}
+      <Modal
+        opened={guestModalOpen}
+        onClose={() => setGuestModalOpen(false)}
+        title="Continue as Guest"
+        centered
+      >
+        <Stack>
+          <Text size="sm">
+            Enter your contact information to continue as a guest:
+          </Text>
+
+          <TextInput
+            label="Email Address"
+            placeholder="your@email.com"
+            value={guestEmail}
+            onChange={(e) => setGuestEmail(e.target.value)}
+            required
+          />
+
+          <TextInput
+            label="Phone Number (Optional)"
+            placeholder="(123) 456-7890"
+            value={guestPhone}
+            onChange={(e) => setGuestPhone(e.target.value)}
+          />
+
+          <Checkbox
+            label="I agree to the terms and conditions"
+            checked={agreeToTerms}
+            onChange={(e) => setAgreeToTerms(e.target.checked)}
+          />
+
+          {error && (
+            <Alert color="red" title="Error">
+              {error}
+            </Alert>
+          )}
+
+          <Group>
+            <Button variant="outline" onClick={() => setGuestModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              color={MAIN_COLOR}
+              onClick={handleGuestCheckout}
+              loading={processingGuest}
+              disabled={!guestEmail || !agreeToTerms}
+            >
+              Continue as Guest
+            </Button>
+          </Group>
+
+          <Divider my="sm" />
+
+          <Text size="sm" ta="center">
+            Already have an account?{" "}
+            <Anchor component={Link} to="/login">
+              Log in
+            </Anchor>
+          </Text>
+        </Stack>
+      </Modal>
     </Container>
   );
 };

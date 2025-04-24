@@ -149,11 +149,6 @@ export interface ReservationDTO {
   seats: ReservationSeatDTO[];
 }
 
-export interface CreateReservationRequest {
-  showtimeId: number;
-  seatIds: number[];
-}
-
 // Concession
 export interface ConcessionItemDTO {
   id: number;
@@ -200,6 +195,19 @@ export interface ConcessionOrderDTO {
   items: OrderItemDTO[];
 }
 
+// Add these new interfaces
+export interface GuestUserInfo {
+  email: string;
+  phoneNumber?: string;
+}
+
+// Update your CreateReservationRequest interface
+export interface CreateReservationRequest {
+  showtimeId: number;
+  seatIds: number[];
+  guestInfo?: GuestUserInfo;
+}
+
 // Custom error class for API errors
 export class ApiError extends Error {
   statusCode: number;
@@ -231,7 +239,6 @@ const handleApiError = (error: any, customMessage: string): never => {
   }
 
   if (ApiError.isApiError(error)) {
-    // Use the specific error message if it's an API error
     throw new Error(error.message || customMessage);
   }
 
@@ -248,12 +255,10 @@ async function axiosWithRetry<T>(
     const response = await axiosInstance(config);
     return response.data;
   } catch (error) {
-    // Don't retry authentication failures (401)
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       throw new ApiError("Not authenticated", 401);
     }
 
-    // Don't retry client errors (4xx) except for 429 (rate limit)
     if (
       axios.isAxiosError(error) &&
       error.response?.status &&
@@ -293,7 +298,6 @@ export const authApi = {
       });
 
       console.log("Login successful");
-      // Invalidate any user-related caches after login
       apiCache.invalidate(/^user|^theater/);
       return data;
     } catch (error) {
@@ -302,7 +306,6 @@ export const authApi = {
   },
 
   getCurrentUser: async (): Promise<UserDTO> => {
-    // Check cache first
     const cachedUser = apiCache.get<UserDTO>("currentUser");
     if (cachedUser) return cachedUser;
 
@@ -312,17 +315,13 @@ export const authApi = {
         method: "GET",
       });
 
-      // Cache user data for 30 minutes
       apiCache.set("currentUser", data, 30 * 60 * 1000);
       return data;
     } catch (error) {
-      // Don't propagate authentication errors, just return null
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         console.log("User not authenticated");
         return Promise.reject(new Error("Not authenticated"));
       }
-
-      // For other errors, use the standard error handler
       return handleApiError(error, "Failed to get current user information");
     }
   },
@@ -334,10 +333,27 @@ export const authApi = {
         method: "POST",
       });
 
-      // Clear all cache on logout
       apiCache.clear();
     } catch (error) {
       return handleApiError(error, "Logout failed. Please try again.");
+    }
+  },
+
+  /**
+   * Create a temporary guest user (for anonymous reservations).
+   */
+  createGuestUser: async (guestInfo: GuestUserInfo): Promise<UserDTO> => {
+    try {
+      const data = await axiosWithRetry<UserDTO>({
+        url: `/guest/create`,
+        method: "POST",
+        data: guestInfo,
+      });
+
+      apiCache.set("currentUser", data, 30 * 60 * 1000);
+      return data;
+    } catch (error) {
+      return handleApiError(error, "Failed to create guest session");
     }
   },
 };
@@ -370,7 +386,6 @@ export const userApi = {
 // Theater API calls
 export const theaterApi = {
   getAllTheaters: async (): Promise<TheaterDTO[]> => {
-    // Check cache first
     const cachedTheaters = apiCache.get<TheaterDTO[]>("theaters");
     if (cachedTheaters) return cachedTheaters;
 
@@ -380,7 +395,6 @@ export const theaterApi = {
         method: "GET",
       });
 
-      // Cache theaters for 5 minutes
       apiCache.set("theaters", data, 5 * 60 * 1000);
       return data;
     } catch (error) {
@@ -392,7 +406,6 @@ export const theaterApi = {
   },
 
   getTheaterById: async (id: number): Promise<TheaterDTO> => {
-    // Check cache first
     const cachedTheater = apiCache.get<TheaterDTO>(`theater_${id}`);
     if (cachedTheater) return cachedTheater;
 
@@ -402,7 +415,6 @@ export const theaterApi = {
         method: "GET",
       });
 
-      // Cache individual theater for 5 minutes
       apiCache.set(`theater_${id}`, data, 5 * 60 * 1000);
       return data;
     } catch (error) {
@@ -423,7 +435,6 @@ export const theaterApi = {
         data: theater,
       });
 
-      // Invalidate theaters cache
       apiCache.invalidate(/^theaters/);
       return data;
     } catch (error) {
@@ -445,7 +456,6 @@ export const theaterApi = {
         data: { ...theater, id },
       });
 
-      // Invalidate specific theater and theaters list cache
       apiCache.invalidate(/^theaters/);
       apiCache.invalidate(new RegExp(`^theater_${id}$`));
       return data;
@@ -464,7 +474,6 @@ export const theaterApi = {
         method: "DELETE",
       });
 
-      // Invalidate specific theater and theaters list cache
       apiCache.invalidate(/^theaters/);
       apiCache.invalidate(new RegExp(`^theater_${id}$`));
     } catch (error) {
@@ -531,7 +540,7 @@ export const movieApi = {
         method: "GET",
       });
 
-      apiCache.set("movies", data, 5 * 60 * 1000); // Cache for 5 minutes
+      apiCache.set("movies", data, 5 * 60 * 1000);
       return data;
     } catch (error) {
       return handleApiError(
@@ -551,7 +560,7 @@ export const movieApi = {
         method: "GET",
       });
 
-      apiCache.set(`movie_${id}`, data, 5 * 60 * 1000); // Cache for 5 minutes
+      apiCache.set(`movie_${id}`, data, 5 * 60 * 1000);
       return data;
     } catch (error) {
       return handleApiError(
@@ -575,7 +584,6 @@ export const movieApi = {
     }
   },
 
-  // Assign a theater to a movie - using the existing structure of theater-movies
   assignTheaterToMovie: async (
     movieId: number,
     theaterId: number
@@ -594,7 +602,6 @@ export const movieApi = {
     }
   },
 
-  // Unassign a theater from a movie - using the existing structure of theater-movies
   unassignTheaterFromMovie: async (
     movieId: number,
     theaterId: number
@@ -626,7 +633,7 @@ export const showtimeApi = {
         method: "GET",
       });
 
-      apiCache.set("showtimes", data, 5 * 60 * 1000); // Cache for 5 minutes
+      apiCache.set("showtimes", data, 5 * 60 * 1000);
       return data;
     } catch (error) {
       return handleApiError(
@@ -742,22 +749,7 @@ export const reservationApi = {
       );
     }
   },
-
-  cancelReservation: async (id: number): Promise<void> => {
-    try {
-      await axiosWithRetry<void>({
-        url: `/reservations/${id}`,
-        method: "DELETE",
-      });
-    } catch (error) {
-      return handleApiError(
-        error,
-        "Failed to cancel reservation. Please try again later."
-      );
-    }
-  },
 };
-
 // Concession API methods
 export const concessionApi = {
   getCategories: async (): Promise<ConcessionCategoryDTO[]> => {

@@ -20,6 +20,7 @@ namespace Selu383.SP25.P03.Api.Data
                 await roleManager.CreateAsync(new Role { Name = UserRoleNames.Admin });
                 await roleManager.CreateAsync(new Role { Name = UserRoleNames.Manager });
                 await roleManager.CreateAsync(new Role { Name = UserRoleNames.User });
+                await roleManager.CreateAsync(new Role { Name = "Guest" });
                 context.SaveChanges();
             }
         }

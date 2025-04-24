@@ -1,6 +1,6 @@
 // src/components/MovieShowtimes.tsx
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom"; // Added Link
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Container,
   Title,
@@ -22,80 +22,60 @@ import {
 import {
   IconCalendar,
   IconPlayerPlay,
-  IconBuilding, // Added IconBuilding
+  IconBuilding,
 } from "@tabler/icons-react";
 
 import { movieApi, showtimeApi, MovieDTO, ShowtimeDTO } from "../services/api";
 
 const MovieShowtimes = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [movie, setMovie] = useState<MovieDTO | null>(null);
-  const [, setShowtimes] = useState<ShowtimeDTO[]>([]);
+  const [showtimes, setShowtimes] = useState<ShowtimeDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [trailerOpen, setTrailerOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false); // Added isAdmin state
+  const [isAdmin, setIsAdmin] = useState(false);
   useMantineColorScheme();
 
-  // Define main ticket color and lighter price color
-  const mainTicketColor = "#c70036"; // Specified ticket color
+  const mainTicketColor = "#c70036";
 
+  // stub admin-check → replace with real auth/context
   useEffect(() => {
-    // Check if user is admin - this would typically come from your auth context
-    // For example:
-    // const { isAdmin } = useAuth();
-    // setIsAdmin(isAdmin);
-
-    // For testing, you could set this to true
-    setIsAdmin(true); // You'd replace this with actual auth logic
+    setIsAdmin(true);
   }, []);
 
+  // fetch movie + showtimes (no auth check)
   useEffect(() => {
-    const fetchShowtimesAndAssignments = async () => {
+    const fetchData = async () => {
       if (!id) return;
       try {
-        const movieData = await movieApi.getMovieById(parseInt(id));
+        const movieData = await movieApi.getMovieById(+id);
         setMovie(movieData);
 
-        // Fetch all showtimes for this movie
-        const allShowtimes = await showtimeApi.getShowtimesByMovie(
-          parseInt(id)
-        );
+        const allShowtimes = await showtimeApi.getShowtimesByMovie(+id);
+        const theaterRestrictions = await movieApi.getTheatersByMovie(+id);
 
-        // Check if this movie has theater restrictions
-        const theaterRestrictions = await movieApi.getTheatersByMovie(
-          parseInt(id)
-        );
-
-        // If there are theater restrictions, filter showtimes
         if (theaterRestrictions.length > 0) {
-          // Create a Set for faster lookups
-          const allowedTheaterIds = new Set(theaterRestrictions);
-
-          // Filter showtimes to only include those at allowed theaters
-          const filteredShowtimes = allShowtimes.filter((showtime) =>
-            allowedTheaterIds.has(showtime.theaterId)
-          );
-
-          setShowtimes(filteredShowtimes);
+          const allowed = new Set(theaterRestrictions);
+          setShowtimes(allShowtimes.filter((st) => allowed.has(st.theaterId)));
         } else {
-          // No restrictions, show all showtimes
           setShowtimes(allShowtimes);
         }
-      } catch (error) {
-        setError("Failed to fetch movie information");
-        console.error("Error fetching movie/showtimes:", error);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load movie information");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchShowtimesAndAssignments();
+    fetchData();
   }, [id]);
 
-  // Rest of your component code remains the same...
-
-  // Safely parse YouTube ID from URL - fixed return type to string | undefined
+  // send both guests & logged-in users down to seat selection
+  const handleSelectShowtime = (showtimeId: number) => {
+    navigate(`/reservations/create/${showtimeId}`);
+  };
 
   if (loading) {
     return (
@@ -115,24 +95,17 @@ const MovieShowtimes = () => {
     );
   }
 
-  // Group showtimes by date
-
-  // Group showtimes by theater
-
-  // Sort the dates for display
-
   return (
     <Container size="xl" py="xl">
       <Grid>
+        {/* Movie poster & details */}
         <Grid.Col span={{ base: 12, md: 4 }}>
           <Card
             shadow="sm"
-            padding="lg"
+            p="lg"
             radius="md"
             withBorder
-            style={{
-              borderTop: `3px solid ${mainTicketColor}`,
-            }}
+            style={{ borderTop: `3px solid ${mainTicketColor}` }}
           >
             <Card.Section>
               <div style={{ position: "relative" }}>
@@ -151,8 +124,8 @@ const MovieShowtimes = () => {
                     onClick={() => setTrailerOpen(true)}
                     style={{
                       position: "absolute",
-                      bottom: "10px",
-                      right: "10px",
+                      bottom: 10,
+                      right: 10,
                       zIndex: 2,
                     }}
                   >
@@ -185,21 +158,19 @@ const MovieShowtimes = () => {
             </Group>
 
             <Group gap="xs" mb="md">
-              {movie.genres.map((genre, index) => (
-                <Badge key={index} size="sm" variant="light" color="red">
-                  {genre}
+              {movie.genres.map((g, i) => (
+                <Badge key={i} size="sm" variant="light" color="red">
+                  {g}
                 </Badge>
               ))}
             </Group>
 
-            {/* Admin Button for Theater Management */}
             {isAdmin && (
               <Button
                 variant="outline"
                 component={Link}
                 to={`/movies/${movie.id}/theaters`}
                 leftSection={<IconBuilding size={16} />}
-                mb="md"
                 fullWidth
                 style={{
                   borderColor: mainTicketColor,
@@ -212,41 +183,70 @@ const MovieShowtimes = () => {
           </Card>
         </Grid.Col>
 
-        {/* Rest of your component remains the same... */}
+        {/* Showtimes listing */}
         <Grid.Col span={{ base: 12, md: 8 }}>
-          {/* Existing showtimes display code */}
           <Paper
             shadow="sm"
             p="lg"
             withBorder
-            style={{
-              borderTop: `3px solid ${mainTicketColor}`,
-            }}
+            style={{ borderTop: `3px solid ${mainTicketColor}` }}
           >
-            {/* Existing Tabs and showtimes content */}
-            {/* ... */}
             <Title order={3} mb="md">
               Showtimes for {movie.title}
             </Title>
 
             <Tabs defaultValue="by-date">
-              {/* Existing tabs content */}
-              {/* ... */}
+              <Tabs.List>
+                <Tabs.Tab value="by-date">By Date</Tabs.Tab>
+                <Tabs.Tab value="by-theater">By Theater</Tabs.Tab>
+              </Tabs.List>
+
+              <Tabs.Panel value="by-date" pt="xs">
+                {showtimes.map((st) => (
+                  <Button
+                    key={st.id}
+                    variant="subtle"
+                    onClick={() => handleSelectShowtime(st.id)}
+                    style={{ margin: 4 }}
+                  >
+                    {new Date(st.startTime).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Button>
+                ))}
+              </Tabs.Panel>
+
+              <Tabs.Panel value="by-theater" pt="xs">
+                {showtimes.map((st) => (
+                  <Button
+                    key={st.id}
+                    variant="subtle"
+                    onClick={() => handleSelectShowtime(st.id)}
+                    style={{ margin: 4 }}
+                  >
+                    {st.theaterName} –{" "}
+                    {new Date(st.startTime).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Button>
+                ))}
+              </Tabs.Panel>
             </Tabs>
           </Paper>
         </Grid.Col>
       </Grid>
 
-      {/* Trailer Modal */}
+      {/* Trailer modal */}
       <Modal
         opened={trailerOpen}
         onClose={() => setTrailerOpen(false)}
-        title={`${movie.title} - Official Trailer`}
+        title={`${movie.title} — Official Trailer`}
         size="xl"
         centered
       >
-        {/* Existing modal content */}
-        {/* ... */}
+        {/* embed your video player here */}
       </Modal>
     </Container>
   );

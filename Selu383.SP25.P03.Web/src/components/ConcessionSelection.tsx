@@ -30,20 +30,24 @@ import {
   IconBrandCashapp,
 } from "@tabler/icons-react";
 
+import { useAuth } from "../contexts/AuthContext"; // ← new
+
 import {
-  concessionApi,
   ConcessionItemDTO,
   ConcessionCategoryDTO,
   CreateOrderItemDTO,
   reservationApi,
   ReservationDTO,
 } from "../services/api";
+import { concessionApi } from "../services/api";
 
 const ConcessionSelection = () => {
   const { id } = useParams<{ id: string }>(); // Reservation ID
   const navigate = useNavigate();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
+
+  const { isAuthenticated, isGuest } = useAuth(); // ← new
 
   const [reservation, setReservation] = useState<ReservationDTO | null>(null);
   const [categories, setCategories] = useState<ConcessionCategoryDTO[]>([]);
@@ -57,9 +61,9 @@ const ConcessionSelection = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  // Fetch reservation, categories, and items
+  // ← updated effect
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchReservationAndConcessions = async () => {
       try {
         if (!id) throw new Error("Reservation ID is required");
 
@@ -72,32 +76,37 @@ const ConcessionSelection = () => {
         setReservation(reservationData);
         setCategories(categoriesData);
         setItems(itemsData);
-
         if (categoriesData.length > 0) {
           setActiveCategory(categoriesData[0].id.toString());
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch (err) {
+        console.error("Error fetching data:", err);
         setError("Failed to load concession data. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [id]);
+    if (isAuthenticated || isGuest) {
+      fetchReservationAndConcessions();
+    } else {
+      // redirect guests who aren’t “logged in” yet
+      navigate("/login", {
+        state: { redirectTo: `/concessions/${id}` },
+      });
+    }
+  }, [id, isAuthenticated, isGuest, navigate]);
 
   const handleQuantityChange = (itemId: number, quantity: number) => {
     if (quantity === 0) {
       setCart(cart.filter((item) => item.concessionItemId !== itemId));
       return;
     }
-
-    const existingItem = cart.find((item) => item.concessionItemId === itemId);
-    if (existingItem) {
+    const existing = cart.find((i) => i.concessionItemId === itemId);
+    if (existing) {
       setCart(
-        cart.map((item) =>
-          item.concessionItemId === itemId ? { ...item, quantity } : item
+        cart.map((i) =>
+          i.concessionItemId === itemId ? { ...i, quantity } : i
         )
       );
     } else {
@@ -106,81 +115,54 @@ const ConcessionSelection = () => {
   };
 
   const handleSpecialInstructionsChange = (itemId: number, text: string) => {
-    setSpecialInstructions({
-      ...specialInstructions,
-      [itemId]: text,
-    });
-
-    // Update cart item if it exists
-    const existingItemIndex = cart.findIndex(
-      (item) => item.concessionItemId === itemId
-    );
-    if (existingItemIndex >= 0) {
-      const updatedCart = [...cart];
-      updatedCart[existingItemIndex] = {
-        ...updatedCart[existingItemIndex],
-        specialInstructions: text,
-      };
-      setCart(updatedCart);
+    setSpecialInstructions({ ...specialInstructions, [itemId]: text });
+    const idx = cart.findIndex((i) => i.concessionItemId === itemId);
+    if (idx >= 0) {
+      const updated = [...cart];
+      updated[idx] = { ...updated[idx], specialInstructions: text };
+      setCart(updated);
     }
   };
 
-  const getItemQuantity = (itemId: number): number => {
-    const item = cart.find((item) => item.concessionItemId === itemId);
+  const getItemQuantity = (itemId: number) => {
+    const item = cart.find((i) => i.concessionItemId === itemId);
     return item ? item.quantity : 0;
   };
 
-  const calculateTotal = (): number => {
-    return cart.reduce((total, cartItem) => {
-      const item = items.find((i) => i.id === cartItem.concessionItemId);
-      if (item) {
-        return total + item.price * cartItem.quantity;
-      }
-      return total;
+  const calculateTotal = () =>
+    cart.reduce((sum, ci) => {
+      const item = items.find((i) => i.id === ci.concessionItemId);
+      return item ? sum + item.price * ci.quantity : sum;
     }, 0);
-  };
 
   const handleSubmitOrder = async () => {
     if (!reservation) return;
     if (cart.length === 0) {
-      // Skip concessions
-      navigate(`/my-reservations`);
+      navigate("/my-reservations");
       return;
     }
 
     setOrderLoading(true);
     setError(null);
-
     try {
-      // Update cart items with special instructions
-      const finalCart = cart.map((item) => ({
-        ...item,
-        specialInstructions: specialInstructions[item.concessionItemId] || "",
+      const finalCart = cart.map((ci) => ({
+        ...ci,
+        specialInstructions: specialInstructions[ci.concessionItemId] || "",
       }));
-
-      // Create the order
       await concessionApi.createOrder({
         reservationId: reservation.id,
         items: finalCart,
       });
-
-      // Navigate to reservations page
-      navigate(`/my-reservations`);
-    } catch (error) {
-      console.error("Error creating order:", error);
+      navigate("/my-reservations");
+    } catch (err) {
+      console.error("Error creating order:", err);
       setError("Failed to create your order. Please try again.");
     } finally {
       setOrderLoading(false);
     }
   };
 
-  const handleSkip = () => {
-    navigate(`/my-reservations`);
-  };
-
-  const filteredItems = activeCategory
-    ? items.filter((item) => item.categoryId === parseInt(activeCategory))
-    : items;
+  const handleSkip = () => navigate("/my-reservations");
 
   if (loading) {
     return (
@@ -201,10 +183,7 @@ const ConcessionSelection = () => {
         >
           {error}
         </Alert>
-        <Button
-          onClick={() => navigate(-1)}
-          leftSection={<IconArrowLeft size={16} />}
-        >
+        <Button onClick={() => navigate(-1)} leftSection={<IconArrowLeft />}>
           Go Back
         </Button>
       </Container>
@@ -240,103 +219,100 @@ const ConcessionSelection = () => {
 
         <Tabs value={activeCategory} onChange={setActiveCategory}>
           <Tabs.List mb="md">
-            {categories.map((category) => (
-              <Tabs.Tab key={category.id} value={category.id.toString()}>
-                {category.name}
+            {categories.map((cat) => (
+              <Tabs.Tab key={cat.id} value={cat.id.toString()}>
+                {cat.name}
               </Tabs.Tab>
             ))}
           </Tabs.List>
 
           <Grid gutter="md">
-            {filteredItems.map((item) => (
-              <Grid.Col key={item.id} span={{ base: 12, sm: 6, md: 4 }}>
-                <Card shadow="sm" padding="md" radius="md" withBorder>
-                  {item.imageUrl && (
-                    <Card.Section>
-                      <Image
-                        src={item.imageUrl}
-                        height={120}
-                        alt={item.name}
-                        fallbackSrc="https://placehold.co/400x200/gray/white?text=Food+Item"
-                      />
-                    </Card.Section>
-                  )}
+            {items
+              .filter((i) =>
+                activeCategory ? i.categoryId === +activeCategory : true
+              )
+              .map((item) => (
+                <Grid.Col key={item.id} span={{ base: 12, sm: 6, md: 4 }}>
+                  <Card shadow="sm" padding="md" radius="md" withBorder>
+                    {item.imageUrl && (
+                      <Card.Section>
+                        <Image
+                          src={item.imageUrl}
+                          height={120}
+                          alt={item.name}
+                          fallbackSrc="https://placehold.co/400x200/gray/white?text=Food+Item"
+                        />
+                      </Card.Section>
+                    )}
 
-                  <Group justify="apart" mt="md" mb="xs">
-                    <Text fw={500}>{item.name}</Text>
-                    <Badge color={isDark ? "secondary" : "primary"}>
-                      ${item.price.toFixed(2)}
-                    </Badge>
-                  </Group>
+                    <Group justify="apart" mt="md" mb="xs">
+                      <Text fw={500}>{item.name}</Text>
+                      <Badge color={isDark ? "secondary" : "primary"}>
+                        ${item.price.toFixed(2)}
+                      </Badge>
+                    </Group>
 
-                  <Text size="sm" c="dimmed" mb="md" lineClamp={2}>
-                    {item.description || "No description available"}
-                  </Text>
+                    <Text size="sm" c="dimmed" mb="md" lineClamp={2}>
+                      {item.description || "No description available"}
+                    </Text>
 
-                  <Group justify="apart" mt="md">
-                    <Group>
-                      <Button
-                        size="xs"
-                        variant="subtle"
-                        onClick={() =>
-                          handleQuantityChange(
-                            item.id,
-                            Math.max(0, getItemQuantity(item.id) - 1)
-                          )
-                        }
-                        leftSection={<IconMinus size={14} />}
-                      />
+                    <Group justify="apart" mt="md">
+                      <Group>
+                        <Button
+                          size="xs"
+                          variant="subtle"
+                          onClick={() =>
+                            handleQuantityChange(
+                              item.id,
+                              Math.max(0, getItemQuantity(item.id) - 1)
+                            )
+                          }
+                          leftSection={<IconMinus size={14} />}
+                        />
+                        <Text fw={500}>{getItemQuantity(item.id)}</Text>
+                        <Button
+                          size="xs"
+                          variant="subtle"
+                          onClick={() =>
+                            handleQuantityChange(
+                              item.id,
+                              getItemQuantity(item.id) + 1
+                            )
+                          }
+                          leftSection={<IconPlus size={14} />}
+                        />
+                      </Group>
 
-                      <Text fw={500}>{getItemQuantity(item.id)}</Text>
-
-                      <Button
-                        size="xs"
-                        variant="subtle"
-                        onClick={() =>
-                          handleQuantityChange(
-                            item.id,
-                            getItemQuantity(item.id) + 1
-                          )
-                        }
-                        leftSection={<IconPlus size={14} />}
-                      />
+                      {getItemQuantity(item.id) > 0 && (
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          color="red"
+                          onClick={() => handleQuantityChange(item.id, 0)}
+                          leftSection={<IconTrash size={14} />}
+                        >
+                          Remove
+                        </Button>
+                      )}
                     </Group>
 
                     {getItemQuantity(item.id) > 0 && (
-                      <Button
+                      <TextInput
+                        mt="xs"
                         size="xs"
-                        variant="outline"
-                        color="red"
-                        onClick={() => handleQuantityChange(item.id, 0)}
-                        leftSection={<IconTrash size={14} />}
-                      >
-                        Remove
-                      </Button>
+                        placeholder="Any special instructions?"
+                        value={specialInstructions[item.id] || ""}
+                        onChange={(e) =>
+                          handleSpecialInstructionsChange(
+                            item.id,
+                            e.currentTarget.value
+                          )
+                        }
+                      />
                     )}
-                  </Group>
-
-                  {getItemQuantity(item.id) > 0 && (
-                    <TextInput
-                      mt="xs"
-                      size="xs"
-                      placeholder="Any special instructions?"
-                      value={specialInstructions[item.id] || ""}
-                      onChange={(e) =>
-                        handleSpecialInstructionsChange(item.id, e.target.value)
-                      }
-                    />
-                  )}
-                </Card>
-              </Grid.Col>
-            ))}
-
-            {filteredItems.length === 0 && (
-              <Grid.Col span={12}>
-                <Text ta="center" c="dimmed">
-                  No items available in this category
-                </Text>
-              </Grid.Col>
-            )}
+                  </Card>
+                </Grid.Col>
+              ))}
           </Grid>
         </Tabs>
       </Paper>
@@ -352,22 +328,18 @@ const ConcessionSelection = () => {
           </Text>
         ) : (
           <>
-            {cart.map((cartItem) => {
-              const item = items.find(
-                (i) => i.id === cartItem.concessionItemId
-              );
+            {cart.map((ci) => {
+              const item = items.find((i) => i.id === ci.concessionItemId);
               if (!item) return null;
-
               return (
                 <Paper key={item.id} p="xs" mb="xs" withBorder>
                   <Group justify="apart">
                     <Group>
                       <Text>{item.name}</Text>
-                      <Badge>{cartItem.quantity}x</Badge>
+                      <Badge>{ci.quantity}×</Badge>
                     </Group>
-                    <Text>${(item.price * cartItem.quantity).toFixed(2)}</Text>
+                    <Text>${(item.price * ci.quantity).toFixed(2)}</Text>
                   </Group>
-
                   {specialInstructions[item.id] && (
                     <Text size="xs" c="dimmed" ml="md">
                       Note: {specialInstructions[item.id]}
@@ -395,7 +367,6 @@ const ConcessionSelection = () => {
         >
           Skip Concessions
         </Button>
-
         <Button
           onClick={handleSubmitOrder}
           color={isDark ? "secondary" : "primary"}

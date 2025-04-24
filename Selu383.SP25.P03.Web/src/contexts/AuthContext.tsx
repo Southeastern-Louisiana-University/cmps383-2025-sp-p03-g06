@@ -17,6 +17,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isGuest: boolean;
+  createGuestSession: (email: string, phone: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,6 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const authCheckPerformed = useRef(false);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     if (authCheckPerformed.current) return;
@@ -76,6 +79,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const createGuestSession = async (email: string, phone: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const userData = await authApi.createGuestUser({
+        email,
+        phoneNumber: phone,
+      });
+      setUser(userData);
+      setIsGuest(true);
+    } catch (error) {
+      setError("Failed to create guest session");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Compute isAuthenticated and isAdmin from the user object
   const isAuthenticated = !!user;
   const isAdmin = user?.roles?.includes("Admin") ?? false;
@@ -90,6 +111,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         isAuthenticated,
         isAdmin,
+        isGuest,
+        createGuestSession,
       }}
     >
       {children}

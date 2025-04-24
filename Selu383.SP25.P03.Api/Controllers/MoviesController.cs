@@ -10,6 +10,7 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/movies")]
     [ApiController]
+    [AllowAnonymous]
     public class MoviesController(DataContext context) : ControllerBase
     {
         private readonly DataContext _context = context;

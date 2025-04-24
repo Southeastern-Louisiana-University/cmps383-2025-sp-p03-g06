@@ -11,7 +11,7 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/theater-movies")]
     [ApiController]
-    [Authorize(Roles = $"{UserRoleNames.Admin},{UserRoleNames.Manager}")]
+    [AllowAnonymous]
     public class TheaterMoviesController(DataContext context) : ControllerBase
     {
         private readonly DataContext _context = context;
@@ -54,6 +54,7 @@ namespace Selu383.SP25.P03.Api.Controllers
         }
 
         [HttpPost("assign")]
+        [Authorize(Roles = $"{UserRoleNames.Admin},{UserRoleNames.Manager}")]
         public async Task<ActionResult> AssignMovieToTheater(TheaterMovieDTO dto)
         {
             var movie = await _movies.FindAsync(dto.MovieId);
@@ -88,6 +89,7 @@ namespace Selu383.SP25.P03.Api.Controllers
         }
 
         [HttpDelete("unassign")]
+        [Authorize(Roles = $"{UserRoleNames.Admin},{UserRoleNames.Manager}")]
         public async Task<ActionResult> UnassignMovieFromTheater(TheaterMovieDTO dto)
         {
             var entry = await _theaterMovies
