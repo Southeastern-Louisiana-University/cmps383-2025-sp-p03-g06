@@ -14,6 +14,7 @@ import {
   Drawer,
   Stack,
   Avatar,
+  UnstyledButton,
 } from "@mantine/core";
 import {
   IconLogout,
@@ -61,6 +62,14 @@ const Navbar = () => {
 
   const activeLink = (path: string) => location.pathname === path;
 
+  // Custom Link component that handles React Router integration
+  // This is a simpler approach than using complex typings
+  const NavLink = ({ to, children, ...props }: any) => (
+    <Link to={to} {...props}>
+      {children}
+    </Link>
+  );
+
   return (
     <>
       <Box
@@ -82,30 +91,54 @@ const Navbar = () => {
       >
         <Group justify="space-between" h="100%" wrap="nowrap">
           <Group>
-            <Link
+            {/* Updated branding button */}
+            <UnstyledButton
+              component={NavLink}
               to="/"
               style={{
-                textDecoration: "none",
-                color: "#ffffff",
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                textDecoration: "none",
+                padding: "8px", // Direct value instead of theme
+                borderRadius: "8px", // Direct value instead of theme
+                transition: "background-color 0.2s, transform 0.2s",
               }}
+              sx={() => ({
+                "&:hover": {
+                  backgroundColor: `rgba(224, 49, 49, 0.1)`,
+                  transform: "scale(1.03)",
+                },
+              })}
             >
-              <IconMovie size={32} color={redButtonColor} stroke={1.5} />
+              <Box
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "8px", // Direct value instead of theme
+                  backgroundColor: "#e03131", // Direct color value
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: "12px", // Direct value instead of theme
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)", // Direct shadow
+                }}
+              >
+                <IconMovie size={24} color="#fff" stroke={2} />
+              </Box>
 
               <Text
+                size="xl"
                 fw={700}
-                className="navbar-title"
                 style={{
-                  letterSpacing: "0.5px",
-                  fontFamily: "'Poppins', sans-serif",
-                  fontSize: "1.25rem",
+                  background: "linear-gradient(90deg, #e03131, #ff6b6b)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  letterSpacing: 0.5,
                 }}
               >
                 Lions Den Cinemas
               </Text>
-            </Link>
+            </UnstyledButton>
           </Group>
 
           {/* Desktop menu */}
@@ -114,7 +147,7 @@ const Navbar = () => {
               {isAuthenticated ? (
                 <>
                   <Button
-                    component={Link}
+                    component={NavLink}
                     to="/"
                     variant={activeLink("/") ? "filled" : "subtle"}
                     color="primary"
@@ -125,7 +158,7 @@ const Navbar = () => {
                   </Button>
 
                   <Button
-                    component={Link}
+                    component={NavLink}
                     to="/movies"
                     variant={activeLink("/movies") ? "filled" : "subtle"}
                     color="primary"
@@ -136,7 +169,7 @@ const Navbar = () => {
                   </Button>
 
                   <Button
-                    component={Link}
+                    component={NavLink}
                     to="/theaters"
                     variant={activeLink("/theaters") ? "filled" : "subtle"}
                     color="primary"
@@ -147,7 +180,7 @@ const Navbar = () => {
                   </Button>
 
                   <Button
-                    component={Link}
+                    component={NavLink}
                     to="/my-reservations"
                     variant={
                       activeLink("/my-reservations") ? "filled" : "subtle"
@@ -196,7 +229,18 @@ const Navbar = () => {
               ) : (
                 <>
                   <Button
-                    component={Link}
+                    component={NavLink}
+                    to="/"
+                    variant={activeLink("/") ? "filled" : "subtle"}
+                    color="primary"
+                    leftSection={<IconHome size={18} />}
+                    style={{ color: "white" }}
+                  >
+                    Home
+                  </Button>
+
+                  <Button
+                    component={NavLink}
                     to="/movies"
                     variant={activeLink("/movies") ? "filled" : "subtle"}
                     color="primary"
@@ -207,55 +251,12 @@ const Navbar = () => {
                   </Button>
 
                   <Button
-                    component={Link}
-                    to="/theaters"
-                    variant={activeLink("/theaters") ? "filled" : "subtle"}
-                    color="primary"
-                    leftSection={<IconTheater size={18} />}
-                    style={{ color: "white" }}
-                  >
-                    Our Theaters
-                  </Button>
-
-                  {/* Sign up button */}
-                  <Button
-                    component={Link}
-                    to="/signup"
-                    variant="outline"
+                    onClick={modalHandlers.open}
+                    variant="filled"
+                    style={{ backgroundColor: redButtonColor }}
                     leftSection={<IconUserPlus size={18} />}
-                    style={{
-                      borderColor: redButtonColor,
-                      color: redButtonColor,
-                    }}
-                    styles={{
-                      root: {
-                        "&:hover": {
-                          backgroundColor: `${redButtonColor}10`,
-                        },
-                      },
-                    }}
                   >
-                    Sign Up
-                  </Button>
-
-                  {/* Login button - Same red as landing page */}
-                  <Button
-                    component={Link}
-                    to="/login"
-                    style={{
-                      backgroundColor: redButtonColor,
-                      color: "white",
-                      fontWeight: 600,
-                    }}
-                    styles={{
-                      root: {
-                        "&:hover": {
-                          backgroundColor: "#c92a2a",
-                        },
-                      },
-                    }}
-                  >
-                    LOGIN
+                    Sign In
                   </Button>
                 </>
               )}
@@ -295,96 +296,62 @@ const Navbar = () => {
         withCloseButton
         position="right"
         styles={{
-          body: {
-            backgroundColor: "#1a1b1e",
-          },
-          header: {
-            backgroundColor: "#1a1b1e",
-          },
+          body: { backgroundColor: "#1a1b1e" },
+          header: { backgroundColor: "#1a1b1e" },
         }}
       >
         <Stack>
           {isAuthenticated ? (
             <>
-              <Group mb="md">
-                <Avatar
-                  size="md"
-                  color="primary"
-                  radius="xl"
-                  style={{ backgroundColor: redButtonColor }}
-                >
-                  {user?.userName.charAt(0).toUpperCase()}
-                </Avatar>
-                <div>
-                  <Text fw={500}>{user?.userName}</Text>
-                  <Text size="xs" c="dimmed">
-                    {user?.roles?.includes("Admin")
-                      ? "Administrator"
-                      : "Member"}
-                  </Text>
-                </div>
-              </Group>
-
               <Button
-                component={Link}
+                component={NavLink}
                 to="/"
-                variant="subtle"
+                variant={activeLink("/") ? "filled" : "subtle"}
                 color="primary"
-                fullWidth
                 leftSection={<IconHome size={18} />}
-                onClick={close}
+                fullWidth
               >
                 Home
               </Button>
 
               <Button
-                component={Link}
+                component={NavLink}
                 to="/movies"
                 variant={activeLink("/movies") ? "filled" : "subtle"}
                 color="primary"
-                fullWidth
                 leftSection={<IconMovie size={18} />}
-                onClick={close}
+                fullWidth
               >
                 Movies
               </Button>
 
               <Button
-                component={Link}
+                component={NavLink}
                 to="/theaters"
                 variant={activeLink("/theaters") ? "filled" : "subtle"}
                 color="primary"
-                fullWidth
                 leftSection={<IconTheater size={18} />}
-                onClick={close}
+                fullWidth
               >
                 Theaters
               </Button>
 
               <Button
-                component={Link}
+                component={NavLink}
                 to="/my-reservations"
                 variant={activeLink("/my-reservations") ? "filled" : "subtle"}
                 color="primary"
-                fullWidth
                 leftSection={<IconTicket size={18} />}
-                onClick={close}
+                fullWidth
               >
-                Tickets
+                My Tickets
               </Button>
 
               <Button
-                variant="outline"
-                fullWidth
+                color="red"
                 leftSection={<IconLogout size={18} />}
-                onClick={() => {
-                  handleLogout();
-                  close();
-                }}
-                style={{
-                  borderColor: redButtonColor,
-                  color: redButtonColor,
-                }}
+                onClick={handleLogout}
+                fullWidth
               >
                 Logout
               </Button>
@@ -392,44 +359,35 @@ const Navbar = () => {
           ) : (
             <>
               <Button
-                component={Link}
-                to="/movies"
-                variant="subtle"
+                component={NavLink}
+                to="/"
+                variant={activeLink("/") ? "filled" : "subtle"}
                 color="primary"
+                leftSection={<IconHome size={18} />}
                 fullWidth
+              >
+                Home
+              </Button>
+
+              <Button
+                component={NavLink}
+                to="/movies"
+                variant={activeLink("/movies") ? "filled" : "subtle"}
+                color="primary"
                 leftSection={<IconMovie size={18} />}
-                onClick={close}
+                fullWidth
               >
                 Movies
               </Button>
 
               <Button
-                component={Link}
-                to="/signup"
-                variant="outline"
-                fullWidth
+                onClick={modalHandlers.open}
+                variant="filled"
+                style={{ backgroundColor: redButtonColor }}
                 leftSection={<IconUserPlus size={18} />}
-                onClick={close}
-                style={{
-                  borderColor: redButtonColor,
-                  color: redButtonColor,
-                }}
-              >
-                Sign Up
-              </Button>
-
-              <Button
-                component={Link}
-                to="/login"
                 fullWidth
-                onClick={close}
-                style={{
-                  backgroundColor: redButtonColor,
-                  color: "white",
-                  fontWeight: 600,
-                }}
               >
-                LOGIN
+                Sign In
               </Button>
             </>
           )}

@@ -1,287 +1,342 @@
-// src/components/TheaterList.tsx - Simplified for better legibility
-import { useState, useEffect } from "react";
+// src/components/TheaterList.tsx
+import { useState, useEffect, ChangeEvent } from "react";
 import { theaterApi, TheaterDTO } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
-import TheaterCard from "./TheaterCard";
 import {
   Container,
   Title,
-  Group,
-  Button,
-  Alert,
   Text,
   Loader,
-  SimpleGrid,
-  Paper,
-  Box,
+  Alert,
   TextInput,
   Select,
-  useMantineColorScheme,
+  Button,
+  SimpleGrid,
+  Card,
+  Badge,
+  ScrollArea,
+  Table,
+  Box,
 } from "@mantine/core";
 import {
   IconAlertCircle,
   IconPlus,
   IconSearch,
-  IconFilter,
   IconArrowsSort,
-  IconEye,
-  IconMovie,
   IconTheater,
+  IconLayoutGrid,
+  IconTable as IconTableView,
+  IconMapPin,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 
 const TheaterList = () => {
   const [theaters, setTheaters] = useState<TheaterDTO[]>([]);
-  const [filteredTheaters, setFilteredTheaters] = useState<TheaterDTO[]>([]);
+  const [filtered, setFiltered] = useState<TheaterDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<string>("name-asc");
+  const [sortBy, setSortBy] = useState("name-asc");
   const [filtersVisible, { toggle: toggleFilters }] = useDisclosure(false);
-  const { colorScheme } = useMantineColorScheme();
-  const isDark = colorScheme === "dark";
-
-  const fetchTheaters = async () => {
-    try {
-      const data = await theaterApi.getAllTheaters();
-      setTheaters(data);
-      setFilteredTheaters(data);
-    } catch (error) {
-      setError("Failed to fetch theaters");
-      console.error("Error fetching theaters:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   useEffect(() => {
-    fetchTheaters();
+    (async () => {
+      try {
+        const data = await theaterApi.getAllTheaters();
+        setTheaters(data);
+        setFiltered(data);
+      } catch {
+        setError("Failed to fetch theaters");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  // Filter and sort theaters
   useEffect(() => {
-    let result = [...theaters];
-
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (theater) =>
-          theater.name.toLowerCase().includes(query) ||
-          theater.address.toLowerCase().includes(query)
-      );
-    }
-
-    // Apply sorting
-    if (sortBy) {
-      const [field, direction] = sortBy.split("-");
-      result = result.sort((a, b) => {
-        let comparison = 0;
-
-        if (field === "name") {
-          comparison = a.name.localeCompare(b.name);
-        } else if (field === "seats") {
-          comparison = a.seatCount - b.seatCount;
-        }
-
-        return direction === "asc" ? comparison : -comparison;
-      });
-    }
-
-    setFilteredTheaters(result);
+    let result = theaters.filter((t) =>
+      `${t.name} ${t.address}`.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    const [field, dir] = sortBy.split("-");
+    result = result.sort((a, b) => {
+      const cmp =
+        field === "seats"
+          ? a.seatCount - b.seatCount
+          : a.name.localeCompare(b.name);
+      return dir === "asc" ? cmp : -cmp;
+    });
+    setFiltered(result);
   }, [theaters, searchQuery, sortBy]);
 
   const handleDelete = async (id: number) => {
     try {
       await theaterApi.deleteTheater(id);
-      setTheaters(theaters.filter((theater) => theater.id !== id));
-    } catch (error) {
+      setTheaters((t) => t.filter((x) => x.id !== id));
+    } catch {
       setError("Failed to delete theater");
-      console.error("Error deleting theater:", error);
     }
   };
 
   if (loading) {
     return (
-      <Container
-        mt="xl"
+      <Box
         style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "200px",
+          backgroundColor: "var(--background-darker)",
+          minHeight: "100vh",
+          paddingTop: 48,
         }}
       >
         <Loader size="md" />
-        <Text mt="md">Loading theaters...</Text>
-      </Container>
+        <Text style={{ marginTop: 16 }}>Loading theaters…</Text>
+      </Box>
     );
   }
 
   return (
-    <Container size="xl">
-      <Box mt="xl">
-        <Group justify="center" mb="lg">
-          <IconTheater
-            size={32}
-            stroke={1.5}
-            color="#e03131" // Changed to red color
-          />
-          <Title
-            order={2}
-            style={{
-              fontSize: "1.8rem",
-              fontWeight: 700,
-              color: "#ffffff", // Always white in dark mode
-            }}
-          >
-            Our Theaters
-          </Title>
-        </Group>
+    <Box
+      style={{
+        backgroundColor: "var(--background-darker)",
+        minHeight: "100vh",
+      }}
+    >
+      <Container size="xl" style={{ marginTop: 48 }}>
+        <Box
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <Box style={{ display: "flex", alignItems: "center" }}>
+            <IconTheater size={32} color="#e03131" />
+            <Title
+              order={2}
+              style={{ color: "#fff", marginLeft: 8, fontSize: "1.8rem" }}
+            >
+              Our Theaters
+            </Title>
+          </Box>
+
+          <Box style={{ display: "flex" }}>
+            <Button
+              variant={viewMode === "grid" ? "filled" : "outline"}
+              onClick={() => setViewMode("grid")}
+              size="xs"
+            >
+              <IconLayoutGrid size={16} />
+            </Button>
+            <Button
+              variant={viewMode === "table" ? "filled" : "outline"}
+              onClick={() => setViewMode("table")}
+              size="xs"
+              style={{ marginLeft: 8 }}
+            >
+              <IconTableView size={16} />
+            </Button>
+          </Box>
+        </Box>
 
         {error && (
           <Alert
             icon={<IconAlertCircle size={16} />}
             title="Error"
             color="red"
-            mb="md"
+            style={{ marginBottom: 16 }}
           >
             {error}
           </Alert>
         )}
 
-        <Paper
-          shadow="xs"
-          p="md"
-          withBorder
-          mb="xl"
-          radius="md"
-          style={{
-            background: isDark
-              ? "rgba(37, 38, 43, 0.95)"
-              : "rgba(255, 255, 255, 0.95)",
-          }}
-        >
-          <Group justify="apart" mb={filtersVisible ? "md" : 0}>
+        <Box style={{ marginBottom: 24 }}>
+          <Box
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: filtersVisible ? 16 : 0,
+            }}
+          >
+            <IconSearch size={16} style={{ marginRight: 8 }} />
             <TextInput
-              placeholder="Search theaters..."
-              leftSection={<IconSearch size={16} />}
+              placeholder="Search theaters…"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ flexGrow: 1 }}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setSearchQuery(e.currentTarget.value)
+              }
+              style={{ flex: 1 }}
             />
-
             <Button
               variant="subtle"
               onClick={toggleFilters}
-              leftSection={<IconFilter size={16} />}
-              color={isDark ? "gray" : "dark"}
+              size="xs"
+              style={{ marginLeft: 8 }}
             >
-              {filtersVisible ? "Hide Filters" : "Show Filters"}
+              {filtersVisible ? "Hide filters" : "Show filters"}
             </Button>
-          </Group>
+          </Box>
 
           {filtersVisible && (
-            <Box mt="md">
-              <Group>
-                <Select
-                  label="Sort by"
-                  placeholder="Sort theaters"
-                  leftSection={<IconArrowsSort size={16} />}
-                  value={sortBy}
-                  onChange={(value) => setSortBy(value || "name-asc")}
-                  data={[
-                    { value: "name-asc", label: "Name (A-Z)" },
-                    { value: "name-desc", label: "Name (Z-A)" },
-                    { value: "seats-asc", label: "Seats (Low to High)" },
-                    { value: "seats-desc", label: "Seats (High to Low)" },
-                  ]}
-                  style={{ minWidth: "200px" }}
-                />
-              </Group>
+            <Box style={{ display: "flex", alignItems: "center" }}>
+              <IconArrowsSort size={16} style={{ marginRight: 8 }} />
+              <Select
+                placeholder="Sort by"
+                data={[
+                  { value: "name-asc", label: "Name A→Z" },
+                  { value: "name-desc", label: "Name Z→A" },
+                  { value: "seats-asc", label: "Seats ↑" },
+                  { value: "seats-desc", label: "Seats ↓" },
+                ]}
+                value={sortBy}
+                onChange={(v) => setSortBy(v || "name-asc")}
+                style={{ minWidth: 200 }}
+              />
             </Box>
           )}
-        </Paper>
+        </Box>
 
         {isAdmin && (
-          <Group justify="flex-end" mb="xl">
+          <Box
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: 24,
+            }}
+          >
             <Button
               component={Link}
               to="/theaters/new"
-              color={isDark ? "yellow" : "green"}
-              leftSection={<IconPlus size={18} />}
+              color="green"
+              size="sm"
+              style={{ display: "flex", alignItems: "center" }}
             >
-              Add New Theater
+              <IconPlus size={16} style={{ marginRight: 8 }} />
+              Add Theater
             </Button>
-          </Group>
+          </Box>
         )}
 
-        {filteredTheaters.length === 0 ? (
-          <Paper
-            p="xl"
-            withBorder
-            ta="center"
-            style={{
-              background: isDark
-                ? "rgba(37, 38, 43, 0.95)"
-                : "rgba(248, 249, 250, 0.95)",
-              borderStyle: "dashed",
-              borderColor: isDark ? "#d4af37" : "#0d6832",
-            }}
-          >
-            {searchQuery ? (
-              <>
-                <IconEye
-                  size={32}
-                  stroke={1.5}
-                  color={isDark ? "#d4af37" : "#0d6832"}
-                />
-                <Text fw={500} c={isDark ? "white" : "dark"} mb="xs" mt="md">
-                  No theaters match your search.
-                </Text>
-                <Text c={isDark ? "gray.4" : "gray.7"}>
-                  Try a different search term or clear the filters.
-                </Text>
-              </>
-            ) : (
-              <>
-                <IconMovie
-                  size={32}
-                  stroke={1.5}
-                  color={isDark ? "#d4af37" : "#0d6832"}
-                />
-                <Text fw={500} c={isDark ? "white" : "dark"} mb="xs" mt="md">
-                  No theaters found.
-                </Text>
-                {isAdmin && (
-                  <Text c={isDark ? "gray.4" : "gray.7"}>
-                    Click the "Add New Theater" button to create one.
+        {viewMode === "grid" && (
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing={24}>
+            {filtered.map((t) => (
+              <Card
+                key={t.id}
+                shadow="md"
+                p="lg"
+                radius="md"
+                withBorder
+                style={{ background: "rgba(255,255,255,0.9)" }}
+              >
+                <Box
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 16,
+                  }}
+                >
+                  <Text style={{ fontWeight: 500 }}>{t.name}</Text>
+                  <Badge variant="light" color="red">
+                    {t.seatCount} seats
+                  </Badge>
+                </Box>
+                <Box
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: 16,
+                  }}
+                >
+                  <IconMapPin size={14} />
+                  <Text size="sm" style={{ marginLeft: 4 }}>
+                    {t.address}
                   </Text>
-                )}
-              </>
-            )}
-          </Paper>
-        ) : (
-          <SimpleGrid
-            cols={{ base: 1, xs: 1, sm: 2, md: 3 }}
-            spacing="lg"
-            verticalSpacing="xl"
-          >
-            {filteredTheaters.map((theater) => (
-              <TheaterCard
-                key={theater.id}
-                theater={theater}
-                onDelete={handleDelete}
-                isAdmin={isAdmin}
-              />
+                </Box>
+                <Box
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <Button
+                    component={Link}
+                    to={`/theaters/${t.id}/movies`}
+                    size="xs"
+                  >
+                    View Movies
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      color="red"
+                      size="xs"
+                      onClick={() => handleDelete(t.id)}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </Box>
+              </Card>
             ))}
           </SimpleGrid>
         )}
-      </Box>
-    </Container>
+
+        {viewMode === "table" && (
+          <ScrollArea style={{ marginBottom: 24 }}>
+            <Table highlightOnHover verticalSpacing="sm">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Address</th>
+                  <th>Seats</th>
+                  {isAdmin && <th>Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((t) => (
+                  <tr key={t.id}>
+                    <td>{t.name}</td>
+                    <td>
+                      <Box style={{ display: "flex", alignItems: "center" }}>
+                        <IconMapPin size={14} />
+                        <Text size="sm" style={{ marginLeft: 4 }}>
+                          {t.address}
+                        </Text>
+                      </Box>
+                    </td>
+                    <td>
+                      <Badge variant="light" color="red">
+                        {t.seatCount}
+                      </Badge>
+                    </td>
+                    {isAdmin && (
+                      <td>
+                        <Box style={{ display: "flex", alignItems: "center" }}>
+                          <Button
+                            component={Link}
+                            to={`/theaters/${t.id}/movies`}
+                            size="xs"
+                          >
+                            View
+                          </Button>
+                          <Button
+                            variant="outline"
+                            color="red"
+                            size="xs"
+                            style={{ marginLeft: 8 }}
+                            onClick={() => handleDelete(t.id)}
+                          >
+                            Delete
+                          </Button>
+                        </Box>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </ScrollArea>
+        )}
+      </Container>
+    </Box>
   );
 };
 

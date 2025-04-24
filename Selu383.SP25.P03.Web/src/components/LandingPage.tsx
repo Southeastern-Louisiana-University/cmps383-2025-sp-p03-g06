@@ -1,3 +1,4 @@
+// src/components/LandingPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -38,7 +39,6 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
-
   const { isAuthenticated } = useAuth();
   const [movies, setMovies] = useState<MovieDTO[]>([]);
 
@@ -51,7 +51,6 @@ const LandingPage = () => {
         console.error("Failed to fetch movies", error);
       }
     };
-
     fetchMovies();
   }, []);
 
@@ -79,13 +78,19 @@ const LandingPage = () => {
   };
 
   return (
-    <Box>
+    <Box
+      style={{
+        backgroundColor: "var(--background-darker)",
+        minHeight: "100vh",
+      }}
+    >
+      {/* Carousel section */}
       <Box
         style={{
           position: "relative",
           padding: "40px 0",
           overflow: "hidden",
-          background: isDark ? "#1a1b1e" : "#f8f9fa",
+          backgroundColor: "var(--background-darker)", // ← matched to footer/navbar
           width: "100%",
         }}
       >
@@ -110,22 +115,21 @@ const LandingPage = () => {
               padding: "0 20px",
             },
             control: {
-              width: "80px",
-              height: "80px",
-              backgroundColor: isDark
-                ? "#ffffff" // Solid white background in dark mode
-                : "#000000", // Solid black background in light mode
-              color: isDark ? "#000000" : "#ffffff", // Contrasting icon color
-              borderRadius: "50%",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
-              border: isDark ? "3px solid #ffffff" : "3px solid #000000",
+              width: 100,
+              height: 60,
+              backgroundColor: "rgba(224, 224, 224, 0.9)",
+              color: "#000000",
+              borderRadius: "8px",
+              border: "2px solid rgba(255, 255, 255, 0.8)",
+              boxShadow: "0 0 0 4px rgba(0, 0, 0, 0.2)",
               transition: "all 0.2s ease",
+              backdropFilter: "blur(4px)",
+              outline: "1px solid rgba(0, 0, 0, 0.1)",
               "&:hover": {
-                backgroundColor: isDark
-                  ? "#f0f0f0" // Slightly off-white on hover
-                  : "#202020", // Dark gray on hover
-                scale: "1.05",
-                border: isDark ? "4px solid #ffffff" : "4px solid #000000",
+                backgroundColor: "rgba(192, 192, 192, 0.95)",
+                boxShadow: "0 0 0 6px rgba(0,0,0,0.3)",
+                transform: "scale(1.05)",
+                border: "2px solid rgba(255, 255, 255, 1)",
               },
             },
             controls: {
@@ -137,27 +141,27 @@ const LandingPage = () => {
               bottom: "-30px",
             },
             indicator: {
-              width: "10px",
-              height: "10px",
-              backgroundColor: isDark
-                ? "rgba(255, 255, 255, 0.4)"
-                : "rgba(0, 0, 0, 0.3)",
+              width: 10,
+              height: 10,
+              backgroundColor: "rgba(136, 136, 136, 0.7)",
+              border: "1px solid rgba(0, 0, 0, 0.2)",
               "&[data-active]": {
-                backgroundColor: isDark ? "white" : "black",
+                backgroundColor: "rgba(0, 0, 0, 0.9)",
+                border: "1px solid rgba(255, 255, 255, 0.5)",
               },
             },
           }}
         >
           {movies.map((movie) => (
             <Carousel.Slide key={movie.id}>
+              {/* Slide content (poster, info, button) unchanged */}
               <Flex direction="column" gap="xs" style={{ padding: "0 10px" }}>
-                {/* Movie Poster - Clickable */}
                 <Box
                   style={{
                     width: "100%",
                     height: "auto",
                     position: "relative",
-                    paddingBottom: "150%", // 2:3 aspect ratio typical for movie posters
+                    paddingBottom: "150%",
                     overflow: "hidden",
                     borderRadius: "8px",
                     boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
@@ -186,7 +190,6 @@ const LandingPage = () => {
                   />
                 </Box>
 
-                {/* Movie Info Below Poster */}
                 <Flex
                   direction="column"
                   gap={8}
@@ -213,7 +216,6 @@ const LandingPage = () => {
                     )}
                   </Group>
 
-                  {/* Movie Rating Stars */}
                   <Group gap={5} mt={5}>
                     <Rating
                       value={getRatingStars(movie.title)}
@@ -230,7 +232,6 @@ const LandingPage = () => {
                     Released {formatReleaseDate(movie.releaseDate)}
                   </Text>
 
-                  {/* Red button with white text */}
                   <Button
                     fullWidth
                     color="red"
@@ -263,16 +264,21 @@ const LandingPage = () => {
         </Carousel>
       </Box>
 
-      {/* Membership Section - Only show if not authenticated */}
+      {/* Membership Section */}
       {!isAuthenticated && (
         <Box
           style={{
             textAlign: "center",
             padding: "40px 20px",
-            backgroundColor: isDark ? "#141517" : "#f1f3f5",
+            backgroundColor: "var(--background-darker)", // ← match footer/navbar
           }}
         >
-          <Text size="xl" fw={700} mb={10}>
+          <Text
+            size="xl"
+            fw={700}
+            mb={10}
+            style={{ color: isDark ? "white" : "black" }}
+          >
             Become a Member
           </Text>
           <Text c="dimmed" mb={20}>
@@ -286,7 +292,6 @@ const LandingPage = () => {
             style={{
               backgroundColor: "#e03131",
               color: "white",
-              fontWeight: 600,
             }}
             styles={{
               root: {

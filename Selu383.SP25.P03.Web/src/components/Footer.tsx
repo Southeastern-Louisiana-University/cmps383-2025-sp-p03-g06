@@ -1,3 +1,4 @@
+// src/components/Footer.tsx
 import {
   Group,
   Text,
@@ -13,6 +14,8 @@ import {
   IconBrandFacebook,
   IconBrandX,
 } from "@tabler/icons-react";
+import { useState } from "react";
+import LegalModal from "./LegalModal";
 
 const Footer = () => {
   // Configuration for social media links - just change the URLs when accounts are created
@@ -35,6 +38,21 @@ const Footer = () => {
   ];
 
   const currentYear = new Date().getFullYear();
+
+  // State for modal control
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+
+  // Modal handlers
+  const openPrivacyModal = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setPrivacyModalOpen(true);
+  };
+
+  const openTermsModal = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setTermsModalOpen(true);
+  };
 
   return (
     <Box
@@ -140,18 +158,20 @@ const Footer = () => {
               <Text
                 size="xs"
                 c="dimmed"
-                component={Link}
-                to="/privacy"
-                style={{ textDecoration: "none" }}
+                component="a"
+                href="#"
+                onClick={openPrivacyModal}
+                style={{ textDecoration: "none", cursor: "pointer" }}
               >
                 Privacy Policy
               </Text>
               <Text
                 size="xs"
                 c="dimmed"
-                component={Link}
-                to="/terms"
-                style={{ textDecoration: "none" }}
+                component="a"
+                href="#"
+                onClick={openTermsModal}
+                style={{ textDecoration: "none", cursor: "pointer" }}
               >
                 Terms of Service
               </Text>
@@ -159,6 +179,19 @@ const Footer = () => {
           </Group>
         </Stack>
       </Container>
+
+      {/* Legal modals */}
+      <LegalModal
+        opened={privacyModalOpen}
+        onClose={() => setPrivacyModalOpen(false)}
+        type="privacy"
+      />
+
+      <LegalModal
+        opened={termsModalOpen}
+        onClose={() => setTermsModalOpen(false)}
+        type="terms"
+      />
     </Box>
   );
 };

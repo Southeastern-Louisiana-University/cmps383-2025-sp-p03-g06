@@ -66,9 +66,7 @@ const TheaterCard = memo(({ theater, onDelete, isAdmin }: TheaterCardProps) => {
         flexDirection: "column",
         height: "100%",
         borderTop: `3px solid #e03131`, // Changed from gold to red
-        background: isDark
-          ? "rgba(37, 38, 43, 0.95)"
-          : "rgba(255, 255, 255, 0.95)",
+        background: "var(--background-darker)",
       }}
     >
       <Text
