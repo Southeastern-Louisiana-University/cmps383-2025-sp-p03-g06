@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
+using Selu383.SP25.P03.Api.Features.Movies;
 using Selu383.SP25.P03.Api.Features.Users;
 
 namespace Selu383.SP25.P03.Api.Controllers
@@ -16,6 +17,22 @@ namespace Selu383.SP25.P03.Api.Controllers
         private readonly RoleManager<Role> roleManager = roleManager;
         private readonly DataContext dataContext = dataContext;
         private readonly DbSet<Role> roles = dataContext.Set<Role>();
+
+        [HttpGet("me")]
+        [AllowAnonymous]
+        [HttpGet("{id}")]
+       // [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetById(string id)
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+            return Ok(new
+            {
+                id = user.Id,
+                userName = user.UserName,
+                email = user.Email
+            });
+        }
 
         [HttpPost("register")]
         [AllowAnonymous] // Explicitly allow unauthenticated access

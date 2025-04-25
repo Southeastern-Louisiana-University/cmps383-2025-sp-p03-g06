@@ -29,6 +29,7 @@ export interface AuthResponse {
 // Token storage functions
 export const saveToken = async (token: string) => {
   try {
+    console.log(token);
     await AsyncStorage.setItem("auth_token", token);
   } catch (error) {
     console.error("Error saving auth token:", error);
@@ -37,6 +38,8 @@ export const saveToken = async (token: string) => {
 
 export const getToken = async () => {
   try {
+    console.log("getToken");
+    console.log(await AsyncStorage.getItem("auth_token"));
     return await AsyncStorage.getItem("auth_token");
   } catch (error) {
     console.error("Error retrieving auth token:", error);
@@ -56,29 +59,34 @@ export const clearToken = async () => {
 export const authApi = {
   // Login with username and password
   login: (credentials: LoginRequest) =>
-    apiRequest<AuthResponse>("api/auth/login", {
+    apiRequest<AuthResponse>("api/authentication/login", {
       method: "POST",
       body: JSON.stringify(credentials),
     }),
 
   // Register a new user
-  register: (userData: RegisterRequest) =>
-    apiRequest<AuthResponse>("api/auth/register", {
+  register: ( userData: RegisterRequest) =>
+    apiRequest<AuthResponse>("api/authentication/register", {
       method: "POST",
       body: JSON.stringify(userData),
     }),
 
   // Get current user profile
-  getCurrentUser: () =>
-    apiRequest<User>("api/auth/me", {
+  getCurrentUser: async (): Promise<User> => {
+    const token = await getToken();
+    if (!token) throw new Error("No auth token present");
+
+    return apiRequest<User>("api/authentication/me", {
+      method: "GET",
       headers: {
-        Authorization: `Bearer ${getToken()}`,
+        Authorization: `Bearer ${token}`,
       },
-    }),
+    });
+  },
 
   // Logout - client-side only
   logout: () => {
-    clearToken();
+   clearToken();
     return Promise.resolve(true);
   },
 };
