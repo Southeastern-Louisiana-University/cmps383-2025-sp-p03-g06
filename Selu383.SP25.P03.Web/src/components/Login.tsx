@@ -25,7 +25,11 @@ import {
 } from "@tabler/icons-react";
 import AnimatedLion from "./AnimatedLion";
 
-const Login = () => {
+interface LoginProps {
+  onSuccess?: () => void;
+}
+
+const Login = ({ onSuccess }: LoginProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { login, error, loading } = useAuth();
@@ -44,6 +48,9 @@ const Login = () => {
     e.preventDefault();
     try {
       await login(username, password);
+      if (onSuccess) {
+        onSuccess();
+      }
       navigate("/");
     } catch (error) {
       console.error("Login failed:", error);
@@ -51,115 +58,135 @@ const Login = () => {
   };
 
   return (
-    <Container size="xs" px="xs">
-      <Paper
-        shadow="sm"
-        p="xl"
-        radius="md"
-        withBorder
-        style={{
-          marginTop: "2.5rem",
-          borderTop: `3px solid ${theme.colors.primary[5]}`,
-          background: theme.colors.dark[8],
-          backdropFilter: "blur(10px)",
-          boxShadow: theme.shadows.md,
-        }}
-      >
-        <Group justify="center" mb={24}>
-          <AnimatedLion
-            size={80}
-            primaryColor="#d4af37"
-            secondaryColor="#6B4226"
-          />
-        </Group>
+    <Stack gap="lg">
+      <Group justify="center">
+        <AnimatedLion
+          size={100}
+          primaryColor="#d4af37"
+          secondaryColor="#6B4226"
+        />
+      </Group>
+
+      <Stack gap={8} align="center">
         <Title
-          ta="center"
           order={2}
           style={{
-            fontSize: "1.8rem",
+            fontSize: "2rem",
             fontWeight: 700,
-            color: theme.colors.primary[0],
+            color: theme.colors.gray[0],
           }}
         >
           Welcome Back
         </Title>
 
-        <Text ta="center" size="md" c="dimmed" mb={32}>
+        <Text size="lg" c="dimmed">
           Sign in to continue your cinema journey
         </Text>
+      </Stack>
 
-        {error && (
-          <Alert
-            icon={<IconAlertCircle size={16} />}
-            title="Login Failed"
-            color="red"
-            mb="md"
-          >
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <Alert
+          icon={<IconAlertCircle size={16} />}
+          title="Login Failed"
+          color="red"
+          variant="filled"
+        >
+          {error}
+        </Alert>
+      )}
 
-        <form onSubmit={handleSubmit}>
-          <Stack gap="md">
-            <TextInput
-              label="Username"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              autoFocus
-              leftSection={<IconUser size={18} />}
-            />
+      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+        <Stack gap="md">
+          <TextInput
+            label="Username"
+            placeholder="Enter your username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            size="lg"
+            autoFocus
+            leftSection={<IconUser size={20} />}
+            styles={{
+              input: {
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                "&:focus": {
+                  borderColor: theme.colors.red[7],
+                },
+              },
+              label: {
+                color: theme.colors.gray[3],
+                marginBottom: 8,
+              },
+            }}
+          />
 
-            <PasswordInput
-              label="Password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              leftSection={<IconLock size={18} />}
-            />
+          <PasswordInput
+            label="Password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            size="lg"
+            leftSection={<IconLock size={20} />}
+            styles={{
+              input: {
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                "&:focus": {
+                  borderColor: theme.colors.red[7],
+                },
+              },
+              label: {
+                color: theme.colors.gray[3],
+                marginBottom: 8,
+              },
+              innerInput: {
+                height: "100%",
+              },
+            }}
+          />
 
-            <Button
-              fullWidth
-              type="submit"
-              loading={loading}
-              color="primary"
-              rightSection={loading ? null : <IconArrowRight size={18} />}
-              mt={10}
-            >
-              {loading ? "Logging in..." : "Sign In"}
-            </Button>
-          </Stack>
-        </form>
-
-        <Divider
-          my="lg"
-          labelPosition="center"
-          label={
-            <Text size="sm" fw={500} c="dimmed">
-              OR
-            </Text>
-          }
-        />
-
-        <Stack align="center" gap="xs">
-          <Text size="sm" c="dimmed">
-            New to Lions Den Cinemas?
-          </Text>
           <Button
-            component={Link}
-            to="/signup"
-            variant="outline"
-            color="primary"
             fullWidth
-            leftSection={<IconUserPlus size={18} />}
+            type="submit"
+            loading={loading}
+            color="red"
+            size="lg"
+            rightSection={loading ? null : <IconArrowRight size={20} />}
+            mt="md"
           >
-            Join the Den
+            {loading ? "Signing in..." : "Sign In"}
           </Button>
         </Stack>
-      </Paper>
-    </Container>
+      </form>
+
+      <Divider
+        label={
+          <Text size="sm" fw={500} c="dimmed">
+            OR
+          </Text>
+        }
+        labelPosition="center"
+      />
+
+      <Stack gap="xs" align="center">
+        <Text size="sm" c="dimmed">
+          New to Lions Den Cinemas?
+        </Text>
+        <Button
+          component={Link}
+          to="/signup"
+          variant="outline"
+          color="red"
+          fullWidth
+          size="lg"
+          leftSection={<IconUserPlus size={20} />}
+        >
+          Join the Den
+        </Button>
+      </Stack>
+    </Stack>
   );
 };
 

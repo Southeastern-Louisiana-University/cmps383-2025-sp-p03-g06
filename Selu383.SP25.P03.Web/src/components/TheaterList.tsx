@@ -295,59 +295,119 @@ const TheaterList = () => {
           </SimpleGrid>
         )}
 
-        {/* ——— Table View ——— */}
+        {/* ——— Table view ——— */}
         {viewMode === "table" && (
-          <ScrollArea style={{ marginBottom: 24 }}>
-            <Table highlightOnHover verticalSpacing="sm">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Address</th>
-                  <th>Seats</th>
-                  {isAdmin && <th>Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.name}</td>
-                    <td>
-                      <Group style={{ alignItems: "center", gap: 4 }}>
-                        <IconMapPin size={14} />
-                        <Text size="sm">{t.address}</Text>
-                      </Group>
-                    </td>
-                    <td>
-                      <Badge color="red" variant="light">
-                        {t.seatCount}
-                      </Badge>
-                    </td>
-                    {isAdmin && (
-                      <td>
-                        <Group style={{ gap: 8 }}>
-                          <Button
-                            component={Link}
-                            to={`/theaters/${t.id}/movies`}
-                            size="xs"
-                          >
-                            View
-                          </Button>
-                          <Button
-                            variant="outline"
-                            color="red"
-                            size="xs"
-                            onClick={() => handleDelete(t.id)}
-                          >
-                            Delete
-                          </Button>
+          <Paper
+            withBorder
+            style={{
+              padding: 16,
+              marginBottom: 24,
+              overflowX: "auto",
+              backgroundColor: isDark
+                ? theme.colors.dark[7]
+                : theme.colors.gray[1],
+            }}
+          >
+            <ScrollArea>
+              <Table
+                highlightOnHover
+                striped
+                verticalSpacing="md"
+                style={{ minWidth: 900 }}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      style={{
+                        padding: "12px 16px",
+                        fontSize: "1.125rem",
+                        textAlign: "left",
+                      }}
+                    >
+                      Name
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 16px",
+                        fontSize: "1.125rem",
+                        textAlign: "left",
+                      }}
+                    >
+                      Address
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 16px",
+                        fontSize: "1.125rem",
+                        textAlign: "center",
+                      }}
+                    >
+                      Seats
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 16px",
+                        fontSize: "1.125rem",
+                        textAlign: "center",
+                      }}
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((t) => (
+                    <tr
+                      key={t.id}
+                      style={{
+                        backgroundColor: isDark
+                          ? theme.colors.dark[6]
+                          : theme.white,
+                        transition: "background 0.2s",
+                      }}
+                    >
+                      <td
+                        style={{
+                          padding: "12px 16px",
+                          fontSize: "1rem",
+                          textAlign: "left",
+                        }}
+                      >
+                        {t.name}
+                      </td>
+                      <td
+                        style={{
+                          padding: "12px 16px",
+                          fontSize: "1rem",
+                          textAlign: "left",
+                        }}
+                      >
+                        <Group style={{ alignItems: "center", gap: 8 }}>
+                          <IconMapPin size={18} />
+                          <Text size="md">{t.address}</Text>
                         </Group>
                       </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </ScrollArea>
+                      <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                        <Badge size="lg" color="red" variant="filled">
+                          {t.seatCount}
+                        </Badge>
+                      </td>
+                      <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                        <Button
+                          component={Link}
+                          to={`/theaters/${t.id}/movies`}
+                          size="sm"
+                          variant="light"
+                        >
+                          View Movies
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </ScrollArea>
+          </Paper>
         )}
       </Container>
     </Box>

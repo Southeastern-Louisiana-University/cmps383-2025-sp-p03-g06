@@ -277,9 +277,12 @@ const ConcessionSelection = () => {
                         >
                           <Image
                             src={
-                              item.imageUrl.startsWith("/")
-                                ? item.imageUrl
-                                : `/${item.imageUrl}`
+                              item.imageUrl
+                                ? `/images/food/${item.imageUrl
+                                    .split("/")
+                                    .pop()
+                                    ?.replace(".jpg", "")}.jpg`
+                                : undefined
                             }
                             height={120}
                             alt={item.name}

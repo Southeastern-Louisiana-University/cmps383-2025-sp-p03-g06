@@ -17,6 +17,18 @@ namespace Selu383.SP25.P03.Api
 
             builder.Services.AddControllers();
 
+            // Add CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.WithOrigins("http://localhost:5173", "https://localhost:7027")
+                           .AllowAnyMethod()
+                           .AllowAnyHeader()
+                           .AllowCredentials();
+                });
+            });
+
             // Configure OpenAPI/Swagger - standard configuration
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -93,8 +105,8 @@ namespace Selu383.SP25.P03.Api
             //Swagger UI
             app.UseSwagger();
             app.UseSwaggerUI();
-
             app.UseHttpsRedirection();
+            app.UseCors();
             app.UseAuthentication();
             app.UseRouting()
                .UseAuthorization()

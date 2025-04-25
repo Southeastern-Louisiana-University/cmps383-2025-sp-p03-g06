@@ -77,7 +77,11 @@ function getStrength(password: string) {
   return Math.max(100 - (100 / (requirements.length + 1)) * multiplier, 0);
 }
 
-const SignUp = () => {
+interface SignUpProps {
+  onSuccess?: () => void;
+}
+
+const SignUp = ({ onSuccess }: SignUpProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -139,8 +143,12 @@ const SignUp = () => {
       await userApi.register({
         username,
         password,
-        roles: ["User"], // This will be overridden on the server anyway
+        roles: ["User"],
       });
+
+      if (onSuccess) {
+        onSuccess();
+      }
 
       // Redirect to login page after successful registration
       navigate("/login", {
@@ -155,261 +163,191 @@ const SignUp = () => {
   };
 
   return (
-    <Container size="xs" px="xs">
-      <Paper
-        shadow="sm"
-        p="xl"
-        radius="md"
-        withBorder
-        style={{
-          marginTop: "2.5rem",
-          borderTop: "3px solid var(--mantine-color-primary-6)",
-          background: isDark
-            ? "rgba(37, 38, 43, 0.95)"
-            : "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(10px)",
-          boxShadow: isDark
-            ? "0 4px 20px rgba(0, 0, 0, 0.2)"
-            : "0 4px 20px rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        <Group justify="center" mb={24}>
-          {/* Replace with AnimatedLion using red colors */}
-          <AnimatedLion
-            size={80}
-            primaryColor="#d4af37"
-            secondaryColor="#6B4226"
-          />
-        </Group>
+    <Stack gap="lg">
+      <Group justify="center">
+        <AnimatedLion
+          size={100}
+          primaryColor="#d4af37"
+          secondaryColor="#6B4226"
+        />
+      </Group>
 
+      <Stack gap={8} align="center">
         <Title
-          ta="center"
           order={2}
           style={{
-            fontSize: "1.8rem",
+            fontSize: "2rem",
             fontWeight: 700,
-            marginBottom: "8px",
-            color: isDark ? "#ffffff" : "#e03131", // Changed from green to red
+            color: theme.colors.gray[0],
           }}
         >
           Join the Den
         </Title>
 
-        <Text
-          ta="center"
-          size="md"
-          mb={32}
-          style={{
-            color: isDark ? theme.colors.gray[3] : theme.colors.gray[7],
-          }}
-        >
+        <Text size="lg" c="dimmed">
           Create your account to experience the magic of cinema
         </Text>
+      </Stack>
 
-        {error && (
-          <Alert
-            icon={<IconAlertCircle size={16} />}
-            title="Registration Failed"
-            color="red"
-            mb="md"
-          >
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <Alert
+          icon={<IconAlertCircle size={16} />}
+          title="Registration Failed"
+          color="red"
+          variant="filled"
+        >
+          {error}
+        </Alert>
+      )}
 
-        <form onSubmit={handleSubmit}>
-          <Stack gap="md">
-            <TextInput
-              label="Username"
-              placeholder="Choose a username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              autoFocus
-              leftSection={<IconUser size={16} />}
-              styles={{
-                input: {
-                  height: "42px",
-                  background: isDark
-                    ? "rgba(30, 30, 35, 0.6)"
-                    : "rgba(255, 255, 255, 0.8)",
-                  border: `1px solid ${
-                    isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-                  }`,
-                  "&:focus": {
-                    borderColor: isDark
-                      ? "#e03131" // Changed from secondary to red
-                      : theme.colors.primary[6],
-                  },
-                },
-                label: {
-                  marginBottom: "6px",
-                  color: isDark ? theme.colors.gray[3] : theme.colors.gray[7],
-                },
-              }}
-            />
-
-            <div>
-              <PasswordInput
-                label="Password"
-                placeholder="Create a password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                leftSection={<IconLock size={16} />}
-                onFocus={() => setShowPasswordFeedback(true)}
-                onBlur={() => setShowPasswordFeedback(password.length > 0)}
-                styles={{
-                  input: {
-                    height: "42px",
-                    background: isDark
-                      ? "rgba(30, 30, 35, 0.6)"
-                      : "rgba(255, 255, 255, 0.8)",
-                    border: `1px solid ${
-                      isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-                    }`,
-                    "&:focus": {
-                      borderColor: isDark
-                        ? "#e03131" // Changed from secondary to red
-                        : theme.colors.primary[6],
-                    },
-                  },
-                  label: {
-                    marginBottom: "6px",
-                    color: isDark ? theme.colors.gray[3] : theme.colors.gray[7],
-                  },
-                  innerInput: {
-                    height: "42px",
-                  },
-                }}
-              />
-
-              {(showPasswordFeedback || password.length > 0) && (
-                <Box
-                  mt="sm"
-                  p="xs"
-                  style={{
-                    background: isDark
-                      ? "rgba(30, 31, 34, 0.5)"
-                      : "rgba(245, 245, 245, 0.5)",
-                    borderRadius: "6px",
-                  }}
-                >
-                  <Group gap={5} grow mb="xs">
-                    {bars}
-                  </Group>
-
-                  <PasswordRequirement
-                    label="Has at least 6 characters"
-                    meets={password.length >= 6}
-                  />
-                  {checks}
-                </Box>
-              )}
-            </div>
-
-            <PasswordInput
-              label="Confirm Password"
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              leftSection={<IconLock size={16} />}
-              styles={{
-                input: {
-                  height: "42px",
-                  background: isDark
-                    ? "rgba(30, 30, 35, 0.6)"
-                    : "rgba(255, 255, 255, 0.8)",
-                  border: `1px solid ${
-                    isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-                  }`,
-                  "&:focus": {
-                    borderColor: isDark
-                      ? "#e03131" // Changed from secondary to red
-                      : theme.colors.primary[6],
-                  },
-                },
-                label: {
-                  marginBottom: "6px",
-                  color: isDark ? theme.colors.gray[3] : theme.colors.gray[7],
-                },
-                innerInput: {
-                  height: "42px",
-                },
-              }}
-            />
-
-            <Button
-              fullWidth
-              type="submit"
-              loading={loading}
-              color="primary" // Changed from yellow to primary (red)
-              mt="md"
-              rightSection={loading ? null : <IconUserCheck size={18} />}
-              disabled={
-                password !== confirmPassword || getStrength(password) < 50
-              }
-              styles={{
-                root: {
-                  height: "42px",
-                  fontSize: "1rem",
-                  background: "#e03131", // Changed from gold to red
-                  "&:hover": {
-                    background: "#c92a2a", // Darker red for hover
-                  },
-                  "&:disabled": {
-                    background: isDark
-                      ? "rgba(37, 38, 43, 0.5)"
-                      : "rgba(240, 240, 240, 0.8)",
-                    color: isDark ? theme.colors.gray[5] : theme.colors.gray[6],
-                  },
-                  transition: "background 0.2s ease",
-                },
-              }}
-            >
-              {loading ? "Creating Account..." : "Create Account"}
-            </Button>
-          </Stack>
-        </form>
-
-        <Divider
-          my="lg"
-          labelPosition="center"
-          label={
-            <Text size="sm" fw={500} c={isDark ? "gray.5" : "gray.6"}>
-              OR
-            </Text>
-          }
-        />
-
-        <Stack align="center" gap="xs">
-          <Text size="sm" c="dimmed">
-            Already have an account?
-          </Text>
-          <Button
-            component={Link}
-            to="/login"
-            variant="outline"
-            color="primary" // Changed from yellow to primary (red)
-            fullWidth
-            leftSection={<IconArrowLeft size={18} />}
+      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+        <Stack gap="md">
+          <TextInput
+            label="Username"
+            placeholder="Choose a username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            size="lg"
+            autoFocus
+            leftSection={<IconUser size={20} />}
             styles={{
-              root: {
-                height: "42px",
-                borderWidth: "1px",
-                transition: "background 0.2s ease",
-                borderColor: "#e03131", // Added explicit red border color
-                color: "#e03131", // Added explicit red text color
+              input: {
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                "&:focus": {
+                  borderColor: theme.colors.red[7],
+                },
+              },
+              label: {
+                color: theme.colors.gray[3],
+                marginBottom: 8,
               },
             }}
+          />
+
+          <div>
+            <PasswordInput
+              label="Password"
+              placeholder="Create a password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              size="lg"
+              minLength={6}
+              leftSection={<IconLock size={20} />}
+              onFocus={() => setShowPasswordFeedback(true)}
+              onBlur={() => setShowPasswordFeedback(password.length > 0)}
+              styles={{
+                input: {
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  "&:focus": {
+                    borderColor: theme.colors.red[7],
+                  },
+                },
+                label: {
+                  color: theme.colors.gray[3],
+                  marginBottom: 8,
+                },
+                innerInput: {
+                  height: "100%",
+                },
+              }}
+            />
+
+            {(showPasswordFeedback || password.length > 0) && (
+              <Box
+                mt="sm"
+                p="md"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                }}
+              >
+                <Group gap={5} grow mb="xs">
+                  {bars}
+                </Group>
+
+                <PasswordRequirement
+                  label="Has at least 6 characters"
+                  meets={password.length >= 6}
+                />
+                {checks}
+              </Box>
+            )}
+          </div>
+
+          <PasswordInput
+            label="Confirm Password"
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            size="lg"
+            leftSection={<IconLock size={20} />}
+            styles={{
+              input: {
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                "&:focus": {
+                  borderColor: theme.colors.red[7],
+                },
+              },
+              label: {
+                color: theme.colors.gray[3],
+                marginBottom: 8,
+              },
+              innerInput: {
+                height: "100%",
+              },
+            }}
+          />
+
+          <Button
+            fullWidth
+            type="submit"
+            loading={loading}
+            color="red"
+            size="lg"
+            rightSection={loading ? null : <IconUserCheck size={20} />}
+            disabled={
+              password !== confirmPassword || getStrength(password) < 50
+            }
+            mt="md"
           >
-            Sign In
+            {loading ? "Creating Account..." : "Create Account"}
           </Button>
         </Stack>
-      </Paper>
-    </Container>
+      </form>
+
+      <Divider
+        label={
+          <Text size="sm" fw={500} c="dimmed">
+            OR
+          </Text>
+        }
+        labelPosition="center"
+      />
+
+      <Stack gap="xs" align="center">
+        <Text size="sm" c="dimmed">
+          Already have an account?
+        </Text>
+        <Button
+          component={Link}
+          to="/login"
+          variant="outline"
+          color="red"
+          fullWidth
+          size="lg"
+          leftSection={<IconArrowLeft size={20} />}
+        >
+          Sign In
+        </Button>
+      </Stack>
+    </Stack>
   );
 };
 

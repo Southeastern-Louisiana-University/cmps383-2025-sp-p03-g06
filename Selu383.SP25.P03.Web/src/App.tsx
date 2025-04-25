@@ -20,6 +20,8 @@ import SeatSelection from "./components/SeatSelection";
 import MyReservations from "./components/MyReservations";
 import TicketView from "./components/TicketView";
 import Footer from "./components/Footer";
+import MovieTheaterAssignment from "./components/MovieTheaterAssignment";
+import AdminPanel from "./components/AdminPanel";
 import {
   MantineProvider,
   createTheme,
@@ -30,7 +32,6 @@ import {
 import { ModalsProvider } from "@mantine/modals";
 import "./styles/animations.css";
 import "./App.css";
-import MovieTheaterAssignment from "./components/MovieTheaterAssignment";
 
 // Component to animate page transitions
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
@@ -164,7 +165,7 @@ const AppContent = () => {
                 />
                 <Route path="/theaters" element={<TheaterList />} />
 
-                {/* These admin routes should still be protected */}
+                {/* Admin routes */}
                 <Route
                   path="/theaters/new"
                   element={
@@ -190,13 +191,13 @@ const AppContent = () => {
                   }
                 />
 
-                {/* This is where you'd handle the protected vs. guest checkout */}
+                {/* Guest checkout */}
                 <Route
                   path="/reservations/create/:id"
-                  element={<SeatSelection />} // No longer wrapped in ProtectedRoute
+                  element={<SeatSelection />}
                 />
 
-                {/* These should still be protected */}
+                {/* Protected user routes */}
                 <Route
                   path="/my-reservations"
                   element={
@@ -217,6 +218,18 @@ const AppContent = () => {
                   path="/concessions/:id"
                   element={<ConcessionSelection />}
                 />
+
+                {/* Admin Panel Route */}
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <AdminPanel />
+                    </AdminRoute>
+                  }
+                />
+
+                {/* Fallback route */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </PageTransition>

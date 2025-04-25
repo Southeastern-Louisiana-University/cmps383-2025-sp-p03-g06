@@ -25,11 +25,12 @@ import {
   IconMovie,
   IconHome,
   IconUserPlus,
+  IconSettings,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 
 const Navbar = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [loginOpened, { open: openLogin, close: closeLogin }] =
     useDisclosure(false);
@@ -180,7 +181,7 @@ const Navbar = () => {
                     leftSection={<IconTheater size={18} />}
                     style={{ color: "white" }}
                   >
-                    Theaters
+                    Our Theaters
                   </Button>
 
                   <Button
@@ -220,6 +221,15 @@ const Navbar = () => {
 
                     <Menu.Dropdown>
                       <Menu.Label>Account</Menu.Label>
+                      {isAdmin && (
+                        <Menu.Item
+                          component={Link}
+                          to="/admin"
+                          leftSection={<IconSettings size={14} />}
+                        >
+                          Admin Panel
+                        </Menu.Item>
+                      )}
                       <Menu.Item
                         color="red"
                         leftSection={<IconLogout size={14} />}
@@ -261,7 +271,7 @@ const Navbar = () => {
                     leftSection={<IconTheater size={18} />}
                     style={{ color: "white" }}
                   >
-                    Theaters
+                    Our Theaters
                   </Button>
 
                   <Button
@@ -271,7 +281,7 @@ const Navbar = () => {
                     onClick={openLogin}
                   >
                     {" "}
-                    Sign In
+                    Login
                   </Button>
 
                   <Button
@@ -361,7 +371,7 @@ const Navbar = () => {
                 leftSection={<IconTheater size={18} />}
                 fullWidth
               >
-                Theaters
+                Our Theaters
               </Button>
 
               <Button
@@ -415,7 +425,7 @@ const Navbar = () => {
                 leftSection={<IconUserPlus size={18} />}
                 fullWidth
               >
-                Sign In
+                Login
               </Button>
             </>
           )}
