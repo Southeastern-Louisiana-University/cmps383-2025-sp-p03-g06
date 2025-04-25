@@ -31,7 +31,9 @@ const Cart = ({ items, onIncrease, onDecrease, onRemove }: CartProps) => {
           <View style={styles.item}>
             <View style={styles.itemInfo}>
               <Text style={styles.itemName}>{item.name}</Text>
-              <Text>${(item.price * item.quantity).toFixed(2)}</Text>
+              <Text style={{ color: "#ffffff" }}>
+                ${(item.price * item.quantity).toFixed(2)}
+              </Text>
             </View>
             <View style={styles.quantityControl}>
               <TouchableOpacity
