@@ -1,33 +1,51 @@
 // components/movie/MovieCard.styles.ts
-import { StyleSheet } from "react-native";
+// #c70036 is the brand color
+import { StyleSheet, Dimensions } from "react-native";
+
+const screenWidth = Dimensions.get("window").width;
+const cardMargin = 8;
+const cardWidth = (screenWidth - cardMargin * 3) / 2; // fits 2 cards with margin
 
 export const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#121212",
-    borderRadius: 12,
-    padding: 8,
-    marginBottom: 16,
-    flex: 1,
+    width: cardWidth,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 4,
+    overflow: "hidden",
+    marginBottom: 5,
+    marginHorizontal: cardMargin,
+  },
+  cardContent: {
+    flexDirection: "column",
     alignItems: "center",
-    justifyContent: "center",
+    paddingVertical: 5, 
+    paddingHorizontal: 1, 
   },
   poster: {
-    width: 140,
-    height: 210,
-    borderRadius: 8,
-    marginBottom: 8,
+    width: "100%",
+    height: undefined,
+    aspectRatio: 2 / 3, 
+    maxHeight: 200,
+    resizeMode: "cover",
+    borderRadius: 6,
   },
   posterPlaceholder: {
-    width: 140,
-    height: 210,
-    borderRadius: 8,
+    width: "100%",
+    aspectRatio: 2 / 3,
     backgroundColor: "#333",
-    marginBottom: 8,
+    borderRadius: 6,
   },
   title: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#c70036",
     textAlign: "center",
+    marginTop: 6,
+  },
+  rating: {
+    fontSize: 12,
+    color: "#fff",
+    textAlign: "center",
+    marginTop: 2,
   },
 });

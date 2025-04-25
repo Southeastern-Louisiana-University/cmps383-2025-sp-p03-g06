@@ -2,7 +2,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { styles } from "./MovieCard.styles";
-import { Movie } from "@/services/api/moviesApi";
+import { Movie } from "@/services/api/types";
 
 interface Props {
   movie: Movie;
@@ -11,12 +11,17 @@ interface Props {
 
 const MovieCard: React.FC<Props> = ({ movie, onPress }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
-    {movie.posterImageUrl ? (
-      <Image source={{ uri: movie.posterImageUrl }} style={styles.poster} />
-    ) : (
-      <View style={styles.posterPlaceholder} />
-    )}
-    <Text style={styles.title}>{movie.title}</Text>
+    <View style={styles.cardContent}>
+      <Image
+        source={movie.posterUrl}
+        style={styles.poster}
+        resizeMode="contain"
+      />
+      <View>
+        <Text style={styles.title}>{movie.title}</Text>
+        
+      </View>
+    </View>
   </TouchableOpacity>
 );
 

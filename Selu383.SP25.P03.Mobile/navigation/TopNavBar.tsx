@@ -2,6 +2,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface TopNavBarProps {
   title?: string;
@@ -12,7 +13,12 @@ export const TopNavBar = ({ title = "Lions Den Cinema" }: TopNavBarProps) => {
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <Text style={styles.logoText}>{title}</Text>
-        <View style={styles.brandCircle} />
+        <MaterialCommunityIcons
+          name="movie-open"
+          size={25}
+          color="#c70036" // or whatever color you prefer
+          style={{ marginLeft: 4 }}
+        />
       </View>
       <View style={styles.iconsContainer}>
         <TouchableOpacity style={styles.iconButton}>

@@ -1,8 +1,8 @@
 // app/components/MainLayout.tsx
 import React, { ReactNode } from "react";
 import { View, StyleSheet, SafeAreaView } from "react-native";
-import { TopNavBar } from "./navigation/TopNavBar";
-import { BottomNavBar } from "./navigation/BottomNavBar";
+import { TopNavBar } from "../../navigation/TopNavBar";
+import { BottomNavBar } from "../../navigation/BottomNavBar";
 
 interface MainLayoutProps {
   children: ReactNode;
