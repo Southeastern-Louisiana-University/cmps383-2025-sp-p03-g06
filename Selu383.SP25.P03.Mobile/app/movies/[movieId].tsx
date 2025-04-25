@@ -80,7 +80,7 @@ export default function MovieScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { flexGrow: 1 }]}>
       {/* Movie Details */}
       <Text style={styles.title}>{movie.title}</Text>
       <Text style={styles.rating}>Rated {movie.rating}</Text>

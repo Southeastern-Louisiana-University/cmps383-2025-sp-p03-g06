@@ -1,22 +1,5 @@
-
-export interface ConcessionItem {
-	id: number;
-	name: string;
-	description: string;
-	price: number;
-	imageUrl: string;
-	isAvailable: boolean;
-}
+import { ConcessionItem } from "@/services/api/apiTypes";
 
 export interface CartItem extends ConcessionItem {
-	quantity: number;
-}
-
-export interface Order {
-	id: number;
-	items: CartItem[];
-	totalPrice: number;
-	orderDate: Date;
-	status: 'pending' | 'processing' | 'completed' | 'cancelled';
-	userId: number;
+  quantity: number;
 }
