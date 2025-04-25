@@ -32,7 +32,6 @@ import {
   IconLayoutGrid,
   IconTable as IconTableView,
   IconMapPin,
-  IconPlus,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 
@@ -41,7 +40,6 @@ const TheaterList = () => {
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { isAdmin } = useAuth();
   const [theaters, setTheaters] = useState<TheaterDTO[]>([]);
   const [filtered, setFiltered] = useState<TheaterDTO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,15 +78,6 @@ const TheaterList = () => {
     });
     setFiltered(result);
   }, [theaters, searchQuery, sortBy]);
-
-  const handleDelete = async (id: number) => {
-    try {
-      await theaterApi.deleteTheater(id);
-      setTheaters((prev) => prev.filter((t) => t.id !== id));
-    } catch {
-      setError("Failed to delete theater");
-    }
-  };
 
   if (loading) {
     return (
@@ -182,27 +171,6 @@ const TheaterList = () => {
           )}
         </Paper>
 
-        {/* ——— “Add Theater” (admin only) ——— */}
-        {isAdmin && (
-          <Box
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginBottom: 24,
-            }}
-          >
-            <Button
-              component={Link}
-              to="/theaters/new"
-              color="green"
-              size="sm"
-              leftSection={<IconPlus size={16} />}
-            >
-              Add Theater
-            </Button>
-          </Box>
-        )}
-
         {/* ——— View Mode Toggle ——— */}
         <Box
           style={{
@@ -279,16 +247,6 @@ const TheaterList = () => {
                   >
                     View Movies
                   </Button>
-                  {isAdmin && (
-                    <Button
-                      variant="outline"
-                      color="red"
-                      size="xs"
-                      onClick={() => handleDelete(t.id)}
-                    >
-                      Delete
-                    </Button>
-                  )}
                 </Box>
               </Card>
             ))}
@@ -315,84 +273,30 @@ const TheaterList = () => {
                 verticalSpacing="md"
                 style={{ minWidth: 900 }}
               >
-                <thead>
-                  <tr>
-                    <th
-                      style={{
-                        padding: "12px 16px",
-                        fontSize: "1.125rem",
-                        textAlign: "left",
-                      }}
-                    >
-                      Name
-                    </th>
-                    <th
-                      style={{
-                        padding: "12px 16px",
-                        fontSize: "1.125rem",
-                        textAlign: "left",
-                      }}
-                    >
-                      Address
-                    </th>
-                    <th
-                      style={{
-                        padding: "12px 16px",
-                        fontSize: "1.125rem",
-                        textAlign: "center",
-                      }}
-                    >
-                      Seats
-                    </th>
-                    <th
-                      style={{
-                        padding: "12px 16px",
-                        fontSize: "1.125rem",
-                        textAlign: "center",
-                      }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Name</Table.Th>
+                    <Table.Th>Address</Table.Th>
+                    <Table.Th style={{ textAlign: "center" }}>Seats</Table.Th>
+                    <Table.Th style={{ textAlign: "center" }}>Actions</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
                   {filtered.map((t) => (
-                    <tr
-                      key={t.id}
-                      style={{
-                        backgroundColor: isDark
-                          ? theme.colors.dark[6]
-                          : theme.white,
-                        transition: "background 0.2s",
-                      }}
-                    >
-                      <td
-                        style={{
-                          padding: "12px 16px",
-                          fontSize: "1rem",
-                          textAlign: "left",
-                        }}
-                      >
-                        {t.name}
-                      </td>
-                      <td
-                        style={{
-                          padding: "12px 16px",
-                          fontSize: "1rem",
-                          textAlign: "left",
-                        }}
-                      >
+                    <Table.Tr key={t.id}>
+                      <Table.Td>{t.name}</Table.Td>
+                      <Table.Td>
                         <Group style={{ alignItems: "center", gap: 8 }}>
                           <IconMapPin size={18} />
                           <Text size="md">{t.address}</Text>
                         </Group>
-                      </td>
-                      <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: "center" }}>
                         <Badge size="lg" color="red" variant="filled">
                           {t.seatCount}
                         </Badge>
-                      </td>
-                      <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: "center" }}>
                         <Button
                           component={Link}
                           to={`/theaters/${t.id}/movies`}
@@ -401,10 +305,10 @@ const TheaterList = () => {
                         >
                           View Movies
                         </Button>
-                      </td>
-                    </tr>
+                      </Table.Td>
+                    </Table.Tr>
                   ))}
-                </tbody>
+                </Table.Tbody>
               </Table>
             </ScrollArea>
           </Paper>

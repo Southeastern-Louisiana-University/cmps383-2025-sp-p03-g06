@@ -45,7 +45,7 @@ new()
     Name = "Small Popcorn",
     Description = "Freshly popped popcorn, small size",
     Price = 5.99m,
-    ImageUrl = "/images/food/small-popcorn.jpg",
+    ImageUrl = "/images/food/popcorn.jpg",
     CategoryId = snacksCategory.Id,
     IsAvailable = true
 },
@@ -54,7 +54,7 @@ new()
     Name = "Large Popcorn",
     Description = "Freshly popped popcorn, large size",
     Price = 7.99m,
-    ImageUrl = "/images/food/large-popcorn.jpg",
+    ImageUrl = "/images/food/popcorn.jpg",
     CategoryId = snacksCategory.Id,
     IsAvailable = true
 },
@@ -109,7 +109,7 @@ new()
             Name = "Coffee",
             Description = "Freshly brewed coffee",
             Price = 4.99m,
-            ImageUrl = "/images/food/coffee.avif",
+            ImageUrl = "/images/food/coffee.jpg",
             CategoryId = beveragesCategory.Id,
             IsAvailable = true
         },
@@ -120,7 +120,7 @@ new()
             Name = "Popcorn & Soda Combo",
             Description = "Large popcorn and large soda with free refills",
             Price = 13.99m,
-            ImageUrl = "/images/food/pop-soda.avif",
+            ImageUrl = "/images/food/soda-pop.jpg",
             CategoryId = comboDealsCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -149,7 +149,7 @@ new()
             Name = "Chocolate Bar",
             Description = "Classic chocolate bar",
             Price = 3.99m,
-            ImageUrl = "/images/food/choc.avif",
+            ImageUrl = "/images/food/choc.jpg",
             CategoryId = dessertsCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -158,7 +158,7 @@ new()
             Name = "Ice Cream",
             Description = "Premium vanilla ice cream cup",
             Price = 5.99m,
-            ImageUrl = "/images/food/icecream.avif",
+            ImageUrl = "/images/food/icecream.jpg",
             CategoryId = dessertsCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -167,7 +167,7 @@ new()
             Name = "Cookie",
             Description = "Freshly baked chocolate chip cookie",
             Price = 3.49m,
-            ImageUrl = "/images/food/cookie.avif",
+            ImageUrl = "/images/food/cookie.jpg",
             CategoryId = dessertsCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -176,7 +176,7 @@ new()
             Name = "Candy Pack",
             Description = "Assorted movie theater candy",
             Price = 4.99m,
-            ImageUrl = "/images/food/candy.avif",
+            ImageUrl = "/images/food/candy.jpg",
             CategoryId = dessertsCategory.Id,  // Use the actual ID
             IsAvailable = true
         }

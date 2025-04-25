@@ -12,28 +12,13 @@ import {
   Group,
   Rating,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { Carousel } from "@mantine/carousel";
 import "@mantine/carousel/styles.css";
 import { movieApi, MovieDTO } from "../services/api";
 import { IconClock, IconMovie, IconTicket } from "@tabler/icons-react";
-
-// Map of movie titles to their ratings in the range of 0-10
-const movieRatings: Record<string, number> = {
-  "Snow White": 5.5,
-  "Death of a Unicorn": 6.4,
-  Novocaine: 6.7,
-  "Mickey 17": 7.0,
-  "A Working Man": 6.2,
-  "The Woman in the Yard": 5.6,
-  "The Day the Earth Blew Up: A Looney Tunes Movie": 7.0,
-  "Dog Man": 6.3,
-  "The Monkey": 6.2,
-  "Paddington in Peru": 6.7,
-  "Captain America: Brave New World": 5.9,
-  "Mufasa: The Lion King": 6.6,
-  Locked: 6.3,
-  "One of Them Days": 6.6,
-};
+import MovieRating from "./MovieRating";
+import LoginSignupModal from "./LoginSignupModal";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -41,6 +26,9 @@ const LandingPage = () => {
   const isDark = colorScheme === "dark";
   const { isAuthenticated } = useAuth();
   const [movies, setMovies] = useState<MovieDTO[]>([]);
+  const [modalOpened, { open: openModal, close: closeModal }] =
+    useDisclosure(false);
+  const [initialView, setInitialView] = useState<"login" | "signup">("signup");
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -58,8 +46,13 @@ const LandingPage = () => {
     navigate(`/movies/${movie.id}/showtimes`);
   };
 
-  const handleJoinClick = () => {
-    navigate("/signup");
+  const handleSuccess = () => {
+    closeModal();
+  };
+
+  const handleJoinNow = () => {
+    setInitialView("signup");
+    openModal();
   };
 
   const formatReleaseDate = (dateString: string) => {
@@ -72,9 +65,15 @@ const LandingPage = () => {
   };
 
   // Convert 0-10 rating to 0-5 stars for the rating component
-  const getRatingStars = (title: string) => {
-    const rating = movieRatings[title] || 0;
-    return rating / 2;
+  const getRatingStars = (score: number | undefined) => {
+    if (typeof score !== "number") return 0;
+    return Math.max(0, Math.min(5, score / 2));
+  };
+
+  // Format score for display
+  const formatScore = (score: number | undefined) => {
+    if (typeof score !== "number") return "N/A";
+    return score.toFixed(1);
   };
 
   return (
@@ -154,7 +153,6 @@ const LandingPage = () => {
         >
           {movies.map((movie) => (
             <Carousel.Slide key={movie.id}>
-              {/* Slide content (poster, info, button) unchanged */}
               <Flex direction="column" gap="xs" style={{ padding: "0 10px" }}>
                 <Box
                   style={{
@@ -210,21 +208,23 @@ const LandingPage = () => {
                     </Badge>
 
                     {movie.rating && (
-                      <Badge color={isDark ? "blue" : "indigo"}>
-                        {movie.rating}
-                      </Badge>
+                      <MovieRating
+                        rating={movie.rating}
+                        size="sm"
+                        showTooltip={true}
+                      />
                     )}
                   </Group>
 
                   <Group gap={5} mt={5}>
                     <Rating
-                      value={getRatingStars(movie.title)}
+                      value={getRatingStars(movie.ratingScore)}
                       fractions={2}
                       readOnly
                       size="sm"
                     />
                     <Text size="xs" c="dimmed">
-                      {movieRatings[movie.title]?.toFixed(1) || "N/A"}/10
+                      {formatScore(movie.ratingScore)}/10
                     </Text>
                   </Group>
 
@@ -288,7 +288,7 @@ const LandingPage = () => {
           <Button
             color="red"
             size="md"
-            onClick={handleJoinClick}
+            onClick={handleJoinNow}
             style={{
               backgroundColor: "#e03131",
               color: "white",
@@ -309,6 +309,13 @@ const LandingPage = () => {
           </Button>
         </Box>
       )}
+
+      <LoginSignupModal
+        opened={modalOpened}
+        onClose={closeModal}
+        onSuccess={handleSuccess}
+        initialView={initialView}
+      />
     </Box>
   );
 };

@@ -55,7 +55,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "PG",
                     PosterImageUrl = "/images/now_showing/SnowWhite.png",
                     TrailerUrl = "https://www.youtube.com/watch?v=iV46TJKL8cU", // Add trailer URL
-                    ReleaseDate = new DateTime(2025, 3, 21)
+                    ReleaseDate = new DateTime(2025, 3, 21),
+                    RatingScore = 5.5
                 },
                 new()
                 {
@@ -65,7 +66,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "R",
                     PosterImageUrl = "/images/now_showing/DeathOfAUnicorn.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=62pyfjnzIuc", // Add trailer URL
-                    ReleaseDate = new DateTime(2025, 3, 28)
+                    ReleaseDate = new DateTime(2025, 3, 28),
+                    RatingScore = 6.4
                 },
                 new()
                 {
@@ -75,7 +77,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "R",
                     PosterImageUrl = "/images/now_showing/Novocaine.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=-PyOIlJEdqA", // Add trailer URL
-                    ReleaseDate = new DateTime(2025, 3, 14)
+                    ReleaseDate = new DateTime(2025, 3, 14),
+                    RatingScore = 6.7
                 },
                 new()
                 {
@@ -85,7 +88,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "R",
                     PosterImageUrl = "/images/now_showing/Mickey17.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=tA1s65o_kYM", // Add trailer URL
-                    ReleaseDate = new DateTime(2025, 3, 7)
+                    ReleaseDate = new DateTime(2025, 3, 7),
+                    RatingScore = 7.0
                 },
                 new()
                 {
@@ -95,7 +99,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "R",
                     PosterImageUrl = "/images/now_showing/AWorkingMan.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=zTbgNC42Ops",
-                    ReleaseDate = new DateTime(2025, 3, 28)
+                    ReleaseDate = new DateTime(2025, 3, 28),
+                    RatingScore = 6.2
                 },
                 new()
                 {
@@ -105,7 +110,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "PG-13",
                     PosterImageUrl = "/images/now_showing/AWomanInTheYard.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=27aEM6q1Wqs",
-                    ReleaseDate = new DateTime(2025, 3, 28)
+                    ReleaseDate = new DateTime(2025, 3, 28),
+                    RatingScore = 5.6
                 },
                 new()
                 {
@@ -115,7 +121,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "PG",
                     PosterImageUrl = "/images/now_showing/LooneyTunes.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=QtmSjyz6JI4",
-                    ReleaseDate = new DateTime(2025, 3, 14)
+                    ReleaseDate = new DateTime(2025, 3, 14),
+                    RatingScore = 7.0
                 },
                 new()
                 {
@@ -125,7 +132,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "PG",
                     PosterImageUrl = "/images/now_showing/DogMan.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=QaJbAennB_Q", 
-                    ReleaseDate = new DateTime(2025, 1, 31)
+                    ReleaseDate = new DateTime(2025, 1, 31),
+                    RatingScore = 6.3
                 },
                 new()
                 {
@@ -135,7 +143,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "R",
                     PosterImageUrl = "/images/now_showing/TheMonkey.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=1jc0KjSiXb0",
-                    ReleaseDate = new DateTime(2025, 2, 21)
+                    ReleaseDate = new DateTime(2025, 2, 21),
+                    RatingScore = 6.2
                 },
                 new()
                 {
@@ -145,7 +154,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "PG",
                     PosterImageUrl = "/images/now_showing/PaddingtonBear.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=NTvudSGfHRI",
-                    ReleaseDate = new DateTime(2025, 2, 14)
+                    ReleaseDate = new DateTime(2025, 2, 14),
+                    RatingScore = 6.7
                 },
                 new()
                 {
@@ -155,7 +165,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "PG-13",
                     PosterImageUrl = "/images/now_showing/CaptainAmerica.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=1pHDWnXmK7Y",
-                    ReleaseDate = new DateTime(2025, 2, 14)
+                    ReleaseDate = new DateTime(2025, 2, 14),
+                    RatingScore = 5.9
                 },
                 new()
                 {
@@ -165,7 +176,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "PG",
                     PosterImageUrl = "/images/now_showing/Mufasa.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=o17MF9vnabg",
-                    ReleaseDate = new DateTime(2024, 12, 20)
+                    ReleaseDate = new DateTime(2024, 12, 20),
+                    RatingScore = 6.6
                 },
                 new()
                 {
@@ -175,7 +187,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "R",
                     PosterImageUrl = "/images/now_showing/Locked.jpg",
                     TrailerUrl = "https://www.youtube.com/watch?v=xB_FsQOlh4k", 
-                    ReleaseDate = new DateTime(2025, 3, 21)
+                    ReleaseDate = new DateTime(2025, 3, 21),
+                    RatingScore = 6.3
                 },
                 new()
                 {
@@ -185,7 +198,8 @@ namespace Selu383.SP25.P03.Api.Data
                     Rating = "R",
                     PosterImageUrl = "/images/now_showing/OOTD.png",
                     TrailerUrl = "https://www.youtube.com/watch?v=-5xzjw_0d_0",
-                    ReleaseDate = new DateTime(2025, 1, 17)
+                    ReleaseDate = new DateTime(2025, 1, 17),
+                    RatingScore = 6.6
                 }
             };
 

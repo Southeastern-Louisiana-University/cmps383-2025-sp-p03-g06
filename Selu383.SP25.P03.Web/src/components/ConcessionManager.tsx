@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Paper,
   Title,
@@ -20,6 +20,7 @@ import {
   Switch,
   Textarea,
   Select,
+  Box,
 } from "@mantine/core";
 import {
   IconPlus,
@@ -30,7 +31,7 @@ import {
   IconCoffee,
   IconCategory,
 } from "@tabler/icons-react";
-import { concessionApi } from "../services/api";
+import { concessionApi, ConcessionDTO } from "../services/api";
 
 // Define type interfaces
 export interface ConcessionItemDTO {
@@ -48,7 +49,7 @@ export interface ConcessionCategoryDTO {
   name: string;
 }
 
-const ConcessionManager = () => {
+const ConcessionManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string | null>("items");
   const [items, setItems] = useState<ConcessionItemDTO[]>([]);
   const [categories, setCategories] = useState<ConcessionCategoryDTO[]>([]);
@@ -242,342 +243,230 @@ const ConcessionManager = () => {
   }
 
   return (
-    <Paper p="md" withBorder>
-      <Tabs value={activeTab} onChange={handleTabChange}>
-        <Tabs.List>
-          <Tabs.Tab value="items" leftSection={<IconCoffee size={16} />}>
-            Items
-          </Tabs.Tab>
-          <Tabs.Tab value="categories" leftSection={<IconCategory size={16} />}>
-            Categories
-          </Tabs.Tab>
-        </Tabs.List>
-
-        <Tabs.Panel value="items" pt="md">
-          <Group justify="space-between" mb="md">
-            <Title order={3}>Concession Items</Title>
-            <Button leftSection={<IconPlus />} onClick={handleCreateItem}>
-              Add Item
-            </Button>
-          </Group>
-
-          {error && (
-            <Alert icon={<IconAlertCircle />} color="red" mb="md">
-              {error}
-            </Alert>
-          )}
-
-          <TextInput
-            placeholder="Search items..."
-            mb="md"
-            leftSection={<IconSearch />}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.currentTarget.value)}
-          />
-
-          <Table striped highlightOnHover>
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Category</th>
-                <th>Available</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items
-                .filter((i) =>
-                  i.name.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map((item) => {
-                  const cat = categories.find((c) => c.id === item.categoryId);
-                  return (
-                    <tr key={item.id}>
-                      <td>
-                        <Image
-                          src={
-                            item.imageUrl
-                              ? `/images/food/${item.imageUrl
-                                  .split("/")
-                                  .pop()
-                                  ?.replace(".jpg", "")}.jpg`
-                              : undefined
-                          }
-                          h={60}
-                          w={60}
-                          fit="cover"
-                          alt={item.name}
-                          fallbackSrc="https://placehold.co/400x200/gray/white?text=Food+Item"
-                        />
-                      </td>
-                      <td>
-                        <Text fw={500}>{item.name}</Text>
-                      </td>
-                      <td>
-                        <Badge>${item.price.toFixed(2)}</Badge>
-                      </td>
-                      <td>{cat?.name || "Unknown"}</td>
-                      <td>
-                        <Badge color={item.isAvailable ? "green" : "red"}>
-                          {item.isAvailable ? "Yes" : "No"}
-                        </Badge>
-                      </td>
-                      <td>
-                        <Group gap="xs">
-                          <ActionIcon
-                            color="blue"
-                            onClick={() => handleEditItem(item)}
-                          >
-                            <IconEdit />
-                          </ActionIcon>
-                          <ActionIcon
-                            color="red"
-                            onClick={() => {
-                              setCurrentItem(item);
-                              setIsItemDeleteModalOpen(true);
-                            }}
-                          >
-                            <IconTrash />
-                          </ActionIcon>
-                        </Group>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </Table>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="categories" pt="md">
-          <Group justify="space-between" mb="md">
-            <Title order={3}>Categories</Title>
-            <Button leftSection={<IconPlus />} onClick={handleCreateCategory}>
-              Add Category
-            </Button>
-          </Group>
-
-          {error && (
-            <Alert icon={<IconAlertCircle />} color="red" mb="md">
-              {error}
-            </Alert>
-          )}
-          <TextInput
-            placeholder="Search categories..."
-            mb="md"
-            leftSection={<IconSearch />}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.currentTarget.value)}
-          />
-
-          <Table striped highlightOnHover>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Count</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categories
-                .filter((c) =>
-                  c.name.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map((cat) => {
-                  const count = items.filter(
-                    (i) => i.categoryId === cat.id
-                  ).length;
-                  return (
-                    <tr key={cat.id}>
-                      <td>
-                        <Text fw={500}>{cat.name}</Text>
-                      </td>
-                      <td>{count}</td>
-                      <td>
-                        <Group gap="xs">
-                          <ActionIcon
-                            color="blue"
-                            onClick={() => handleEditCategory(cat)}
-                          >
-                            <IconEdit />
-                          </ActionIcon>
-                          <ActionIcon
-                            color="red"
-                            disabled={count > 0}
-                            onClick={() => {
-                              setCurrentCategory(cat);
-                              setIsCategoryDeleteModalOpen(true);
-                            }}
-                            title={count > 0 ? "Has items" : undefined}
-                          >
-                            <IconTrash />
-                          </ActionIcon>
-                        </Group>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </Table>
-        </Tabs.Panel>
-      </Tabs>
-
-      {/* Item Modal */}
-      <Modal
-        opened={isItemModalOpen}
-        onClose={() => setIsItemModalOpen(false)}
-        title={isEditingItem ? "Edit Item" : "New Item"}
-        size="md"
-      >
-        <Stack>
-          <TextInput
-            label="Name"
-            value={itemFormData.name}
-            onChange={(e) =>
-              setItemFormData({ ...itemFormData, name: e.currentTarget.value })
-            }
-            required
-          />
-          <Textarea
-            label="Description"
-            value={itemFormData.description}
-            onChange={(e) =>
-              setItemFormData({
-                ...itemFormData,
-                description: e.currentTarget.value,
-              })
-            }
-          />
-          <NumberInput
-            label="Price"
-            value={itemFormData.price}
-            onChange={(val: number | string) =>
-              setItemFormData({
-                ...itemFormData,
-                price: typeof val === "string" ? parseFloat(val) : val ?? 0,
-              })
-            }
-            min={0.01}
-            step={0.01}
-            required
-          />
-          <TextInput
-            label="Image URL"
-            value={itemFormData.imageUrl}
-            onChange={(e) =>
-              setItemFormData({
-                ...itemFormData,
-                imageUrl: e.currentTarget.value,
-              })
-            }
-          />
-          <Select
-            label="Category"
-            data={categories.map((c) => ({
-              value: c.id.toString(),
-              label: c.name,
-            }))}
-            value={itemFormData.categoryId.toString()}
-            onChange={(val) =>
-              setItemFormData({ ...itemFormData, categoryId: Number(val) })
-            }
-            required
-          />
-          <Switch
-            label="Available"
-            checked={itemFormData.isAvailable}
-            onChange={(e) =>
-              setItemFormData({
-                ...itemFormData,
-                isAvailable: e.currentTarget.checked,
-              })
-            }
-          />
-          <Group justify="right">
-            <Button variant="outline" onClick={() => setIsItemModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveItem}>
-              {isEditingItem ? "Update" : "Create"}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
-
-      {/* Delete Confirmation Modals */}
-      <Modal
-        opened={isItemDeleteModalOpen}
-        onClose={() => setIsItemDeleteModalOpen(false)}
-        title="Delete Item?"
-        size="sm"
-      >
-        <Text>Are you sure you want to delete "{currentItem?.name}"?</Text>
-        <Group justify="right" mt="md">
+    <Box p="xl">
+      <Paper p="xl" radius="md">
+        <Group justify="space-between" mb="xl">
+          <Title order={2}>Concession Management</Title>
           <Button
-            variant="outline"
-            onClick={() => setIsItemDeleteModalOpen(false)}
+            onClick={() => {
+              setIsEditingItem(false);
+              setCurrentItem(null);
+              setItemFormData({
+                name: "",
+                description: "",
+                price: 0,
+                imageUrl: "",
+                categoryId: 0,
+                isAvailable: true,
+              });
+              setIsItemModalOpen(true);
+            }}
+            leftSection={<IconPlus size={18} />}
+            color="red"
           >
-            Cancel
-          </Button>
-          <Button color="red" onClick={confirmDeleteItem}>
-            Delete
+            Add Concession
           </Button>
         </Group>
-      </Modal>
 
-      <Modal
-        opened={isCategoryDeleteModalOpen}
-        onClose={() => setIsCategoryDeleteModalOpen(false)}
-        title="Delete Category?"
-        size="sm"
-      >
-        <Text>
-          Are you sure you want to delete "{currentCategory?.name}" category?
-        </Text>
-        <Group justify="right" mt="md">
-          <Button
-            variant="outline"
-            onClick={() => setIsCategoryDeleteModalOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button color="red" onClick={confirmDeleteCategory}>
-            Delete
-          </Button>
-        </Group>
-      </Modal>
+        <TextInput
+          placeholder="Search concessions..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.currentTarget.value)}
+          mb="lg"
+          leftSection={<IconSearch size={18} />}
+        />
 
-      {/* Category Modal */}
-      <Modal
-        opened={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
-        title={isEditingCategory ? "Edit Category" : "New Category"}
-        size="md"
-      >
-        <Stack>
-          <TextInput
-            label="Name"
-            value={categoryFormData.name}
-            onChange={(e) =>
-              setCategoryFormData({ name: e.currentTarget.value })
-            }
-            required
-          />
-          <Group justify="right">
+        <Table striped highlightOnHover withTableBorder withColumnBorders>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th style={{ width: "80px" }}></Table.Th>
+              <Table.Th style={{ width: "25%" }}>Name</Table.Th>
+              <Table.Th style={{ width: "45%" }}>Description</Table.Th>
+              <Table.Th style={{ width: "120px", textAlign: "center" }}>
+                Price
+              </Table.Th>
+              <Table.Th style={{ width: "120px", textAlign: "center" }}>
+                Actions
+              </Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {items
+              .filter((i) =>
+                i.name.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .map((item) => {
+                const cat = categories.find((c) => c.id === item.categoryId);
+                return (
+                  <Table.Tr key={item.id}>
+                    <Table.Td style={{ textAlign: "center", padding: "8px" }}>
+                      <Image
+                        src={
+                          item.imageUrl
+                            ? `/images/food/${item.imageUrl
+                                .split("/")
+                                .pop()
+                                ?.replace(".jpg", "")}.jpg`
+                            : undefined
+                        }
+                        h={60}
+                        w={60}
+                        fit="cover"
+                        alt={item.name}
+                      />
+                    </Table.Td>
+                    <Table.Td style={{ padding: "16px" }}>
+                      <Text fw={500}>{item.name}</Text>
+                    </Table.Td>
+                    <Table.Td style={{ padding: "16px" }}>
+                      <Text>{item.description}</Text>
+                    </Table.Td>
+                    <Table.Td style={{ textAlign: "center" }}>
+                      <Badge>${item.price.toFixed(2)}</Badge>
+                    </Table.Td>
+                    <Table.Td style={{ textAlign: "center" }}>
+                      <Group gap={8} justify="center">
+                        <ActionIcon
+                          variant="light"
+                          color="blue"
+                          onClick={() => handleEditItem(item)}
+                          title="Edit"
+                        >
+                          <IconEdit size={18} />
+                        </ActionIcon>
+                        <ActionIcon
+                          variant="light"
+                          color="red"
+                          onClick={() => {
+                            setCurrentItem(item);
+                            setIsItemDeleteModalOpen(true);
+                          }}
+                          title="Delete"
+                        >
+                          <IconTrash size={18} />
+                        </ActionIcon>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+          </Table.Tbody>
+        </Table>
+
+        {/* Concession Form Modal */}
+        <Modal
+          opened={isItemModalOpen}
+          onClose={() => setIsItemModalOpen(false)}
+          title={isEditingItem ? "Edit Concession" : "New Concession"}
+          size="lg"
+        >
+          <Stack>
+            <TextInput
+              label="Name"
+              value={itemFormData.name}
+              onChange={(e) =>
+                setItemFormData({
+                  ...itemFormData,
+                  name: e.currentTarget.value,
+                })
+              }
+              required
+            />
+            <Textarea
+              label="Description"
+              value={itemFormData.description}
+              onChange={(e) =>
+                setItemFormData({
+                  ...itemFormData,
+                  description: e.currentTarget.value,
+                })
+              }
+            />
+            <NumberInput
+              label="Price"
+              value={itemFormData.price}
+              onChange={(val) =>
+                setItemFormData({
+                  ...itemFormData,
+                  price: typeof val === "string" ? parseFloat(val) : val ?? 0,
+                })
+              }
+              min={0}
+              precision={2}
+              required
+              prefix="$"
+            />
+            <TextInput
+              label="Image URL"
+              value={itemFormData.imageUrl}
+              onChange={(e) =>
+                setItemFormData({
+                  ...itemFormData,
+                  imageUrl: e.currentTarget.value,
+                })
+              }
+            />
+            <Select
+              label="Category"
+              data={categories.map((c) => ({
+                value: c.id.toString(),
+                label: c.name,
+              }))}
+              value={itemFormData.categoryId.toString()}
+              onChange={(val) =>
+                setItemFormData({ ...itemFormData, categoryId: Number(val) })
+              }
+              required
+            />
+            <Switch
+              label="Available"
+              checked={itemFormData.isAvailable}
+              onChange={(e) =>
+                setItemFormData({
+                  ...itemFormData,
+                  isAvailable: e.currentTarget.checked,
+                })
+              }
+            />
+            <Group justify="right" mt="md">
+              <Button
+                variant="outline"
+                onClick={() => setIsItemModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveItem} color="red">
+                {isEditingItem ? "Update" : "Create"}
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          opened={isItemDeleteModalOpen}
+          onClose={() => setIsItemDeleteModalOpen(false)}
+          title="Delete Concession"
+          size="sm"
+        >
+          <Text>
+            Are you sure you want to delete "{currentItem?.name}"? This action
+            cannot be undone.
+          </Text>
+          <Group justify="right" mt="md">
             <Button
               variant="outline"
-              onClick={() => setIsCategoryModalOpen(false)}
+              onClick={() => setIsItemDeleteModalOpen(false)}
             >
               Cancel
             </Button>
-            <Button onClick={handleSaveCategory}>
-              {isEditingCategory ? "Update" : "Create"}
+            <Button color="red" onClick={confirmDeleteItem}>
+              Delete
             </Button>
           </Group>
-        </Stack>
-      </Modal>
-    </Paper>
+        </Modal>
+      </Paper>
+    </Box>
   );
 };
 

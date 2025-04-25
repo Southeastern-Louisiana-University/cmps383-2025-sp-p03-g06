@@ -15,7 +15,9 @@ import {
   Center,
   Tabs,
   useMantineColorScheme,
+  Stack,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconAlertCircle,
   IconTicket,
@@ -24,33 +26,59 @@ import {
   IconTheater,
   IconCurrencyDollar,
   IconQrcode,
+  IconShoppingCart,
 } from "@tabler/icons-react";
 import { useAuth } from "../contexts/AuthContext";
+import LoginSignupModal from "./LoginSignupModal";
+import TicketLookupModal from "./TicketLookupModal";
 
 // You'll need to add these types and API methods to your services/api.ts file
-import { reservationApi, ReservationDTO } from "../services/api";
+import {
+  reservationApi,
+  concessionApi,
+  ReservationDTO,
+  ConcessionOrderDTO,
+} from "../services/api";
 
 const MyReservations = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isGuest } = useAuth();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
+  const [
+    ticketLookupOpened,
+    { open: openTicketLookup, close: closeTicketLookup },
+  ] = useDisclosure(false);
 
   const [reservations, setReservations] = useState<ReservationDTO[]>([]);
+  const [concessionOrders, setConcessionOrders] = useState<
+    Record<number, ConcessionOrderDTO[]>
+  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Only force-login if neither signed-in nor guest
-    if (!isAuthenticated && !isGuest && !loading) {
-      navigate("/login", { state: { redirectTo: "/my-reservations" } });
-      return;
-    }
-
     const fetchReservations = async () => {
       try {
         const data = await reservationApi.getMyReservations();
         setReservations(data);
+
+        // Fetch concession orders for each reservation
+        const ordersMap: Record<number, ConcessionOrderDTO[]> = {};
+        for (const reservation of data) {
+          try {
+            const orders = await concessionApi.getOrdersByReservation(
+              reservation.id
+            );
+            ordersMap[reservation.id] = orders;
+          } catch (error) {
+            console.error(
+              `Failed to fetch concession orders for reservation ${reservation.id}:`,
+              error
+            );
+          }
+        }
+        setConcessionOrders(ordersMap);
       } catch (error) {
         setError("Failed to fetch your reservations");
         console.error("Error fetching reservations:", error);
@@ -61,169 +89,15 @@ const MyReservations = () => {
 
     if (isAuthenticated || isGuest) {
       fetchReservations();
+    } else {
+      setLoading(false);
+      openTicketLookup();
     }
-  }, [isAuthenticated, navigate, loading]);
-
-  if (loading) {
-    return (
-      <Center my="xl">
-        <Loader size="lg" />
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container>
-        <Alert
-          icon={<IconAlertCircle size={16} />}
-          title="Error"
-          color="red"
-          my="xl"
-        >
-          {error}
-        </Alert>
-      </Container>
-    );
-  }
-
-  // Filter reservations by status
-  const upcomingReservations = reservations.filter(
-    (r) =>
-      r.status === "Confirmed" && new Date(r.showtimeStartTime) > new Date()
-  );
-
-  const pastReservations = reservations.filter(
-    (r) =>
-      (r.status === "Confirmed" &&
-        new Date(r.showtimeStartTime) <= new Date()) ||
-      r.status === "Cancelled"
-  );
-
-  const renderReservationCard = (reservation: ReservationDTO) => {
-    const showtime = new Date(reservation.showtimeStartTime);
-    const isPast = showtime <= new Date();
-    const isCancelled = reservation.status === "Cancelled";
-
-    return (
-      <Card
-        key={reservation.id}
-        shadow="sm"
-        padding="lg"
-        radius="md"
-        withBorder
-        mb="md"
-        style={{
-          borderTop: `3px solid ${
-            isCancelled
-              ? "#e03131"
-              : isPast
-              ? "#868e96"
-              : isDark
-              ? "#d4af37"
-              : "#0d6832"
-          }`,
-          opacity: isCancelled ? 0.7 : 1,
-        }}
-      >
-        <Group justify="apart" mb="xs">
-          <Title order={4}>{reservation.movieTitle}</Title>
-          <Badge
-            color={
-              isCancelled
-                ? "red"
-                : isPast
-                ? "gray"
-                : isDark
-                ? "yellow"
-                : "green"
-            }
-          >
-            {reservation.status}
-          </Badge>
-        </Group>
-
-        <Group mb="xs">
-          <IconCalendarEvent size={16} />
-          <Text size="sm">
-            {showtime.toLocaleDateString(undefined, {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </Text>
-        </Group>
-
-        <Group mb="xs">
-          <IconClock size={16} />
-          <Text size="sm">
-            {showtime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
-        </Group>
-
-        <Group mb="xs">
-          <IconTheater size={16} />
-          <Text size="sm">
-            {reservation.theaterName} - {reservation.roomName}
-          </Text>
-        </Group>
-
-        <Group mb="xs">
-          <IconTicket size={16} />
-          <Text size="sm">
-            Seats:{" "}
-            {reservation.seats
-              .map((seat) => `${seat.row}${seat.number}`)
-              .join(", ")}
-          </Text>
-        </Group>
-
-        <Group mb="xs">
-          <IconCurrencyDollar size={16} />
-          <Text size="sm">Total: ${reservation.totalPrice.toFixed(2)}</Text>
-        </Group>
-
-        {!isCancelled && (
-          <>
-            <Divider my="md" />
-
-            <Group justify="apart">
-              {!isPast && (
-                <Button
-                  variant="outline"
-                  color="red"
-                  size="xs"
-                  onClick={() => handleCancelReservation(reservation.id)}
-                >
-                  Cancel
-                </Button>
-              )}
-
-              <Button
-                variant="light"
-                color={isDark ? "yellow" : "green"}
-                rightSection={<IconQrcode size={16} />}
-                size="xs"
-                onClick={() => handleViewTicket(reservation.id)}
-              >
-                View Ticket
-              </Button>
-            </Group>
-          </>
-        )}
-      </Card>
-    );
-  };
+  }, [isAuthenticated, isGuest, openTicketLookup]);
 
   const handleCancelReservation = async (id: number) => {
     try {
       await reservationApi.cancelReservation(id);
-
-      // Update reservation status locally
       setReservations((prevReservations) =>
         prevReservations.map((res) =>
           res.id === id ? { ...res, status: "Cancelled" } : res
@@ -239,71 +113,266 @@ const MyReservations = () => {
     navigate(`/ticket/${id}`);
   };
 
+  if (loading) {
+    return (
+      <Center my="xl">
+        <Loader size="lg" />
+      </Center>
+    );
+  }
+
   return (
-    <Container size="lg" py="xl">
-      <Title
-        order={2}
-        mb="xl"
-        ta="center"
-        style={{
-          color: isDark ? "#fff" : "#0d6832",
-        }}
-      >
-        My Tickets
-      </Title>
+    <>
+      <Container size="lg" py="xl">
+        <Title
+          order={2}
+          mb="xl"
+          ta="center"
+          style={{
+            color: isDark ? "#fff" : "#0d6832",
+          }}
+        >
+          My Tickets
+        </Title>
 
-      {reservations.length === 0 ? (
-        <Paper p="xl" withBorder ta="center">
-          <IconTicket size={40} style={{ opacity: 0.5 }} />
-          <Text mt="md" size="lg" fw={500}>
-            You don't have any reservations yet
-          </Text>
-          <Text size="sm" c="dimmed" mb="xl">
-            Browse movies and book your first show!
-          </Text>
-          <Button
-            onClick={() => navigate("/movies")}
-            color={isDark ? "yellow" : "green"}
+        {error && (
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Error"
+            color="red"
+            mb="xl"
+            onClose={() => setError(null)}
+            withCloseButton
           >
-            View Movies
-          </Button>
-        </Paper>
-      ) : (
-        <Tabs defaultValue="upcoming">
-          <Tabs.List mb="md">
-            <Tabs.Tab
-              value="upcoming"
-              leftSection={<IconCalendarEvent size={16} />}
+            {error}
+          </Alert>
+        )}
+
+        {reservations.length === 0 ? (
+          <Paper p="xl" withBorder ta="center">
+            <IconTicket size={40} style={{ opacity: 0.5 }} />
+            <Text mt="md" size="lg" fw={500}>
+              You don't have any reservations yet
+            </Text>
+            <Text size="sm" c="dimmed" mb="xl">
+              Browse movies and book your first show!
+            </Text>
+            <Button
+              onClick={() => navigate("/movies")}
+              color={isDark ? "yellow" : "green"}
             >
-              Upcoming ({upcomingReservations.length})
-            </Tabs.Tab>
-            <Tabs.Tab value="past" leftSection={<IconClock size={16} />}>
-              Past & Cancelled ({pastReservations.length})
-            </Tabs.Tab>
-          </Tabs.List>
+              View Movies
+            </Button>
+          </Paper>
+        ) : (
+          <div>
+            {reservations.map((reservation) => {
+              const showtime = new Date(reservation.showtimeStartTime);
+              const isPast = showtime <= new Date();
+              const isCancelled = reservation.status === "Cancelled";
 
-          <Tabs.Panel value="upcoming">
-            {upcomingReservations.length === 0 ? (
-              <Text ta="center" c="dimmed">
-                You don't have any upcoming reservations.
-              </Text>
-            ) : (
-              upcomingReservations.map(renderReservationCard)
-            )}
-          </Tabs.Panel>
+              return (
+                <Card
+                  key={reservation.id}
+                  withBorder
+                  mb="md"
+                  padding="lg"
+                  radius="md"
+                >
+                  <Group justify="space-between" mb="xs">
+                    <Text fw={700} size="lg">
+                      {reservation.movieTitle}
+                    </Text>
+                    <Badge
+                      color={
+                        isCancelled
+                          ? "red"
+                          : isPast
+                          ? "gray"
+                          : isDark
+                          ? "yellow"
+                          : "green"
+                      }
+                    >
+                      {isCancelled
+                        ? "Cancelled"
+                        : isPast
+                        ? "Past"
+                        : "Confirmed"}
+                    </Badge>
+                  </Group>
 
-          <Tabs.Panel value="past">
-            {pastReservations.length === 0 ? (
-              <Text ta="center" c="dimmed">
-                You don't have any past reservations.
-              </Text>
-            ) : (
-              pastReservations.map(renderReservationCard)
-            )}
-          </Tabs.Panel>
-        </Tabs>
-      )}
-    </Container>
+                  <Group mb="xs">
+                    <IconCalendarEvent size={16} />
+                    <Text size="sm">
+                      {showtime.toLocaleDateString(undefined, {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </Text>
+                  </Group>
+
+                  <Group mb="xs">
+                    <IconClock size={16} />
+                    <Text size="sm">
+                      {showtime.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Text>
+                  </Group>
+
+                  <Group mb="xs">
+                    <IconTheater size={16} />
+                    <Text size="sm">
+                      {reservation.theaterName} - {reservation.roomName}
+                    </Text>
+                  </Group>
+
+                  <Group mb="xs">
+                    <IconTicket size={16} />
+                    <Text size="sm">
+                      Seats:{" "}
+                      {reservation.seats
+                        .map((seat) => `${seat.row}${seat.number}`)
+                        .join(", ")}
+                    </Text>
+                  </Group>
+
+                  <Group mb="xs">
+                    <IconCurrencyDollar size={16} />
+                    <Text size="sm">
+                      Total: ${reservation.totalPrice.toFixed(2)}
+                    </Text>
+                  </Group>
+
+                  {/* Display Concession Orders */}
+                  {concessionOrders[reservation.id]?.length > 0 && (
+                    <>
+                      <Divider
+                        my="md"
+                        label={
+                          <Group gap={4}>
+                            <IconShoppingCart size={16} />
+                            <Text size="sm">Concession Orders</Text>
+                          </Group>
+                        }
+                      />
+                      <Stack gap="xs">
+                        {concessionOrders[reservation.id].map((order) => (
+                          <Card
+                            key={order.id}
+                            withBorder
+                            radius="sm"
+                            padding="xs"
+                          >
+                            <Group justify="apart" mb={4}>
+                              <Text size="sm" fw={500}>
+                                Order #{order.id}
+                              </Text>
+                              <Badge
+                                color={
+                                  order.status === "Delivered"
+                                    ? "green"
+                                    : order.status === "Cancelled"
+                                    ? "red"
+                                    : "yellow"
+                                }
+                                size="sm"
+                              >
+                                {order.status}
+                              </Badge>
+                            </Group>
+                            <Text size="xs" c="dimmed">
+                              Ordered:{" "}
+                              {new Date(order.orderTime).toLocaleString()}
+                            </Text>
+                            <Divider my="xs" />
+                            {order.items.map((item) => (
+                              <Group key={item.id} justify="apart" mb={2}>
+                                <Text size="sm">
+                                  {item.quantity}x {item.itemName}
+                                </Text>
+                                <Text size="sm">
+                                  ${(item.quantity * item.unitPrice).toFixed(2)}
+                                </Text>
+                              </Group>
+                            ))}
+                            <Divider my="xs" />
+                            <Group justify="apart">
+                              <Text size="sm" fw={500}>
+                                Total:
+                              </Text>
+                              <Text size="sm" fw={500}>
+                                ${order.totalPrice.toFixed(2)}
+                              </Text>
+                            </Group>
+                          </Card>
+                        ))}
+                      </Stack>
+                    </>
+                  )}
+
+                  {!isCancelled && (
+                    <>
+                      <Divider my="md" />
+
+                      <Group justify="apart">
+                        {!isPast && (
+                          <Button
+                            variant="outline"
+                            color="red"
+                            size="xs"
+                            onClick={() =>
+                              handleCancelReservation(reservation.id)
+                            }
+                          >
+                            Cancel
+                          </Button>
+                        )}
+
+                        <Group>
+                          <Button
+                            variant="light"
+                            color={isDark ? "yellow" : "green"}
+                            rightSection={<IconQrcode size={16} />}
+                            size="xs"
+                            onClick={() => handleViewTicket(reservation.id)}
+                          >
+                            View Ticket
+                          </Button>
+
+                          {/* Add concessions button - only show if within valid time window */}
+                          {!isPast && (
+                            <Button
+                              variant="light"
+                              color={isDark ? "yellow" : "green"}
+                              size="xs"
+                              onClick={() =>
+                                navigate(`/concessions/${reservation.id}`)
+                              }
+                            >
+                              Add Concessions
+                            </Button>
+                          )}
+                        </Group>
+                      </Group>
+                    </>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </Container>
+
+      <TicketLookupModal
+        opened={ticketLookupOpened}
+        onClose={closeTicketLookup}
+      />
+    </>
   );
 };
 

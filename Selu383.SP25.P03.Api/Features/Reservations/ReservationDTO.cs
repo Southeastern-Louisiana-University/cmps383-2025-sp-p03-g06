@@ -4,7 +4,7 @@ namespace Selu383.SP25.P03.Api.Features.Reservations
     public class ReservationDTO
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
         public string? UserName { get; set; }
         public int ShowtimeId { get; set; }
         public DateTime ShowtimeStartTime { get; set; }

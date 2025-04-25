@@ -1,14 +1,12 @@
 // src/components/Login.tsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   TextInput,
   PasswordInput,
   Button,
   Text,
-  Paper,
-  Container,
   Title,
   Divider,
   Alert,
@@ -27,9 +25,10 @@ import AnimatedLion from "./AnimatedLion";
 
 interface LoginProps {
   onSuccess?: () => void;
+  onSwitchToSignup?: () => void;
 }
 
-const Login = ({ onSuccess }: LoginProps) => {
+const Login = ({ onSuccess, onSwitchToSignup }: LoginProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { login, error, loading } = useAuth();
@@ -175,13 +174,12 @@ const Login = ({ onSuccess }: LoginProps) => {
           New to Lions Den Cinemas?
         </Text>
         <Button
-          component={Link}
-          to="/signup"
           variant="outline"
           color="red"
           fullWidth
           size="lg"
           leftSection={<IconUserPlus size={20} />}
+          onClick={onSwitchToSignup}
         >
           Join the Den
         </Button>

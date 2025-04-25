@@ -11,7 +11,6 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/theater-movies")]
     [ApiController]
-    [AllowAnonymous]
     public class TheaterMoviesController(DataContext context) : ControllerBase
     {
         private readonly DataContext _context = context;
@@ -20,6 +19,7 @@ namespace Selu383.SP25.P03.Api.Controllers
         private readonly DbSet<Theater> _theaters = context.Set<Theater>();
 
         [HttpGet("movie/{movieId}")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<int>>> GetTheatersByMovie(int movieId)
         {
             var movie = await _movies.FindAsync(movieId);
@@ -37,6 +37,7 @@ namespace Selu383.SP25.P03.Api.Controllers
         }
 
         [HttpGet("theater/{theaterId}")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<int>>> GetMoviesByTheater(int theaterId)
         {
             var theater = await _theaters.FindAsync(theaterId);

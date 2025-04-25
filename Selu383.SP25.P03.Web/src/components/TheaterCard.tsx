@@ -8,80 +8,29 @@ import {
   Group,
   Button,
   Divider,
-  ActionIcon,
-  Tooltip,
-  Box,
-  Menu,
   ThemeIcon,
+  Box,
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";
-import {
-  IconMapPin,
-  IconSofa,
-  IconPencil,
-  IconTrash,
-  IconMovie,
-  IconDots,
-} from "@tabler/icons-react";
-import { modals } from "@mantine/modals";
+import { IconMapPin, IconSofa, IconMovie } from "@tabler/icons-react";
 
 interface TheaterCardProps {
   theater: TheaterDTO;
-  onDelete: (id: number) => void;
-  isAdmin: boolean;
 }
 
-// Memoized component to prevent unnecessary re-renders
-const TheaterCard = memo(({ theater, onDelete, isAdmin }: TheaterCardProps) => {
+const TheaterCard = memo(({ theater }: TheaterCardProps) => {
   const { colorScheme } = useMantineColorScheme();
-  const isDark = colorScheme === "dark";
   const theme = useMantineTheme();
-
-  const confirmDelete = () => {
-    modals.openConfirmModal({
-      title: <Text fw={700}>Delete Theater</Text>,
-      centered: true,
-      children: (
-        <Text size="sm">
-          Are you sure you want to delete <strong>{theater.name}</strong>? This
-          action cannot be undone.
-        </Text>
-      ),
-      labels: { confirm: "Delete", cancel: "Cancel" },
-      confirmProps: { color: "red" },
-      onConfirm: () => onDelete(theater.id),
-    });
-  };
+  const isDark = colorScheme === "dark";
 
   return (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      withBorder
-      className="theater-card"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        borderTop: `3px solid #e03131`, // Changed from gold to red
-        background: "var(--background-darker)",
-      }}
-    >
-      <Text
-        fw={700}
-        size="lg"
-        mb="xs"
-        style={{
-          lineHeight: 1.3,
-          color: isDark ? theme.colors.gray[1] : theme.colors.dark[7],
-        }}
-      >
+    <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Text fw={700} size="lg" mb="xs">
         {theater.name}
       </Text>
 
-      <Group gap="xs" mb="xs">
+      <Group gap="xs" mb="md">
         <ThemeIcon
           color={isDark ? "red" : "red"}
           variant="light"
@@ -124,7 +73,7 @@ const TheaterCard = memo(({ theater, onDelete, isAdmin }: TheaterCardProps) => {
 
       <Divider my="md" />
 
-      <Group justify="space-between" mt="auto" className="card-actions">
+      <Group justify="center" mt="auto">
         <Button
           component={Link}
           to={`/movies`}
@@ -135,42 +84,6 @@ const TheaterCard = memo(({ theater, onDelete, isAdmin }: TheaterCardProps) => {
         >
           View Movies
         </Button>
-
-        {isAdmin && (
-          <Box pos="relative">
-            <Menu position="bottom-end" shadow="md" width={150}>
-              <Menu.Target>
-                <Tooltip label="Options">
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    aria-label="Theater options"
-                  >
-                    <IconDots size={18} />
-                  </ActionIcon>
-                </Tooltip>
-              </Menu.Target>
-
-              <Menu.Dropdown>
-                <Menu.Label>Actions</Menu.Label>
-                <Menu.Item
-                  component={Link}
-                  to={`/theaters/edit/${theater.id}`}
-                  leftSection={<IconPencil size={16} />}
-                >
-                  Edit Theater
-                </Menu.Item>
-                <Menu.Item
-                  color="red"
-                  leftSection={<IconTrash size={16} />}
-                  onClick={confirmDelete}
-                >
-                  Delete Theater
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Box>
-        )}
       </Group>
     </Card>
   );

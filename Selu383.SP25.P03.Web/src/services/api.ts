@@ -184,6 +184,7 @@ export interface CreateOrderItemDTO {
 export interface CreateConcessionOrderDTO {
   reservationId: number;
   items: CreateOrderItemDTO[];
+  guestInfo?: GuestUserInfo;
 }
 
 export interface OrderItemDTO {
@@ -887,6 +888,74 @@ export const showtimeApi = {
       return handleApiError(
         error,
         "Failed to fetch showtime details. Please try again later."
+      );
+    }
+  },
+
+  createShowtime: async (
+    showtime: Omit<
+      ShowtimeDTO,
+      "id" | "movieTitle" | "theaterRoomName" | "theaterName" | "endTime"
+    >
+  ): Promise<ShowtimeDTO> => {
+    try {
+      const data = await axiosWithRetry<ShowtimeDTO>({
+        url: `/showtimes`,
+        method: "POST",
+        data: showtime,
+      });
+
+      // Clear showtimes cache
+      apiCache.delete("showtimes");
+      apiCache.delete("upcoming_showtimes");
+      return data;
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to create showtime. Please try again later."
+      );
+    }
+  },
+
+  updateShowtime: async (
+    id: number,
+    showtime: ShowtimeDTO
+  ): Promise<ShowtimeDTO> => {
+    try {
+      const data = await axiosWithRetry<ShowtimeDTO>({
+        url: `/showtimes/${id}`,
+        method: "PUT",
+        data: showtime,
+      });
+
+      // Clear showtimes cache
+      apiCache.delete("showtimes");
+      apiCache.delete("upcoming_showtimes");
+      apiCache.delete(`showtime_${id}`);
+      return data;
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to update showtime. Please try again later."
+      );
+    }
+  },
+
+  deleteShowtime: async (id: number): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/showtimes/${id}`,
+        method: "DELETE",
+      });
+
+      // Clear showtimes cache
+      apiCache.delete("showtimes");
+      apiCache.delete("upcoming_showtimes");
+      apiCache.delete(`showtime_${id}`);
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to delete showtime. Please try again later."
       );
     }
   },

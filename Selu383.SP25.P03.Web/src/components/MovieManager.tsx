@@ -20,6 +20,7 @@ import {
   Loader,
   Center,
   Alert,
+  Box,
 } from "@mantine/core";
 import {
   IconPlus,
@@ -27,9 +28,13 @@ import {
   IconTrash,
   IconSearch,
   IconAlertCircle,
+  IconStar,
+  IconStarFilled,
+  IconStarHalfFilled,
 } from "@tabler/icons-react";
 import { DateInput } from "@mantine/dates";
 import { movieApi, MovieDTO, theaterApi } from "../services/api";
+import MovieRating from "./MovieRating";
 
 const MovieManager: React.FC = () => {
   const [movies, setMovies] = useState<MovieDTO[]>([]);
@@ -135,12 +140,9 @@ const MovieManager: React.FC = () => {
       posterImageUrl: movie.posterImageUrl || "",
       trailerUrl: movie.trailerUrl || "",
       releaseDate: movie.releaseDate,
-      genres: movie.genres,
+      genres: movie.genres || [],
       ratingScore: movie.ratingScore,
-      theaters: movie.theaters.map((theater) => ({
-        id: theater.id,
-        name: theater.name,
-      })),
+      theaters: movie.theaters || [],
     });
     setIsModalOpen(true);
   };
@@ -169,85 +171,43 @@ const MovieManager: React.FC = () => {
 
   const handleSaveMovie = async () => {
     try {
-      // Validate required fields
-      if (
-        !formData.title ||
-        !formData.description ||
-        !formData.durationMinutes ||
-        !formData.rating ||
-        !formData.releaseDate ||
-        !formData.genres.length
-      ) {
-        setError("Please fill in all required fields");
-        return;
-      }
-
       setLoading(true);
-      console.log("Saving movie with data:", {
-        isEditing,
-        movieId: currentMovie?.id,
-        formData,
-      });
+      setError(null);
 
-      let savedMovie;
-      if (isEditing && currentMovie) {
-        // When updating, make sure to include all required fields and the ID
-        const updateData = {
-          ...formData,
-          id: currentMovie.id,
-          // Ensure all required fields are included
-          title: formData.title,
-          description: formData.description,
-          durationMinutes: formData.durationMinutes,
-          rating: formData.rating,
-          releaseDate: formData.releaseDate,
-          genres: formData.genres,
-          // Optional fields - use undefined instead of null
-          posterImageUrl: formData.posterImageUrl || undefined,
-          trailerUrl: formData.trailerUrl || undefined,
-          ratingScore: formData.ratingScore,
-        };
-        console.log("Updating movie:", updateData);
-        savedMovie = await movieApi.updateMovie(currentMovie.id, updateData);
-      } else {
-        // When creating, send all required fields
-        const createData = {
-          title: formData.title,
-          description: formData.description,
-          durationMinutes: formData.durationMinutes,
-          rating: formData.rating,
-          releaseDate: formData.releaseDate,
-          genres: formData.genres,
-          // Optional fields - use empty string instead of null
-          posterImageUrl: formData.posterImageUrl || "",
-          trailerUrl: formData.trailerUrl || "",
-          ratingScore: formData.ratingScore,
-        };
-        // Add empty theaters array for create
-        const movieData = {
-          ...createData,
-          theaters: [],
-        };
-        console.log("Creating new movie:", movieData);
-        savedMovie = await movieApi.createMovie(movieData);
-      }
+      // First save the movie
+      const savedMovie = isEditing
+        ? await movieApi.updateMovie(currentMovie!.id, formData)
+        : await movieApi.createMovie(formData);
 
       // After saving the movie, update theater assignments if theaters were selected
       if (savedMovie) {
-        const selectedTheaters = formData.theaters || [];
+        const selectedTheaterIds = (formData.theaters || []).map((t) => t.id);
+        const currentTheaterIds = await movieApi.getTheatersByMovie(
+          savedMovie.id
+        );
+
+        // Determine which theaters to add and remove
+        const theatersToAdd = selectedTheaterIds.filter(
+          (id) => !currentTheaterIds.includes(id)
+        );
+        const theatersToRemove = currentTheaterIds.filter(
+          (id) => !selectedTheaterIds.includes(id)
+        );
+
+        // Process assignments in parallel
         await Promise.all([
-          // First, unassign from all theaters
-          ...theaters.map((theater) =>
+          // Remove from unselected theaters
+          ...theatersToRemove.map((theaterId) =>
             theaterApi.unassignMovieFromTheater({
               movieId: savedMovie.id,
-              theaterId: parseInt(theater.value),
+              theaterId: theaterId,
             })
           ),
-          // Then, assign to selected theaters
-          ...selectedTheaters.map((theaterId) =>
+          // Add to selected theaters
+          ...theatersToAdd.map((theaterId) =>
             theaterApi.assignMovieToTheater({
               movieId: savedMovie.id,
-              theaterId: parseInt(theaterId.toString()),
+              theaterId: theaterId,
             })
           ),
         ]);
@@ -285,201 +245,289 @@ const MovieManager: React.FC = () => {
   }
 
   return (
-    <Paper p="md" withBorder>
-      <Group justify="space-between" mb="md">
-        <Title order={3}>Movie Management</Title>
-        <Button leftSection={<IconPlus />} onClick={handleCreateMovie}>
-          Add Movie
-        </Button>
-      </Group>
-
-      {error && (
-        <Alert icon={<IconAlertCircle />} color="red" mb="md">
-          {error}
-        </Alert>
-      )}
-
-      <TextInput
-        placeholder="Search movies..."
-        mb="md"
-        leftSection={<IconSearch />}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.currentTarget.value)}
-      />
-
-      <Table striped highlightOnHover>
-        <thead>
-          <tr>
-            <th>Poster</th>
-            <th>Title</th>
-            <th>Duration</th>
-            <th>Rating</th>
-            <th>Genres</th>
-            <th>Release Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {movies
-            .filter((m) =>
-              m.title.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .map((movie) => (
-              <tr key={movie.id}>
-                <td>
-                  <Image
-                    src={movie.posterImageUrl || "/images/default-movie.jpg"}
-                    h={60}
-                    w={40}
-                    fit="cover"
-                    alt={movie.title}
-                  />
-                </td>
-                <td>
-                  <Text fw={500}>{movie.title}</Text>
-                </td>
-                <td>{movie.durationMinutes} min</td>
-                <td>
-                  <Badge>{movie.rating}</Badge>
-                </td>
-                <td>
-                  <Group gap={4}>
-                    {movie.genres.map((genre) => (
-                      <Badge key={genre} size="sm">
-                        {genre}
-                      </Badge>
-                    ))}
-                  </Group>
-                </td>
-                <td>{new Date(movie.releaseDate).toLocaleDateString()}</td>
-                <td>
-                  <Group gap="xs">
-                    <ActionIcon
-                      color="blue"
-                      onClick={() => handleEditMovie(movie)}
-                    >
-                      <IconEdit />
-                    </ActionIcon>
-                    <ActionIcon
-                      color="red"
-                      onClick={() => handleDeleteMovie(movie)}
-                    >
-                      <IconTrash />
-                    </ActionIcon>
-                  </Group>
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </Table>
-
-      {/* Movie Form Modal */}
-      <Modal
-        opened={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={isEditing ? "Edit Movie" : "New Movie"}
-        size="lg"
-      >
-        <Stack>
-          <TextInput
-            label="Title"
-            value={formData.title}
-            onChange={(e) => handleInputChange("title", e.currentTarget.value)}
-            required
-          />
-          <Textarea
-            label="Description"
-            value={formData.description}
-            onChange={(e) =>
-              handleInputChange("description", e.currentTarget.value)
-            }
-            required
-          />
-          <NumberInput
-            label="Duration (minutes)"
-            value={formData.durationMinutes}
-            onChange={(val) => handleInputChange("durationMinutes", val)}
-            min={1}
-            required
-          />
-          <Select
-            label="Rating"
-            data={availableRatings}
-            value={formData.rating}
-            onChange={(val) => handleInputChange("rating", val)}
-            required
-          />
-          <TextInput
-            label="Poster Image URL"
-            value={formData.posterImageUrl}
-            onChange={(e) =>
-              handleInputChange("posterImageUrl", e.currentTarget.value)
-            }
-          />
-          <TextInput
-            label="Trailer URL"
-            value={formData.trailerUrl}
-            onChange={(e) =>
-              handleInputChange("trailerUrl", e.currentTarget.value)
-            }
-          />
-          <DateInput
-            label="Release Date"
-            value={new Date(formData.releaseDate)}
-            onChange={(val) =>
-              handleInputChange(
-                "releaseDate",
-                val ? val.toISOString() : new Date().toISOString()
-              )
-            }
-            required
-          />
-          <MultiSelect
-            label="Genres"
-            data={availableGenres}
-            value={formData.genres}
-            onChange={(val) => handleInputChange("genres", val)}
-            required
-          />
-          <MultiSelect
-            label="Theaters"
-            data={theaters}
-            value={formData.theaters?.map((t) => t.id.toString()) || []}
-            onChange={(val) => handleInputChange("theaters", val)}
-            placeholder="Select theaters where this movie will be shown"
-          />
-          <Group justify="right" mt="md">
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveMovie}>
-              {isEditing ? "Update" : "Create"}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        opened={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        title="Delete Movie"
-        size="sm"
-      >
-        <Text>
-          Are you sure you want to delete "{currentMovie?.title}"? This action
-          cannot be undone.
-        </Text>
-        <Group justify="right" mt="md">
-          <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
-            Cancel
-          </Button>
-          <Button color="red" onClick={confirmDeleteMovie}>
-            Delete
+    <Box p="xl">
+      <Paper p="xl" radius="md">
+        <Group justify="space-between" mb="xl">
+          <Title order={2}>Movie Management</Title>
+          <Button
+            onClick={() => {
+              setIsEditing(false);
+              setCurrentMovie(null);
+              setFormData({
+                title: "",
+                description: "",
+                durationMinutes: 90,
+                rating: "PG",
+                posterImageUrl: "",
+                trailerUrl: "",
+                releaseDate: new Date().toISOString(),
+                genres: [],
+                ratingScore: undefined,
+                theaters: [],
+              });
+              setIsModalOpen(true);
+            }}
+            leftSection={<IconPlus size={18} />}
+            color="red"
+          >
+            Add Movie
           </Button>
         </Group>
-      </Modal>
-    </Paper>
+
+        <TextInput
+          placeholder="Search movies..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.currentTarget.value)}
+          mb="lg"
+          leftSection={<IconSearch size={18} />}
+        />
+
+        <Table striped highlightOnHover withTableBorder withColumnBorders>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th style={{ width: "80px" }}></Table.Th>
+              <Table.Th style={{ width: "25%" }}>Title</Table.Th>
+              <Table.Th style={{ width: "100px", textAlign: "center" }}>
+                Duration
+              </Table.Th>
+              <Table.Th style={{ width: "100px", textAlign: "center" }}>
+                Rating
+              </Table.Th>
+              <Table.Th style={{ width: "150px", textAlign: "center" }}>
+                Stars
+              </Table.Th>
+              <Table.Th style={{ width: "25%", textAlign: "center" }}>
+                Genres
+              </Table.Th>
+              <Table.Th style={{ width: "120px", textAlign: "center" }}>
+                Release Date
+              </Table.Th>
+              <Table.Th style={{ width: "120px", textAlign: "center" }}>
+                Actions
+              </Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {movies
+              .filter((m) =>
+                m.title.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .map((movie) => (
+                <Table.Tr key={movie.id}>
+                  <Table.Td style={{ textAlign: "center", padding: "8px" }}>
+                    <Image
+                      src={movie.posterImageUrl || "/images/default-movie.jpg"}
+                      h={60}
+                      w={40}
+                      fit="cover"
+                      alt={movie.title}
+                    />
+                  </Table.Td>
+                  <Table.Td style={{ padding: "16px" }}>
+                    <Text fw={500}>{movie.title}</Text>
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: "center" }}>
+                    {movie.durationMinutes} min
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: "center" }}>
+                    <MovieRating
+                      rating={movie.rating}
+                      size="sm"
+                      showTooltip={false}
+                    />
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: "center" }}>
+                    <MovieRating
+                      score={movie.ratingScore}
+                      size="sm"
+                      showTooltip={false}
+                    />
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: "center" }}>
+                    <Group gap={4} justify="center" wrap="wrap">
+                      {movie.genres.map((genre, index) => (
+                        <Badge
+                          key={index}
+                          size="sm"
+                          variant="light"
+                          color="red"
+                        >
+                          {genre}
+                        </Badge>
+                      ))}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: "center" }}>
+                    {new Date(movie.releaseDate).toLocaleDateString()}
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: "center" }}>
+                    <Group gap={8} justify="center">
+                      <ActionIcon
+                        variant="light"
+                        color="blue"
+                        onClick={() => handleEditMovie(movie)}
+                        title="Edit"
+                      >
+                        <IconEdit size={18} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="light"
+                        color="red"
+                        onClick={() => handleDeleteMovie(movie)}
+                        title="Delete"
+                      >
+                        <IconTrash size={18} />
+                      </ActionIcon>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+          </Table.Tbody>
+        </Table>
+
+        {/* Movie Form Modal */}
+        <Modal
+          opened={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={isEditing ? "Edit Movie" : "New Movie"}
+          size="lg"
+        >
+          <Stack>
+            <TextInput
+              label="Title"
+              value={formData.title}
+              onChange={(e) =>
+                handleInputChange("title", e.currentTarget.value)
+              }
+              required
+            />
+            <Textarea
+              label="Description"
+              value={formData.description}
+              onChange={(e) =>
+                handleInputChange("description", e.currentTarget.value)
+              }
+              required
+            />
+            <NumberInput
+              label="Duration (minutes)"
+              value={formData.durationMinutes}
+              onChange={(val) => handleInputChange("durationMinutes", val)}
+              min={1}
+              required
+            />
+            <Select
+              label="Rating"
+              data={availableRatings}
+              value={formData.rating}
+              onChange={(val) => handleInputChange("rating", val)}
+              required
+            />
+            <TextInput
+              label="Poster Image URL"
+              value={formData.posterImageUrl}
+              onChange={(e) =>
+                handleInputChange("posterImageUrl", e.currentTarget.value)
+              }
+            />
+            <TextInput
+              label="Trailer URL"
+              value={formData.trailerUrl}
+              onChange={(e) =>
+                handleInputChange("trailerUrl", e.currentTarget.value)
+              }
+            />
+            <DateInput
+              label="Release Date"
+              value={new Date(formData.releaseDate)}
+              onChange={(val) =>
+                handleInputChange(
+                  "releaseDate",
+                  val ? val.toISOString() : new Date().toISOString()
+                )
+              }
+              required
+            />
+            <NumberInput
+              label="Stars"
+              description="Rate the movie from 0 to 10 stars"
+              value={formData.ratingScore}
+              onChange={(val) =>
+                handleInputChange(
+                  "ratingScore",
+                  typeof val === "number" ? val : null
+                )
+              }
+              min={0}
+              max={10}
+              step={0.1}
+              decimalScale={1}
+              placeholder="e.g., 7.5"
+              rightSection={<IconStar size={16} style={{ color: "#FFD700" }} />}
+              allowDecimal
+              hideControls={false}
+            />
+            <MultiSelect
+              label="Genres"
+              data={availableGenres}
+              value={formData.genres}
+              onChange={(val) => handleInputChange("genres", val)}
+              required
+            />
+            <MultiSelect
+              label="Theaters"
+              data={theaters}
+              value={(formData.theaters || []).map((t) => t.id.toString())}
+              onChange={(values) => {
+                const selectedTheaters = values.map((value) => {
+                  const theater = theaters.find((t) => t.value === value);
+                  return {
+                    id: parseInt(value),
+                    name: theater?.label || "",
+                  };
+                });
+                handleInputChange("theaters", selectedTheaters);
+              }}
+              placeholder="Select theaters where this movie will be shown"
+              searchable
+              clearable
+            />
+            <Group justify="right" mt="md">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveMovie}>
+                {isEditing ? "Update" : "Create"}
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          opened={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          title="Delete Movie"
+          size="sm"
+        >
+          <Text>
+            Are you sure you want to delete "{currentMovie?.title}"? This action
+            cannot be undone.
+          </Text>
+          <Group justify="right" mt="md">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button color="red" onClick={confirmDeleteMovie}>
+              Delete
+            </Button>
+          </Group>
+        </Modal>
+      </Paper>
+    </Box>
   );
 };
 

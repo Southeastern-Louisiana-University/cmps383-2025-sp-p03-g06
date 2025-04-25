@@ -45,7 +45,7 @@ const ConcessionSelection = () => {
   const navigate = useNavigate();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isGuest, guestInfo } = useAuth();
 
   const [reservation, setReservation] = useState<ReservationDTO | null>(null);
   const [categories, setCategories] = useState<ConcessionCategoryDTO[]>([]);
@@ -133,6 +133,13 @@ const ConcessionSelection = () => {
           ...ci,
           specialInstructions: specialInstructions[ci.concessionItemId] || "",
         })),
+        guestInfo:
+          isGuest && guestInfo
+            ? {
+                email: guestInfo.email,
+                phoneNumber: guestInfo.phoneNumber,
+              }
+            : undefined,
       });
       navigate(isAuthenticated ? "/my-reservations" : "/", {
         state: {
@@ -143,7 +150,11 @@ const ConcessionSelection = () => {
       });
     } catch (err) {
       console.error(err);
-      setError("Failed to create your order. Please try again.");
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to create your order. Please try again.");
+      }
     } finally {
       setOrderLoading(false);
     }

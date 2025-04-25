@@ -8,7 +8,6 @@ import {
 import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/Login";
-import SignUp from "./components/SignUp";
 import TheaterList from "./components/TheaterList";
 import TheaterForm from "./components/TheaterForm";
 import Navbar from "./components/Navbar";
@@ -22,6 +21,7 @@ import TicketView from "./components/TicketView";
 import Footer from "./components/Footer";
 import MovieTheaterAssignment from "./components/MovieTheaterAssignment";
 import AdminPanel from "./components/AdminPanel";
+import LoginSignupModal from "./components/LoginSignupModal";
 import {
   MantineProvider,
   createTheme,
@@ -29,6 +29,7 @@ import {
   Center,
   Transition,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { ModalsProvider } from "@mantine/modals";
 import "./styles/animations.css";
 import "./App.css";
@@ -57,6 +58,8 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   const [showLoader, setShowLoader] = useState(false);
+  const [loginOpened, { open: openLogin, close: closeLogin }] =
+    useDisclosure(false);
 
   useEffect(() => {
     if (loading) {
@@ -73,7 +76,18 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       </Center>
     );
   }
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+
+  if (!isAuthenticated) {
+    openLogin();
+    return (
+      <>
+        {children}
+        <LoginSignupModal opened={true} onClose={closeLogin} />
+      </>
+    );
+  }
+
+  return <>{children}</>;
 };
 
 // Admin-only route
@@ -138,12 +152,36 @@ const theme = createTheme({
 const AppContent = () => {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
+  const [loginOpened, { open: openLogin, close: closeLogin }] =
+    useDisclosure(false);
+  const [previousPath, setPreviousPath] = useState<string | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-color-scheme", "dark");
     document.documentElement.classList.add("dark-mode");
     setVisible(true);
   }, []);
+
+  // Handle opening login modal from URL
+  useEffect(() => {
+    if (location.pathname === "/login" || location.pathname === "/signup") {
+      // Store the previous path before opening the modal
+      if (!loginOpened && !previousPath) {
+        setPreviousPath(document.referrer || "/");
+      }
+      openLogin();
+    }
+  }, [location.pathname, openLogin, loginOpened, previousPath]);
+
+  // Custom close handler for the modal
+  const handleCloseModal = () => {
+    closeLogin();
+    // Navigate back to the previous path if it exists
+    if (previousPath) {
+      window.history.back();
+      setPreviousPath(null);
+    }
+  };
 
   return (
     <div className="app">
@@ -153,8 +191,6 @@ const AppContent = () => {
           <main className="content" style={styles}>
             <PageTransition>
               <Routes location={location}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
                 <Route path="/" element={<LandingPage />} />
 
                 {/* These routes should be accessible without authentication */}
@@ -237,6 +273,7 @@ const AppContent = () => {
         )}
       </Transition>
       <Footer />
+      <LoginSignupModal opened={loginOpened} onClose={handleCloseModal} />
     </div>
   );
 };

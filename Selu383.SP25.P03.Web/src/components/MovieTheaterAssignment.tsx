@@ -21,7 +21,7 @@ import { movieApi, theaterApi, MovieDTO, TheaterDTO } from "../services/api";
 const MovieTheaterAssignment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isManager } = useAuth();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -33,8 +33,8 @@ const MovieTheaterAssignment = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Redirect if not admin
-    if (!isAdmin) {
+    // Redirect if not admin or manager
+    if (!isAdmin && !isManager) {
       navigate("/movies");
       return;
     }
@@ -65,7 +65,7 @@ const MovieTheaterAssignment = () => {
     };
 
     fetchData();
-  }, [id, navigate, isAdmin]);
+  }, [id, navigate, isAdmin, isManager]);
 
   const handleSave = async () => {
     if (!movie) return;

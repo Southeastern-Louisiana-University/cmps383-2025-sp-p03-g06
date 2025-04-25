@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Selu383.SP25.P03.Api.Features.Authorization;
 using Selu383.SP25.P03.Api.Features.Concessions;
 using Selu383.SP25.P03.Api.Features.Movies;
+using Selu383.SP25.P03.Api.Features.OrderItems;
+using Selu383.SP25.P03.Api.Features.Payments;
 using Selu383.SP25.P03.Api.Features.Reservations;
 using Selu383.SP25.P03.Api.Features.Showtimes;
 using Selu383.SP25.P03.Api.Features.Theaters;
@@ -13,10 +16,10 @@ namespace Selu383.SP25.P03.Api.Data
 {
     public class DataContext : IdentityDbContext<
         User,
-        Role,
+        Features.Authorization.Role,
         int,
         IdentityUserClaim<int>,
-        UserRole,
+        Features.Authorization.UserRole,
         IdentityUserLogin<int>,
         IdentityRoleClaim<int>,
         IdentityUserToken<int>>
@@ -38,6 +41,7 @@ namespace Selu383.SP25.P03.Api.Data
         public DbSet<ConcessionItem> ConcessionItems { get; set; }
         public DbSet<ConcessionOrder> ConcessionOrders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         // Add join table for Movie-Theater relationship
         public DbSet<TheaterMovie> TheaterMovies { get; set; }
@@ -47,7 +51,7 @@ namespace Selu383.SP25.P03.Api.Data
             base.OnModelCreating(builder);
 
             // UserRole configuration
-            builder.Entity<UserRole>().HasKey(x => new { x.UserId, x.RoleId });
+            builder.Entity<Features.Authorization.UserRole>().HasKey(x => new { x.UserId, x.RoleId });
             builder.Entity<User>()
                 .HasMany(e => e.UserRoles)
                 .WithOne(x => x.User)
@@ -55,7 +59,7 @@ namespace Selu383.SP25.P03.Api.Data
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<Role>()
+            builder.Entity<Features.Authorization.Role>()
                 .HasMany(e => e.UserRoles)
                 .WithOne(x => x.Role)
                 .HasForeignKey(x => x.RoleId)  // Change e to x here
@@ -120,20 +124,35 @@ namespace Selu383.SP25.P03.Api.Data
                 .HasForeignKey(r => r.ShowtimeId);
 
             // ConcessionOrder configuration
-            builder.Entity<ConcessionOrder>()
-                .HasOne(o => o.Reservation)
-                .WithMany(r => r.ConcessionOrders)
-                .HasForeignKey(o => o.ReservationId);
+            builder.Entity<ConcessionOrder>(entity =>
+            {
+                entity.Property(e => e.Id).IsRequired();
+                entity.Property(e => e.ReservationId).IsRequired();
+                entity.Property(e => e.OrderTime).IsRequired();
+                entity.Property(e => e.TotalPrice).HasPrecision(18, 2).IsRequired();
+                entity.Property(e => e.Status).IsRequired();
+                entity.Property(e => e.GuestName).HasMaxLength(100);
+                entity.Property(e => e.GuestEmail).HasMaxLength(255);
+                entity.Property(e => e.GuestPhone).HasMaxLength(20);
+
+                entity.HasOne(o => o.Reservation)
+                    .WithMany(r => r.ConcessionOrders)
+                    .HasForeignKey(o => o.ReservationId);
+            });
 
             // OrderItem configuration
-            builder.Entity<OrderItem>()
-                .HasOne(oi => oi.Order)
-                .WithMany(o => o.OrderItems)
-                .HasForeignKey(oi => oi.OrderId);
-            builder.Entity<OrderItem>()
-                .HasOne(oi => oi.ConcessionItem)
-                .WithMany(ci => ci.OrderItems)
-                .HasForeignKey(oi => oi.ConcessionItemId);
+            builder.Entity<OrderItem>(entity =>
+            {
+                entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
+                
+                entity.HasOne(oi => oi.Order)
+                    .WithMany(o => o.OrderItems)
+                    .HasForeignKey(oi => oi.OrderId);
+                
+                entity.HasOne(oi => oi.ConcessionItem)
+                    .WithMany(ci => ci.OrderItems)
+                    .HasForeignKey(oi => oi.ConcessionItemId);
+            });
 
             // ConcessionItem configuration
             builder.Entity<ConcessionItem>()
@@ -152,6 +171,28 @@ namespace Selu383.SP25.P03.Api.Data
                 .HasOne(tm => tm.Theater)
                 .WithMany(t => t.TheaterMovies)
                 .HasForeignKey(tm => tm.TheaterId);
+
+            // Payment configuration
+            builder.Entity<Payment>(entity =>
+            {
+                entity.Property(e => e.Id).IsRequired();
+                entity.Property(e => e.Amount).HasPrecision(18, 2).IsRequired();
+                entity.Property(e => e.PaymentTime).IsRequired();
+                entity.Property(e => e.PaymentMethod).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.PaymentStatus).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.TransactionId).HasMaxLength(100);
+                entity.Property(e => e.PaymentDetails).HasMaxLength(500);
+
+                entity.HasOne(e => e.Reservation)
+                    .WithMany()
+                    .HasForeignKey(e => e.ReservationId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.ConcessionOrder)
+                    .WithMany()
+                    .HasForeignKey(e => e.ConcessionOrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
 }

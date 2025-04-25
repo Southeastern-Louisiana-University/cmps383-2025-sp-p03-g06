@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Selu383.SP25.P03.Api.Features.Authorization;
 
 namespace Selu383.SP25.P03.Api.Features.Users
 {
@@ -7,6 +8,7 @@ namespace Selu383.SP25.P03.Api.Features.Users
         /// <summary>
         /// Navigation property for the roles this user belongs to.
         /// </summary>
-        public virtual ICollection<UserRole> UserRoles { get; } = new List<UserRole>();
+        public string? Name { get; set; }
+        public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     }
 }

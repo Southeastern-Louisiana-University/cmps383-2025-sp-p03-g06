@@ -32,6 +32,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     PosterImageUrl = m.PosterImageUrl,
                     TrailerUrl = m.TrailerUrl,
                     ReleaseDate = m.ReleaseDate,
+                    RatingScore = m.RatingScore,
                     Genres = new List<string>()
                 })
                 .ToListAsync();
@@ -81,6 +82,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     PosterImageUrl = m.PosterImageUrl,
                     TrailerUrl = m.TrailerUrl,
                     ReleaseDate = m.ReleaseDate,
+                    RatingScore = m.RatingScore,
                     Genres = new List<string>()
                 })
                 .FirstOrDefaultAsync();
@@ -117,7 +119,8 @@ namespace Selu383.SP25.P03.Api.Controllers
                 Rating = movieDto.Rating,
                 PosterImageUrl = movieDto.PosterImageUrl,
                 TrailerUrl = movieDto.TrailerUrl,
-                ReleaseDate = movieDto.ReleaseDate
+                ReleaseDate = movieDto.ReleaseDate,
+                RatingScore = movieDto.RatingScore
             };
 
             _movies.Add(movie);
@@ -154,6 +157,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 PosterImageUrl = movie.PosterImageUrl,
                 TrailerUrl = movie.TrailerUrl,
                 ReleaseDate = movie.ReleaseDate,
+                RatingScore = movie.RatingScore,
                 Genres = movieDto.Genres ?? []
             });
         }
@@ -183,6 +187,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             movie.PosterImageUrl = movieDto.PosterImageUrl;
             movie.TrailerUrl = movieDto.TrailerUrl;
             movie.ReleaseDate = movieDto.ReleaseDate;
+            movie.RatingScore = movieDto.RatingScore;
 
             if (movieDto.Genres != null)
             {
@@ -275,6 +280,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     PosterImageUrl = m.PosterImageUrl,
                     TrailerUrl = m.TrailerUrl,
                     ReleaseDate = m.ReleaseDate,
+                    RatingScore = m.RatingScore,
                     Genres = new List<string>()
                 })
                 .FirstOrDefaultAsync();

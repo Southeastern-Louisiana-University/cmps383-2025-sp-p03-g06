@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import LoginSignupModal from "./LoginSignupModal";
-import SignupModal from "./SignupModal";
+// import LoginSignupModal from "./LoginSignupModal"; // Commented out since file doesn't exist yet
 
 import {
   Box,
@@ -28,17 +27,16 @@ import {
   IconSettings,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
+import LoginSignupModal from "./LoginSignupModal";
 
 const Navbar = () => {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [loginOpened, { open: openLogin, close: closeLogin }] =
+  const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
-  const [signupOpened, { open: openSignup, close: closeSignup }] =
-    useDisclosure(false);
+  const [initialView, setInitialView] = useState<"login" | "signup">("login");
 
   const location = useLocation();
-
   const [opened, { toggle, close }] = useDisclosure(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -59,7 +57,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login");
+      navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -74,6 +72,16 @@ const Navbar = () => {
       {children}
     </Link>
   );
+
+  const handleOpenLogin = () => {
+    setInitialView("login");
+    openModal();
+  };
+
+  const handleOpenSignup = () => {
+    setInitialView("signup");
+    openModal();
+  };
 
   return (
     <>
@@ -274,27 +282,24 @@ const Navbar = () => {
                     Our Theaters
                   </Button>
 
-                  <Button
-                    variant="filled"
-                    style={{ backgroundColor: redButtonColor }}
-                    leftSection={<IconUserPlus size={18} />}
-                    onClick={openLogin}
-                  >
-                    {" "}
-                    Login
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    style={{
-                      borderColor: redButtonColor,
-                      color: redButtonColor,
-                    }}
-                    leftSection={<IconUser size={18} />}
-                    onClick={openSignup}
-                  >
-                    Sign Up
-                  </Button>
+                  <Group gap="sm">
+                    <Button
+                      variant="subtle"
+                      color="gray"
+                      onClick={handleOpenLogin}
+                      leftSection={<IconUser size={18} />}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="filled"
+                      color="red"
+                      onClick={handleOpenSignup}
+                      leftSection={<IconUserPlus size={18} />}
+                    >
+                      Sign Up
+                    </Button>
+                  </Group>
                 </>
               )}
             </Group>
@@ -309,9 +314,13 @@ const Navbar = () => {
             size="sm"
           />
         </Group>
-        <LoginSignupModal opened={loginOpened} onClose={closeLogin} />
-        <SignupModal opened={signupOpened} onClose={closeSignup} />
       </Box>
+
+      <LoginSignupModal
+        opened={modalOpened}
+        onClose={closeModal}
+        initialView={initialView}
+      />
 
       {/* Mobile drawer */}
       <Drawer
@@ -419,7 +428,7 @@ const Navbar = () => {
               </Button>
 
               <Button
-                onClick={openLogin}
+                onClick={handleOpenLogin}
                 variant="filled"
                 style={{ backgroundColor: redButtonColor }}
                 leftSection={<IconUserPlus size={18} />}

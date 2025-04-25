@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
+using Selu383.SP25.P03.Api.Features.Authorization;
 using Selu383.SP25.P03.Api.Features.Users;
 
 namespace Selu383.SP25.P03.Api

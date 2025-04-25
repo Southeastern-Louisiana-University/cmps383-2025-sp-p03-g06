@@ -11,6 +11,7 @@ namespace Selu383.SP25.P03.Api.Features.Movies
         public string? PosterImageUrl { get; set; }
         public string? TrailerUrl { get; set; } // Added trailer
         public DateTime ReleaseDate { get; set; }
+        public double? RatingScore { get; set; } // Rating score out of 10
         public List<string> Genres { get; set; } = new List<string>();
     }
 }

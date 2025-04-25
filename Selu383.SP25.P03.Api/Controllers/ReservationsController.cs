@@ -38,8 +38,8 @@ namespace Selu383.SP25.P03.Api.Controllers
                 .Select(r => new ReservationDTO
                 {
                     Id = r.Id,
-                    UserId = r.UserId,
-                    UserName = r.User!.UserName ?? string.Empty,
+                    UserId = r.UserId.HasValue ? r.UserId.Value : 0,
+                    UserName = r.User == null ? string.Empty : r.User.UserName ?? string.Empty,
                     ShowtimeId = r.ShowtimeId,
                     ShowtimeStartTime = r.Showtime!.StartTime,
                     MovieTitle = r.Showtime!.Movie!.Title ?? string.Empty,
@@ -75,8 +75,8 @@ namespace Selu383.SP25.P03.Api.Controllers
                 .Select(r => new ReservationDTO
                 {
                     Id = r.Id,
-                    UserId = r.UserId,
-                    UserName = r.User!.UserName ?? string.Empty,
+                    UserId = r.UserId.HasValue ? r.UserId.Value : 0,
+                    UserName = r.User == null ? string.Empty : r.User.UserName ?? string.Empty,
                     ShowtimeId = r.ShowtimeId,
                     ShowtimeStartTime = r.Showtime!.StartTime,
                     MovieTitle = r.Showtime!.Movie!.Title ?? string.Empty,
@@ -114,8 +114,8 @@ namespace Selu383.SP25.P03.Api.Controllers
                 .Select(r => new ReservationDTO
                 {
                     Id = r.Id,
-                    UserId = r.UserId,
-                    UserName = r.User!.UserName ?? string.Empty,
+                    UserId = r.UserId.HasValue ? r.UserId.Value : 0,
+                    UserName = r.User == null ? string.Empty : r.User.UserName ?? string.Empty,
                     ShowtimeId = r.ShowtimeId,
                     ShowtimeStartTime = r.Showtime!.StartTime,
                     MovieTitle = r.Showtime!.Movie!.Title ?? string.Empty,

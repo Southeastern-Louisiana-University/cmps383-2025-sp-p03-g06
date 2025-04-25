@@ -31,23 +31,6 @@ import {
 import { movieApi, MovieDTO } from "../services/api";
 import MovieRating from "./MovieRating";
 
-const movieRatings: Record<string, number> = {
-  "Snow White": 1.5,
-  "Death of a Unicorn": 6.4,
-  Novocaine: 6.7,
-  "Mickey 17": 7.0,
-  "A Working Man": 6.2,
-  "The Woman in the Yard": 5.6,
-  "The Day the Earth Blew Up: A Looney Tunes Movie": 7.0,
-  "Dog Man": 6.3,
-  "The Monkey": 6.2,
-  "Paddington in Peru": 6.7,
-  "Captain America: Brave New World": 5.9,
-  "Mufasa: The Lion King": 6.6,
-  Locked: 6.3,
-  "One of Them Days": 6.6,
-};
-
 interface FilterOption {
   value: string;
   label: string;
@@ -103,9 +86,7 @@ const MovieList: React.FC = () => {
         );
         break;
       case "top-rated":
-        result.sort(
-          (a, b) => (movieRatings[b.title] || 0) - (movieRatings[a.title] || 0)
-        );
+        result.sort((a, b) => (b.ratingScore || 0) - (a.ratingScore || 0));
         break;
       case "title-az":
         result.sort((a, b) => a.title.localeCompare(b.title));
@@ -317,7 +298,7 @@ const MovieList: React.FC = () => {
 
                   <MovieRating
                     rating={movie.rating}
-                    score={movieRatings[movie.title] || 0}
+                    score={movie.ratingScore}
                   />
 
                   <Text size="sm" c="dimmed" lineClamp={3} my="md">

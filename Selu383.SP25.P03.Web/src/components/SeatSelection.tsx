@@ -22,6 +22,7 @@ import {
   Stack,
   Anchor,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconAlertCircle,
   IconMovie,
@@ -34,9 +35,11 @@ import {
   IconInfoCircle,
   IconCheckbox,
   IconArrowLeft,
+  IconX,
 } from "@tabler/icons-react";
 import { useAuth } from "../contexts/AuthContext";
 import { modals } from "@mantine/modals";
+import LoginSignupModal from "./LoginSignupModal";
 import {
   showtimeApi,
   reservationApi,
@@ -50,6 +53,25 @@ import {
 
 // Main color for the application
 const MAIN_COLOR = "#c70036";
+
+// Add the XOverlay component
+const XOverlay = () => (
+  <Box
+    style={{
+      position: "absolute",
+      top: "-2px",
+      left: "-2px",
+      width: "calc(100% + 4px)",
+      height: "calc(100% + 4px)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      pointerEvents: "none",
+    }}
+  >
+    <IconX size={28} color="#e03131" stroke={2.5} />
+  </Box>
+);
 
 // Helper function to group seats by row
 const groupSeatsByRow = (seats: SeatDTO[]) => {
@@ -101,6 +123,9 @@ const SeatSelection = () => {
   const { isAuthenticated, createGuestSession } = useAuth();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
+  const [modalOpened, { open: openModal, close: closeModal }] =
+    useDisclosure(false);
+  const [initialView, setInitialView] = useState<"login" | "signup">("login");
 
   const [showtime, setShowtime] = useState<ShowtimeDTO | null>(null);
   const [seats, setSeats] = useState<SeatDTO[]>([]);
@@ -123,14 +148,51 @@ const SeatSelection = () => {
       try {
         const showtimeData = await showtimeApi.getShowtimeById(parseInt(id));
         setShowtime(showtimeData);
+        console.log("Fetched showtime:", showtimeData);
 
         const seatsData = await seatApi.getSeatsByRoomId(
           showtimeData.theaterRoomId
         );
-        setSeats(seatsData);
+        console.log("Fetched seats:", seatsData);
+
+        // Seed some seats as unavailable for demonstration
+        const seededSeats = seatsData.map((seat) => {
+          // Make specific seats unavailable
+          if (
+            // Middle section of row C
+            (seat.row === "C" && seat.number >= 4 && seat.number <= 8) ||
+            // A couple of VIP seats in row A
+            (seat.row === "A" && (seat.number === 3 || seat.number === 4)) ||
+            // Some premium seats in row B
+            (seat.row === "B" && (seat.number === 5 || seat.number === 6)) ||
+            // One accessible seat
+            (seat.seatType === "Accessible" && seat.row === "D")
+          ) {
+            return { ...seat, isAvailable: false };
+          }
+          return seat;
+        });
+        console.log("Seeded seats:", seededSeats);
+
+        // Add different seat types for demonstration
+        const enhancedSeats = seededSeats.map((seat) => {
+          if (seat.row === "A") {
+            return { ...seat, seatType: "VIP" };
+          }
+          if (seat.row === "B") {
+            return { ...seat, seatType: "Premium" };
+          }
+          if (seat.row === "D" && (seat.number === 1 || seat.number === 12)) {
+            return { ...seat, seatType: "Accessible" };
+          }
+          return seat;
+        });
+        console.log("Enhanced seats:", enhancedSeats);
+
+        setSeats(enhancedSeats);
       } catch (error) {
+        console.error("Error fetching showtime/seats:", error);
         setError("Failed to fetch showtime information");
-        console.error("Error fetching showtimes/seats:", error);
       } finally {
         setLoading(false);
       }
@@ -141,10 +203,15 @@ const SeatSelection = () => {
 
   const handleSeatClick = (seat: SeatDTO) => {
     if (!seat.isAvailable) return;
+    console.log("Clicked seat:", seat);
 
     setSelectedSeats((prev) => {
       const exists = prev.some((s) => s.id === seat.id);
-      return exists ? prev.filter((s) => s.id !== seat.id) : [...prev, seat];
+      const newSeats = exists
+        ? prev.filter((s) => s.id !== seat.id)
+        : [...prev, seat];
+      console.log("Updated selected seats:", newSeats);
+      return newSeats;
     });
   };
 
@@ -216,20 +283,72 @@ const SeatSelection = () => {
     }
   };
 
-  const handleCreateReservation = async () => {
-    if (selectedSeats.length === 0) {
-      setError("Please select at least one seat");
-      return;
+  const handleCompleteReservation = () => {
+    if (isAuthenticated) {
+      processReservation();
+    } else {
+      modals.open({
+        title: <Text fw={700}>Complete Your Reservation</Text>,
+        centered: true,
+        size: "md",
+        children: (
+          <Stack>
+            <Text size="sm" c="dimmed" mb="md">
+              Choose how you'd like to proceed with your reservation
+            </Text>
+
+            <Button
+              fullWidth
+              color="red"
+              onClick={() => {
+                modals.closeAll();
+                setInitialView("login");
+                openModal();
+              }}
+              mb="sm"
+            >
+              Sign In
+            </Button>
+
+            <Button
+              fullWidth
+              variant="outline"
+              color="red"
+              onClick={() => {
+                modals.closeAll();
+                setInitialView("signup");
+                openModal();
+              }}
+              mb="sm"
+            >
+              Create an Account
+            </Button>
+
+            <Divider
+              label={
+                <Text size="sm" c="dimmed">
+                  OR
+                </Text>
+              }
+              labelPosition="center"
+              my="sm"
+            />
+
+            <Button
+              fullWidth
+              variant="subtle"
+              color="gray"
+              onClick={() => {
+                modals.closeAll();
+                setGuestModalOpen(true);
+              }}
+            >
+              Continue as Guest
+            </Button>
+          </Stack>
+        ),
+      });
     }
-
-    if (!showtime) return;
-
-    if (!isAuthenticated) {
-      setGuestModalOpen(true);
-      return;
-    }
-
-    await processReservation();
   };
 
   const handleGuestCheckout = async () => {
@@ -324,273 +443,295 @@ const SeatSelection = () => {
   }, 0);
 
   return (
-    <Container size="xl" py="xl">
-      {/* Main reservation UI */}
-      <Paper
-        shadow="sm"
-        p="xl"
-        radius="md"
-        withBorder
-        mb="xl"
-        style={{ borderTop: `3px solid ${MAIN_COLOR}` }}
-      >
-        <Title order={3} mb="md">
-          Select Your Seats
-        </Title>
-
-        {error && (
-          <Alert
-            icon={<IconAlertCircle size={16} />}
-            title="Error"
-            color="red"
-            mb="md"
-            onClose={() => setError(null)}
-            withCloseButton
-          >
-            {error}
-          </Alert>
-        )}
-
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 7 }}>
-            <Group mb="md">
-              <IconMovie size={20} style={{ color: MAIN_COLOR }} />
-              <Text fw={500}>{showtime.movieTitle}</Text>
-            </Group>
-            <Group mb="md">
-              <IconTheater size={20} style={{ color: MAIN_COLOR }} />
-              <Text>
-                {showtime.theaterName} - {showtime.theaterRoomName}
-              </Text>
-            </Group>
-            <Group mb="md">
-              <IconClock size={20} style={{ color: MAIN_COLOR }} />
-              <Text>
-                {new Date(showtime.startTime).toLocaleDateString()}{" "}
-                {new Date(showtime.startTime).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}{" "}
-                -{" "}
-                {new Date(showtime.endTime).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-            </Group>
-            <Group mb="md">
-              <IconTicket size={20} style={{ color: MAIN_COLOR }} />
-              <Text>Base Price: ${showtime.baseTicketPrice.toFixed(2)}</Text>
-              <Tooltip label="Premium seats cost 1.5x base price. VIP seats cost 2x base price.">
-                <IconInfoCircle
-                  size={16}
-                  style={{ cursor: "pointer", color: MAIN_COLOR }}
-                />
-              </Tooltip>
-            </Group>
-          </Grid.Col>
-
-          <Grid.Col span={{ base: 12, md: 5 }}>
-            <SeatLegend />
-          </Grid.Col>
-        </Grid>
-
-        <Divider my="md" />
-
-        {selectedSeats.length > 0 && (
-          <Alert color={MAIN_COLOR} mb="md">
-            <Group justify="space-between">
-              <Text>
-                {selectedSeats.length} seat
-                {selectedSeats.length !== 1 && "s"} selected
-              </Text>
-              <Text fw={700}>Total: ${totalPrice.toFixed(2)}</Text>
-            </Group>
-          </Alert>
-        )}
-
+    <>
+      <Container size="xl" py="xl">
+        {/* Main reservation UI */}
         <Paper
-          withBorder
+          shadow="sm"
           p="xl"
           radius="md"
-          bg={isDark ? "dark.7" : "gray.0"}
-          ta="center"
+          withBorder
           mb="xl"
+          style={{ borderTop: `3px solid ${MAIN_COLOR}` }}
         >
-          <Box mt="xl" mb="xl">
-            {sortedRows.map((row) => (
-              <Group key={row} gap="xs" mb="xs" justify="center">
-                <Text fw={500} size="sm" w={20}>
-                  {row}
-                </Text>
-                {seatsByRow[row]
-                  .sort((a, b) => a.number - b.number)
-                  .map((seat) => {
-                    const isSelected = selectedSeats.some(
-                      (s) => s.id === seat.id
-                    );
-                    let color = seat.isAvailable ? "#aaa" : "#555";
-                    let seatIcon = <IconArmchair size={24} />;
-                    if (seat.seatType === "Premium") {
-                      seatIcon = <IconArmchair size={24} />;
-                      color = isSelected ? MAIN_COLOR : "#d4af37";
-                    }
-                    if (seat.seatType === "VIP") {
-                      seatIcon = <IconArmchair2 size={24} />;
-                      color = isSelected ? MAIN_COLOR : "#7a5af5";
-                    }
-                    if (seat.seatType === "Accessible") {
-                      seatIcon = <IconWheelchair size={24} />;
-                      color = isSelected ? MAIN_COLOR : "#e03131";
-                    }
-                    if (!seat.isAvailable) {
-                      color = "#555";
-                    }
-                    if (seat.isAvailable && isSelected) {
-                      color = MAIN_COLOR;
-                    }
-
-                    return (
-                      <Tooltip
-                        key={seat.id}
-                        label={
-                          seat.isAvailable
-                            ? `${seat.row}${seat.number} - ${
-                                seat.seatType || "Standard"
-                              } - $${(seat.seatType === "Premium"
-                                ? basePrice * 1.5
-                                : seat.seatType === "VIP"
-                                ? basePrice * 2
-                                : basePrice
-                              ).toFixed(2)}`
-                            : "Seat not available"
-                        }
-                        position="top"
-                      >
-                        <Box
-                          onClick={() =>
-                            seat.isAvailable && handleSeatClick(seat)
-                          }
-                          style={{
-                            cursor: seat.isAvailable
-                              ? "pointer"
-                              : "not-allowed",
-                            color,
-                            transform: isSelected ? "scale(1.1)" : "scale(1)",
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          {seatIcon}
-                        </Box>
-                      </Tooltip>
-                    );
-                  })}
-              </Group>
-            ))}
-          </Box>
-
-          <Text
-            fw={500}
-            mt="xl"
-            px="xl"
-            py="sm"
-            bg={MAIN_COLOR}
-            style={{ borderRadius: "4px", color: "white" }}
-          >
-            SCREEN
-          </Text>
-        </Paper>
-
-        <Group justify="apart">
-          <Button
-            variant="outline"
-            color={MAIN_COLOR}
-            onClick={() => navigate(-1)}
-            leftSection={<IconArrowLeft size={16} />}
-          >
-            Go Back
-          </Button>
-          <Button
-            color={MAIN_COLOR}
-            onClick={handleCreateReservation}
-            leftSection={<IconCheckbox size={16} />}
-            loading={reservationInProgress}
-            disabled={selectedSeats.length === 0}
-          >
-            Complete Reservation
-          </Button>
-        </Group>
-      </Paper>
-
-      {/* Guest Checkout Modal */}
-      <Modal
-        opened={guestModalOpen}
-        onClose={() => setGuestModalOpen(false)}
-        title="Continue as Guest"
-        centered
-      >
-        <Stack>
-          <Text size="sm">
-            Enter your contact information to continue as a guest:
-          </Text>
-
-          <TextInput
-            label="Email Address"
-            placeholder="your@email.com"
-            value={guestEmail}
-            onChange={(e) => setGuestEmail(e.target.value)}
-            required
-          />
-
-          <TextInput
-            label="Phone Number (Optional)"
-            placeholder="(123) 456-7890"
-            value={guestPhone}
-            onChange={(e) => setGuestPhone(e.target.value)}
-          />
-
-          <Checkbox
-            label="I agree to the terms and conditions"
-            checked={agreeToTerms}
-            onChange={(e) => setAgreeToTerms(e.target.checked)}
-          />
+          <Title order={3} mb="md">
+            Select Your Seats
+          </Title>
 
           {error && (
             <Alert
-              color="red"
+              icon={<IconAlertCircle size={16} />}
               title="Error"
-              withCloseButton
+              color="red"
+              mb="md"
               onClose={() => setError(null)}
+              withCloseButton
             >
               {error}
             </Alert>
           )}
 
-          <Group>
-            <Button variant="outline" onClick={() => setGuestModalOpen(false)}>
-              Cancel
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 7 }}>
+              <Group mb="md">
+                <IconMovie size={20} style={{ color: MAIN_COLOR }} />
+                <Text fw={500}>{showtime.movieTitle}</Text>
+              </Group>
+              <Group mb="md">
+                <IconTheater size={20} style={{ color: MAIN_COLOR }} />
+                <Text>
+                  {showtime.theaterName} - {showtime.theaterRoomName}
+                </Text>
+              </Group>
+              <Group mb="md">
+                <IconClock size={20} style={{ color: MAIN_COLOR }} />
+                <Text>
+                  {new Date(showtime.startTime).toLocaleDateString()}{" "}
+                  {new Date(showtime.startTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  -{" "}
+                  {new Date(showtime.endTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              </Group>
+              <Group mb="md">
+                <IconTicket size={20} style={{ color: MAIN_COLOR }} />
+                <Text>Base Price: ${showtime.baseTicketPrice.toFixed(2)}</Text>
+                <Tooltip label="Premium seats cost 1.5x base price. VIP seats cost 2x base price.">
+                  <IconInfoCircle
+                    size={16}
+                    style={{ cursor: "pointer", color: MAIN_COLOR }}
+                  />
+                </Tooltip>
+              </Group>
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 5 }}>
+              <SeatLegend />
+            </Grid.Col>
+          </Grid>
+
+          <Divider my="md" />
+
+          {selectedSeats.length > 0 && (
+            <Alert color={MAIN_COLOR} mb="md">
+              <Group justify="space-between">
+                <Text>
+                  {selectedSeats.length} seat
+                  {selectedSeats.length !== 1 && "s"} selected
+                </Text>
+                <Text fw={700}>Total: ${totalPrice.toFixed(2)}</Text>
+              </Group>
+            </Alert>
+          )}
+
+          <Paper
+            withBorder
+            p="xl"
+            radius="md"
+            bg={isDark ? "dark.7" : "gray.0"}
+            ta="center"
+            mb="xl"
+          >
+            <Box mt="xl" mb="xl">
+              {sortedRows.map((row) => (
+                <Group key={row} gap="xs" mb="xs" justify="center">
+                  <Text fw={500} size="sm" w={20}>
+                    {row}
+                  </Text>
+                  {seatsByRow[row]
+                    .sort((a, b) => a.number - b.number)
+                    .map((seat) => {
+                      const isSelected = selectedSeats.some(
+                        (s) => s.id === seat.id
+                      );
+                      let color = seat.isAvailable ? "#aaa" : "#555";
+                      let seatIcon = <IconArmchair size={24} />;
+                      if (seat.seatType === "Premium") {
+                        seatIcon = <IconArmchair size={24} />;
+                        color = isSelected ? MAIN_COLOR : "#d4af37";
+                      }
+                      if (seat.seatType === "VIP") {
+                        seatIcon = <IconArmchair2 size={24} />;
+                        color = isSelected ? MAIN_COLOR : "#7a5af5";
+                      }
+                      if (seat.seatType === "Accessible") {
+                        seatIcon = <IconWheelchair size={24} />;
+                        color = isSelected ? MAIN_COLOR : "#e03131";
+                      }
+                      if (!seat.isAvailable) {
+                        color = "#555";
+                      }
+                      if (seat.isAvailable && isSelected) {
+                        color = MAIN_COLOR;
+                      }
+
+                      return (
+                        <Tooltip
+                          key={seat.id}
+                          label={
+                            seat.isAvailable
+                              ? `${seat.row}${seat.number} - ${
+                                  seat.seatType || "Standard"
+                                } - $${(seat.seatType === "Premium"
+                                  ? basePrice * 1.5
+                                  : seat.seatType === "VIP"
+                                  ? basePrice * 2
+                                  : basePrice
+                                ).toFixed(2)}`
+                              : "Seat not available"
+                          }
+                          position="top"
+                        >
+                          <Box
+                            onClick={() =>
+                              seat.isAvailable && handleSeatClick(seat)
+                            }
+                            style={{
+                              cursor: seat.isAvailable
+                                ? "pointer"
+                                : "not-allowed",
+                              color,
+                              transform: isSelected ? "scale(1.1)" : "scale(1)",
+                              transition: "all 0.2s ease",
+                              position: "relative",
+                            }}
+                          >
+                            {seatIcon}
+                            {!seat.isAvailable && <XOverlay />}
+                          </Box>
+                        </Tooltip>
+                      );
+                    })}
+                </Group>
+              ))}
+            </Box>
+
+            <Text
+              fw={500}
+              mt="xl"
+              px="xl"
+              py="sm"
+              bg={MAIN_COLOR}
+              style={{ borderRadius: "4px", color: "white" }}
+            >
+              SCREEN
+            </Text>
+          </Paper>
+
+          <Group justify="space-between">
+            <Button
+              variant="outline"
+              color={MAIN_COLOR}
+              onClick={() => navigate(-1)}
+              leftSection={<IconArrowLeft size={16} />}
+            >
+              Go Back
             </Button>
             <Button
-              color={MAIN_COLOR}
-              onClick={handleGuestCheckout}
-              loading={processingGuest}
-              disabled={!guestEmail || !agreeToTerms}
+              fullWidth
+              color="red"
+              size="lg"
+              onClick={handleCompleteReservation}
+              disabled={selectedSeats.length === 0 || reservationInProgress}
+              loading={reservationInProgress}
+              mt="xl"
             >
-              Continue as Guest
+              {reservationInProgress
+                ? "Processing..."
+                : `Complete Reservation (${
+                    selectedSeats.length
+                  } seats - $${totalPrice.toFixed(2)})`}
             </Button>
           </Group>
+        </Paper>
 
-          <Divider my="sm" />
+        {/* Guest Checkout Modal */}
+        <Modal
+          opened={guestModalOpen}
+          onClose={() => setGuestModalOpen(false)}
+          title="Continue as Guest"
+          centered
+        >
+          <Stack>
+            <Text size="sm">
+              Enter your contact information to continue as a guest:
+            </Text>
 
-          <Text size="sm" ta="center">
-            Already have an account?{" "}
-            <Anchor component={Link} to="/login">
-              Log in
-            </Anchor>
-          </Text>
-        </Stack>
-      </Modal>
-    </Container>
+            <TextInput
+              label="Email Address"
+              placeholder="your@email.com"
+              value={guestEmail}
+              onChange={(e) => setGuestEmail(e.target.value)}
+              required
+            />
+
+            <TextInput
+              label="Phone Number (Optional)"
+              placeholder="(123) 456-7890"
+              value={guestPhone}
+              onChange={(e) => setGuestPhone(e.target.value)}
+            />
+
+            <Checkbox
+              label="I agree to the terms and conditions"
+              checked={agreeToTerms}
+              onChange={(e) => setAgreeToTerms(e.target.checked)}
+            />
+
+            {error && (
+              <Alert
+                color="red"
+                title="Error"
+                withCloseButton
+                onClose={() => setError(null)}
+              >
+                {error}
+              </Alert>
+            )}
+
+            <Group>
+              <Button
+                variant="outline"
+                onClick={() => setGuestModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                color={MAIN_COLOR}
+                onClick={handleGuestCheckout}
+                loading={processingGuest}
+                disabled={!guestEmail || !agreeToTerms}
+              >
+                Continue as Guest
+              </Button>
+            </Group>
+
+            <Divider my="sm" />
+
+            <Text size="sm" ta="center">
+              Already have an account?{" "}
+              <Anchor component={Link} to="/login">
+                Log in
+              </Anchor>
+            </Text>
+          </Stack>
+        </Modal>
+      </Container>
+      <LoginSignupModal
+        opened={modalOpened}
+        onClose={closeModal}
+        onSuccess={() => {
+          closeModal();
+          processReservation();
+        }}
+        initialView={initialView}
+      />
+    </>
   );
 };
 

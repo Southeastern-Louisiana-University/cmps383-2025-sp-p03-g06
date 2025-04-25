@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Concessions;
+using Selu383.SP25.P03.Api.Features.OrderItems;
 using Selu383.SP25.P03.Api.Features.Reservations;
 using Selu383.SP25.P03.Api.Features.Users;
 
@@ -236,12 +237,17 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Invalid reservation: missing showtime information");
             }
 
-            if (reservation.Showtime.StartTime.AddMinutes(-30) > DateTime.UtcNow)
+            // Allow orders from 24 hours before showtime until the end of the movie
+            var currentTime = DateTime.UtcNow;
+            var orderWindowStart = reservation.Showtime.StartTime.AddHours(-24);
+            
+            if (currentTime < orderWindowStart)
             {
-                return BadRequest("Cannot place concession orders more than 30 minutes before showtime");
+                var hoursUntilWindow = (orderWindowStart - currentTime).TotalHours;
+                return BadRequest($"Concession orders will be available {(int)hoursUntilWindow} hours before the showtime");
             }
 
-            if (reservation.Showtime.EndTime < DateTime.UtcNow)
+            if (reservation.Showtime.EndTime < currentTime)
             {
                 return BadRequest("Cannot place concession orders after showtime has ended");
             }

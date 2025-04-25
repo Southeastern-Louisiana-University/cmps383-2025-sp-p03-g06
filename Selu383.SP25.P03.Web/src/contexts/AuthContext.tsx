@@ -17,6 +17,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isManager: boolean;
   isGuest: boolean;
   createGuestSession: (email: string, phone: string) => Promise<void>;
   guestInfo: GuestUserInfo | null;
@@ -108,6 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Compute isAuthenticated and isAdmin from the user object
   const isAuthenticated = !!user;
   const isAdmin = user?.roles?.includes("Admin") ?? false;
+  const isManager = user?.roles?.includes("Manager") ?? false;
 
   return (
     <AuthContext.Provider
@@ -119,6 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         isAuthenticated,
         isAdmin,
+        isManager,
         isGuest,
         createGuestSession,
         guestInfo,

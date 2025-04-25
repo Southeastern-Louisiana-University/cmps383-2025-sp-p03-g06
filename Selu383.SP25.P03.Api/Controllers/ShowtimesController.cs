@@ -191,7 +191,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 bool allowed = await _context.TheaterMovies
                     .AnyAsync(tm => tm.MovieId == showtimeDto.MovieId && tm.TheaterId == theaterRoom.TheaterId);
                 if (!allowed)
-                    return BadRequest("This movie is not allowed to play at this theater");
+                    return BadRequest("This movie is not allowed to play at this theater. Please contact a manager or admin to update theater assignments.");
             }
 
             // Calculate end time

@@ -70,7 +70,7 @@ const MovieShowtimes = () => {
     {}
   );
   const [userLocation, setUserLocation] = useState<UserLocation>(undefined);
-  const [sortByDistance, setSortByDistance] = useState(false);
+  const [sortByDistance, setSortByDistance] = useState(true);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
 
@@ -80,6 +80,10 @@ const MovieShowtimes = () => {
 
   useEffect(() => {
     setIsAdmin(true);
+  }, []);
+
+  useEffect(() => {
+    getUserLocation();
   }, []);
 
   const getUserLocation = () => {
@@ -101,6 +105,7 @@ const MovieShowtimes = () => {
       (err: GeolocationError) => {
         setLocationError(`Unable to get your location: ${err.message}`);
         setLocationLoading(false);
+        setSortByDistance(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -386,27 +391,6 @@ const MovieShowtimes = () => {
                 Showtimes for {movie.title}
               </Title>
 
-              <Group mb="md" justify="space-between">
-                <Group gap="xs">
-                  <Switch
-                    label="Sort by distance"
-                    checked={sortByDistance}
-                    onChange={(e) => setSortByDistance(e.currentTarget.checked)}
-                    disabled={!userLocation}
-                  />
-                  <Button
-                    size="xs"
-                    variant={userLocation ? "filled" : "outline"}
-                    color={userLocation ? "green" : "blue"}
-                    onClick={getUserLocation}
-                    loading={locationLoading}
-                    leftSection={<IconCurrentLocation size={16} />}
-                  >
-                    {userLocation ? "Location Updated" : "Use My Location"}
-                  </Button>
-                </Group>
-              </Group>
-
               {locationError && (
                 <Alert color="red" mb="md" title="Location Error">
                   {locationError}
@@ -414,20 +398,30 @@ const MovieShowtimes = () => {
               )}
 
               <Tabs defaultValue="by-date">
-                <Tabs.List mb="md">
-                  <Tabs.Tab
-                    value="by-date"
-                    leftSection={<IconCalendar size={16} />}
-                  >
-                    By Date
-                  </Tabs.Tab>
-                  <Tabs.Tab
-                    value="by-theater"
-                    leftSection={<IconTheater size={16} />}
-                  >
-                    By Theater
-                  </Tabs.Tab>
-                </Tabs.List>
+                <Group justify="space-between" mb="md">
+                  <Tabs.List>
+                    <Tabs.Tab
+                      value="by-date"
+                      leftSection={<IconCalendar size={16} />}
+                    >
+                      By Date
+                    </Tabs.Tab>
+                    <Tabs.Tab
+                      value="by-theater"
+                      leftSection={<IconTheater size={16} />}
+                    >
+                      By Theater
+                    </Tabs.Tab>
+                  </Tabs.List>
+
+                  <Switch
+                    label="Sort by distance"
+                    checked={sortByDistance}
+                    onChange={(e) => setSortByDistance(e.currentTarget.checked)}
+                    disabled={!userLocation}
+                    size="sm"
+                  />
+                </Group>
 
                 <Tabs.Panel value="by-date">
                   {sortedDates.length === 0 ? (

@@ -8,42 +8,56 @@ import {
   Button,
   Divider,
 } from "@mantine/core";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   IconBrandInstagram,
   IconBrandFacebook,
   IconBrandX,
 } from "@tabler/icons-react";
 import { useState } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { useAuth } from "../contexts/AuthContext";
 import LegalModal from "./LegalModal";
+import TicketLookupModal from "./TicketLookupModal";
 
 const Footer = () => {
-  // Configuration for social media links - just change the URLs when accounts are created
+  // Configuration for social media links
   const socialLinks = [
     {
       icon: <IconBrandInstagram size={24} />,
-      url: "https://instagram.com", // Change when official account is created
+      url: "https://instagram.com",
       label: "Instagram",
     },
     {
       icon: <IconBrandFacebook size={24} />,
-      url: "https://facebook.com", // Change when official account is created
+      url: "https://facebook.com",
       label: "Facebook",
     },
     {
       icon: <IconBrandX size={24} />,
-      url: "https://x.com", // Change when official account is created
+      url: "https://x.com",
       label: "X",
     },
   ];
 
-  const currentYear = new Date().getFullYear();
-
-  // State for modal control
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const [
+    ticketModalOpened,
+    { open: openTicketModal, close: closeTicketModal },
+  ] = useDisclosure();
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
 
-  // Modal handlers
+  const handleTicketsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAuthenticated) {
+      navigate("/my-reservations");
+    } else {
+      openTicketModal();
+    }
+  };
+
   const openPrivacyModal = (e: React.MouseEvent) => {
     e.preventDefault();
     setPrivacyModalOpen(true);
@@ -65,7 +79,6 @@ const Footer = () => {
     >
       <Container size="xl" py="xl">
         <Stack gap="md">
-          {/* Main footer content */}
           <Group justify="space-between" align="flex-start">
             <Stack gap="xs">
               <Text fw={700} size="lg" className="navbar-title">
@@ -100,7 +113,8 @@ const Footer = () => {
                   Theaters
                 </Link>
                 <Link
-                  to="/my-reservations"
+                  to="#"
+                  onClick={handleTicketsClick}
                   style={{
                     color: "var(--text-secondary)",
                     textDecoration: "none",
@@ -149,10 +163,10 @@ const Footer = () => {
 
           <Divider color="var(--border-color)" />
 
-          {/* Copyright section */}
           <Group justify="space-between">
             <Text size="xs" c="dimmed">
-              © {currentYear} Lions Den Cinemas. All rights reserved.
+              © {new Date().getFullYear()} Lions Den Cinemas. All rights
+              reserved.
             </Text>
             <Group gap="md">
               <Text
@@ -180,7 +194,6 @@ const Footer = () => {
         </Stack>
       </Container>
 
-      {/* Legal modals */}
       <LegalModal
         opened={privacyModalOpen}
         onClose={() => setPrivacyModalOpen(false)}
@@ -191,6 +204,11 @@ const Footer = () => {
         opened={termsModalOpen}
         onClose={() => setTermsModalOpen(false)}
         type="terms"
+      />
+
+      <TicketLookupModal
+        opened={ticketModalOpened}
+        onClose={closeTicketModal}
       />
     </Box>
   );

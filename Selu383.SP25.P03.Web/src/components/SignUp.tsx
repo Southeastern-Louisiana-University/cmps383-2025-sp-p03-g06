@@ -1,15 +1,11 @@
 // src/components/SignUp.tsx - Updated with AnimatedLion
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import { userApi } from "../services/api";
 import {
   TextInput,
   PasswordInput,
   Button,
   Text,
-  Paper,
-  Container,
-  Title,
   Divider,
   Alert,
   Stack,
@@ -19,6 +15,7 @@ import {
   rem,
   useMantineColorScheme,
   useMantineTheme,
+  Title,
 } from "@mantine/core";
 import {
   IconAlertCircle,
@@ -26,8 +23,8 @@ import {
   IconLock,
   IconCheck,
   IconX,
-  IconArrowLeft,
   IconUserCheck,
+  IconArrowRight,
 } from "@tabler/icons-react";
 import AnimatedLion from "./AnimatedLion"; // Import our new component
 
@@ -79,20 +76,19 @@ function getStrength(password: string) {
 
 interface SignUpProps {
   onSuccess?: () => void;
+  onSwitchToLogin?: () => void;
 }
 
-const SignUp = ({ onSuccess }: SignUpProps) => {
+const SignUp = ({ onSuccess, onSwitchToLogin }: SignUpProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { colorScheme } = useMantineColorScheme();
+  useMantineColorScheme();
   const theme = useMantineTheme();
-  const isDark = colorScheme === "dark";
 
-  // Password strength
+  // Password
   const [showPasswordFeedback, setShowPasswordFeedback] = useState(false);
   const strength = getStrength(password);
   const checks = requirements.map((requirement, index) => (
@@ -150,10 +146,10 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
         onSuccess();
       }
 
-      // Redirect to login page after successful registration
-      navigate("/login", {
-        state: { message: "Account created successfully! Please log in." },
-      });
+      // Switch to login after successful registration
+      if (onSwitchToLogin) {
+        onSwitchToLogin();
+      }
     } catch (error) {
       console.error("Registration failed:", error);
       setError("Registration failed. Please try a different username.");
@@ -336,15 +332,14 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
           Already have an account?
         </Text>
         <Button
-          component={Link}
-          to="/login"
           variant="outline"
           color="red"
           fullWidth
           size="lg"
-          leftSection={<IconArrowLeft size={20} />}
+          rightSection={<IconArrowRight size={20} />}
+          onClick={onSwitchToLogin}
         >
-          Sign In
+          Login
         </Button>
       </Stack>
     </Stack>

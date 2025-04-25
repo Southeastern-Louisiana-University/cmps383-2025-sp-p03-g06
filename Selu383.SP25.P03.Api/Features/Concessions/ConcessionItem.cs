@@ -1,6 +1,7 @@
 ﻿// Features/Concessions/ConcessionItem.cs
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Selu383.SP25.P03.Api.Features.OrderItems;
 
 namespace Selu383.SP25.P03.Api.Features.Concessions
 {
@@ -23,9 +24,9 @@ namespace Selu383.SP25.P03.Api.Features.Concessions
         public int CategoryId { get; set; }
         public virtual ConcessionCategory? Category { get; set; }
 
-        public bool IsAvailable { get; set; }
+        public bool IsAvailable { get; set; } = true;
 
         // Navigation properties
-        public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public virtual ICollection<OrderItem> OrderItems { get; set; } = [];
     }
 }
