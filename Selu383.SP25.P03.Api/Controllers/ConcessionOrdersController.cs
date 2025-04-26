@@ -42,6 +42,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     OrderTime = o.OrderTime,
                     TotalPrice = o.TotalPrice,
                     Status = o.Status ?? "Unknown",
+                    SeatNumber = o.SeatNumber,
                     Items = o.OrderItems.Select(oi => new OrderItemDTO
                     {
                         Id = oi.Id,
@@ -77,6 +78,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 OrderTime = o.OrderTime,
                 TotalPrice = o.TotalPrice,
                 Status = o.Status ?? "Unknown",
+                SeatNumber = o.SeatNumber,
                 Items = o.OrderItems.Select(oi => new OrderItemDTO
                 {
                     Id = oi.Id,
@@ -124,6 +126,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     OrderTime = o.OrderTime,
                     TotalPrice = o.TotalPrice,
                     Status = o.Status ?? "Unknown",
+                    SeatNumber = o.SeatNumber,
                     Items = o.OrderItems.Select(oi => new OrderItemDTO
                     {
                         Id = oi.Id,
@@ -160,6 +163,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                     OrderTime = o.OrderTime,
                     TotalPrice = o.TotalPrice,
                     Status = o.Status ?? "Unknown",
+                    SeatNumber = o.SeatNumber,
                     Items = o.OrderItems.Select(oi => new OrderItemDTO
                     {
                         Id = oi.Id,
@@ -269,7 +273,8 @@ namespace Selu383.SP25.P03.Api.Controllers
                 ReservationId = orderDto.ReservationId,
                 OrderTime = DateTime.UtcNow,
                 TotalPrice = totalPrice,
-                Status = "Pending"
+                Status = "Pending",
+                SeatNumber = orderDto.SeatNumber
             };
 
             _orders.Add(order);
@@ -373,6 +378,7 @@ namespace Selu383.SP25.P03.Api.Controllers
     {
         public int ReservationId { get; set; }
         public List<CreateOrderItemDTO> Items { get; set; } = [];
+        public string? SeatNumber { get; set; }
     }
 
     public class CreateOrderItemDTO

@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - mobile_v
+      - food-merge
 jobs:
   update:
     runs-on: ubuntu-latest
