@@ -13,6 +13,12 @@ import {
 const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const seatsPerRow = 10;
 
+const mockShowtime = {
+    movieTitle: 'Avengers: Endgame',
+    theaterName: 'AMC Theater',
+    startTime: new Date().toISOString(),
+};
+
 const generateDummySeats = () => {
     const seats = [];
     for (let row = 0; row < rowLabels.length; row++) {
@@ -32,7 +38,7 @@ export default function SeatSelectionScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const seatPrice = 12.99; // 💵 each seat costs $12.99
+    const seatPrice = 12.99;
 
     useEffect(() => {
         const fetchSeats = async () => {
@@ -77,6 +83,15 @@ export default function SeatSelectionScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
+
+                <View style={styles.movieInfoHeader}>
+                    <Text style={styles.movieTitle}>{mockShowtime.movieTitle}</Text>
+                    <Text style={styles.theaterText}>{mockShowtime.theaterName}</Text>
+                    <Text style={styles.timeText}>
+                        {new Date(mockShowtime.startTime).toLocaleDateString()} • {new Date(mockShowtime.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                </View>
+
                 <View style={styles.seatMap}>
                     {rowLabels.map((row) => (
                         <View key={row} style={styles.row}>
@@ -106,7 +121,6 @@ export default function SeatSelectionScreen() {
                     ))}
                 </View>
 
-                {/* ✅ Selected Seats Summary */}
                 <View style={styles.summary}>
                     <Text style={styles.summaryText}>
                         {selectedSeats.length} Seat{selectedSeats.length !== 1 ? 's' : ''} Selected
@@ -128,6 +142,25 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingVertical: 20,
         paddingHorizontal: 10,
+    },
+    movieInfoHeader: {
+        marginBottom: 20,
+        alignItems: 'center',
+    },
+    movieTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    theaterText: {
+        fontSize: 16,
+        color: '#CCC',
+        marginTop: 4,
+    },
+    timeText: {
+        fontSize: 14,
+        color: '#888',
+        marginTop: 2,
     },
     seatMap: {
         alignItems: 'center',
