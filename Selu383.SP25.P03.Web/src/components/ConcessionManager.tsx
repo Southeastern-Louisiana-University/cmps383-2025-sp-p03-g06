@@ -249,14 +249,7 @@ const ConcessionManager: React.FC = () => {
                   <Table.Tr key={item.id}>
                     <Table.Td style={{ textAlign: "center", padding: "8px" }}>
                       <Image
-                        src={
-                          item.imageUrl
-                            ? `/images/food/${item.imageUrl
-                                .split("/")
-                                .pop()
-                                ?.replace(".jpg", "")}.jpg`
-                            : undefined
-                        }
+                        src={item.imageUrl || undefined}
                         h={60}
                         w={60}
                         fit="cover"

@@ -156,7 +156,6 @@ const ConcessionSelection = () => {
     }
   };
 
-
   if (loading) {
     return (
       <Center style={{ margin: "40px 0" }}>
@@ -268,14 +267,7 @@ const ConcessionSelection = () => {
                       >
                         <Card.Section>
                           <Image
-                            src={
-                              item.imageUrl
-                                ? `/images/food/${item.imageUrl
-                                    .split("/")
-                                    .pop()
-                                    ?.replace(".jpg", "")}.jpg`
-                                : undefined
-                            }
+                            src={item.imageUrl || undefined}
                             height={160}
                             alt={item.name}
                             fallbackSrc="https://placehold.co/400x200/gray/white?text=Food+Item"
