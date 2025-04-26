@@ -13,7 +13,6 @@ import {
   Alert,
   Loader,
   Center,
-  Tabs,
   useMantineColorScheme,
   Stack,
 } from "@mantine/core";
@@ -29,7 +28,6 @@ import {
   IconShoppingCart,
 } from "@tabler/icons-react";
 import { useAuth } from "../contexts/AuthContext";
-import LoginSignupModal from "./LoginSignupModal";
 import TicketLookupModal from "./TicketLookupModal";
 
 // You'll need to add these types and API methods to your services/api.ts file
@@ -91,9 +89,15 @@ const MyReservations = () => {
       fetchReservations();
     } else {
       setLoading(false);
+    }
+  }, [isAuthenticated, isGuest]);
+
+  // Handle opening ticket lookup modal when not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !isGuest && !loading) {
       openTicketLookup();
     }
-  }, [isAuthenticated, isGuest, openTicketLookup]);
+  }, [isAuthenticated, isGuest, loading]);
 
   const handleCancelReservation = async (id: number) => {
     try {

@@ -2,7 +2,6 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { theaterApi, TheaterDTO } from "../services/api";
-import { useAuth } from "../contexts/AuthContext";
 
 import {
   Box,

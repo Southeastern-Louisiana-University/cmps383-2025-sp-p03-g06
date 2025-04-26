@@ -33,6 +33,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { ModalsProvider } from "@mantine/modals";
 import "./styles/animations.css";
 import "./App.css";
+import TheaterDetails from "./components/TheaterDetails";
 
 // Component to animate page transitions
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
@@ -200,6 +201,7 @@ const AppContent = () => {
                   element={<MovieShowtimes />}
                 />
                 <Route path="/theaters" element={<TheaterList />} />
+                <Route path="/theaters/:id" element={<TheaterDetails />} />
 
                 {/* Admin routes */}
                 <Route

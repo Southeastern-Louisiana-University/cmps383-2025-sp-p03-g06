@@ -31,16 +31,19 @@ import {
   IconCoffee,
   IconCategory,
 } from "@tabler/icons-react";
-import { concessionApi, ConcessionDTO } from "../services/api";
+import { concessionApi } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 // Define type interfaces
 export interface ConcessionItemDTO {
   id: number;
   name: string;
-  description?: string;
+  description: string;
   price: number;
-  imageUrl?: string;
+  imageUrl: string;
   categoryId: number;
+  categoryName: string;
   isAvailable: boolean;
 }
 
@@ -50,6 +53,17 @@ export interface ConcessionCategoryDTO {
 }
 
 const ConcessionManager: React.FC = () => {
+  const { isManager, isAdmin, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if not authenticated or not admin/manager
+  useEffect(() => {
+    if (!isAuthenticated || (!isAdmin && !isManager)) {
+      navigate("/");
+      return;
+    }
+  }, [isAuthenticated, isAdmin, isManager, navigate]);
+
   const [activeTab, setActiveTab] = useState<string | null>("items");
   const [items, setItems] = useState<ConcessionItemDTO[]>([]);
   const [categories, setCategories] = useState<ConcessionCategoryDTO[]>([]);
@@ -80,6 +94,7 @@ const ConcessionManager: React.FC = () => {
     price: 0,
     imageUrl: "",
     categoryId: 0,
+    categoryName: "",
     isAvailable: true,
   });
   const [categoryFormData, setCategoryFormData] = useState<
@@ -112,13 +127,18 @@ const ConcessionManager: React.FC = () => {
 
   const handleCreateItem = () => {
     setIsEditingItem(false);
-    const defaultCat = categories[0]?.id ?? 0;
+    if (categories.length === 0) {
+      setError("Please create a category first");
+      return;
+    }
+    const defaultCat = categories[0];
     setItemFormData({
       name: "",
       description: "",
       price: 0,
       imageUrl: "",
-      categoryId: defaultCat,
+      categoryId: defaultCat.id,
+      categoryName: defaultCat.name,
       isAvailable: true,
     });
     setIsItemModalOpen(true);
@@ -128,10 +148,11 @@ const ConcessionManager: React.FC = () => {
     setIsEditingItem(true);
     setItemFormData({
       name: item.name,
-      description: item.description ?? "",
+      description: item.description,
       price: item.price,
-      imageUrl: item.imageUrl ?? "",
+      imageUrl: item.imageUrl,
       categoryId: item.categoryId,
+      categoryName: item.categoryName,
       isAvailable: item.isAvailable,
     });
     setCurrentItem(item);
@@ -156,22 +177,33 @@ const ConcessionManager: React.FC = () => {
 
   const handleSaveItem = async () => {
     try {
+      if (!itemFormData.name || !itemFormData.categoryId) {
+        setError("Name and category are required");
+        return;
+      }
+
       setLoading(true);
+      const category = categories.find((c) => c.id === itemFormData.categoryId);
+      if (!category) {
+        setError("Invalid category selected");
+        return;
+      }
+
+      const itemToSave = {
+        ...itemFormData,
+        description: itemFormData.description || "",
+        imageUrl: itemFormData.imageUrl || "",
+        categoryName: category.name,
+      };
+
       if (isEditingItem && currentItem) {
-        await concessionApi.updateItem(currentItem.id, {
-          ...itemFormData,
-          description: itemFormData.description || "",
-          imageUrl: itemFormData.imageUrl || "",
-        });
+        await concessionApi.updateItem(currentItem.id, itemToSave);
       } else {
-        await concessionApi.createItem({
-          ...itemFormData,
-          description: itemFormData.description || "",
-          imageUrl: itemFormData.imageUrl || "",
-        });
+        await concessionApi.createItem(itemToSave);
       }
       await fetchData();
       setIsItemModalOpen(false);
+      setError(null);
     } catch (err) {
       setError("Failed to save item");
       console.error(err);
@@ -257,6 +289,7 @@ const ConcessionManager: React.FC = () => {
                 price: 0,
                 imageUrl: "",
                 categoryId: 0,
+                categoryName: "",
                 isAvailable: true,
               });
               setIsItemModalOpen(true);
@@ -388,11 +421,11 @@ const ConcessionManager: React.FC = () => {
               onChange={(val) =>
                 setItemFormData({
                   ...itemFormData,
-                  price: typeof val === "string" ? parseFloat(val) : val ?? 0,
+                  price: typeof val === "number" ? val : 0,
                 })
               }
               min={0}
-              precision={2}
+              decimalScale={2}
               required
               prefix="$"
             />

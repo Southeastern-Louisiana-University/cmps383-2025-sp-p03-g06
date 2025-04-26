@@ -6,6 +6,7 @@ using Selu383.SP25.P03.Api.Features.Movies;
 using Selu383.SP25.P03.Api.Features.Showtimes;
 using Selu383.SP25.P03.Api.Features.Theaters;
 using Selu383.SP25.P03.Api.Features.Users;
+using Microsoft.Extensions.Logging;
 
 namespace Selu383.SP25.P03.Api.Controllers
 {
@@ -18,13 +19,15 @@ namespace Selu383.SP25.P03.Api.Controllers
         private readonly DbSet<Showtime> _showtimes;
         private readonly DbSet<Movie> _movies;
         private readonly DbSet<TheaterRoom> _theaterRooms;
+        private readonly ILogger<ShowtimesController> _logger;
 
-        public ShowtimesController(DataContext context)
+        public ShowtimesController(DataContext context, ILogger<ShowtimesController> logger)
         {
             _context = context;
             _showtimes = context.Set<Showtime>();
             _movies = context.Set<Movie>();
             _theaterRooms = context.Set<TheaterRoom>();
+            _logger = logger;
         }
 
         [HttpGet]
@@ -286,16 +289,31 @@ namespace Selu383.SP25.P03.Api.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Roles = $"{UserRoleNames.Admin},{UserRoleNames.Manager}")]
-        public async Task<IActionResult> DeleteShowtime(int id)
+        public async Task<ActionResult> DeleteShowtime(int id)
         {
+            _logger.LogInformation($"Delete request received for showtime ID: {id}");
+            
             var showtime = await _showtimes.FindAsync(id);
             if (showtime == null)
+            {
+                _logger.LogWarning($"Showtime with ID {id} not found for deletion");
                 return NotFound();
+            }
 
+            _logger.LogInformation($"Found showtime with ID {id}, proceeding with deletion");
             _showtimes.Remove(showtime);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            
+            try 
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation($"Successfully deleted showtime with ID {id}");
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error deleting showtime with ID {id}: {ex.Message}");
+                throw;
+            }
         }
 
         private bool ShowtimeExists(int id)

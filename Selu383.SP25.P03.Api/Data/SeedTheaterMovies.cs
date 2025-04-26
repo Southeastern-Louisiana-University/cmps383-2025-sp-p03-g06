@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Features.Movies;
+using Selu383.SP25.P03.Api.Features.Theaters;
 
 namespace Selu383.SP25.P03.Api.Data
 {
@@ -16,53 +17,67 @@ namespace Selu383.SP25.P03.Api.Data
                 context.SaveChanges();
             }
 
-            // Get all theaters and movies
             var theaters = context.Theaters.ToList();
             var movies = context.Movies.ToList();
 
-            if (!theaters.Any() || !movies.Any())
+            // Get specific movies that should have no theaters
+            var mufasa = movies.Single(m => m.Title == "Mufasa: The Lion King");
+            var locked = movies.Single(m => m.Title == "Locked");
+
+            // Remove these movies from the pool of assignable movies
+            var assignableMovies = movies
+                .Where(m => m != mufasa && m != locked)
+                .ToList();
+
+            // Movies that will be in all theaters
+            var moviesInAllTheaters = new[]
             {
-                return; // Can't create relationships without theaters and movies
-            }
+                assignableMovies.Single(m => m.Title == "Snow White"),
+                assignableMovies.Single(m => m.Title == "Captain America: Brave New World")
+            };
+
+            // Movies that will be in exactly two theaters
+            var moviesInTwoTheaters = new[]
+            {
+                assignableMovies.Single(m => m.Title == "Mickey 17"),
+                assignableMovies.Single(m => m.Title == "Paddington in Peru"),
+                assignableMovies.Single(m => m.Title == "The Day the Earth Blew Up: A Looney Tunes Movie")
+            };
+
+            // Movies that will be in exactly one theater
+            var moviesInOneTheater = assignableMovies
+                .Except(moviesInAllTheaters)
+                .Except(moviesInTwoTheaters)
+                .ToList();
 
             var theaterMovies = new List<TheaterMovie>();
 
-            // Assign movies to theaters based on release dates and theater characteristics
-            foreach (var theater in theaters)
+            // Assign movies that should be in all theaters
+            foreach (var movie in moviesInAllTheaters)
             {
-                // Get movies that are releasing within the next 30 days or released in the last 30 days
-                var recentAndUpcomingMovies = movies.Where(m => 
-                    Math.Abs((m.ReleaseDate - DateTime.UtcNow).TotalDays) <= 30).ToList();
-
-                // Get older movies that are still showing
-                var olderMovies = movies.Where(m => 
-                    (DateTime.UtcNow - m.ReleaseDate).TotalDays > 30 && 
-                    (DateTime.UtcNow - m.ReleaseDate).TotalDays <= 90).ToList();
-
-                // Each theater gets 4-6 recent/upcoming movies
-                var selectedRecentMovies = recentAndUpcomingMovies
-                    .OrderBy(x => Guid.NewGuid()) // Random selection
-                    .Take(Random.Shared.Next(4, 7))
-                    .ToList();
-
-                // Each theater gets 2-3 older movies
-                var selectedOlderMovies = olderMovies
-                    .OrderBy(x => Guid.NewGuid()) // Random selection
-                    .Take(Random.Shared.Next(2, 4))
-                    .ToList();
-
-                // Combine all selected movies
-                var selectedMovies = selectedRecentMovies.Concat(selectedOlderMovies);
-
-                // Create theater-movie relationships
-                foreach (var movie in selectedMovies)
+                foreach (var theater in theaters)
                 {
-                    theaterMovies.Add(new TheaterMovie
-                    {
-                        TheaterId = theater.Id,
-                        MovieId = movie.Id
-                    });
+                    theaterMovies.Add(new TheaterMovie { Movie = movie, Theater = theater });
                 }
+            }
+
+            // Assign movies that should be in two theaters
+            var random = new Random(42); // Fixed seed for reproducibility
+            foreach (var movie in moviesInTwoTheaters)
+            {
+                // Randomly select two theaters
+                var selectedTheaters = theaters.OrderBy(x => random.Next()).Take(2).ToList();
+                foreach (var theater in selectedTheaters)
+                {
+                    theaterMovies.Add(new TheaterMovie { Movie = movie, Theater = theater });
+                }
+            }
+
+            // Assign movies that should be in one theater
+            foreach (var movie in moviesInOneTheater)
+            {
+                var theater = theaters[random.Next(theaters.Count)];
+                theaterMovies.Add(new TheaterMovie { Movie = movie, Theater = theater });
             }
 
             context.TheaterMovies.AddRange(theaterMovies);

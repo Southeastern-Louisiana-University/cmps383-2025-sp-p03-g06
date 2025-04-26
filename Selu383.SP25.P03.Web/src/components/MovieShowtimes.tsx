@@ -1,6 +1,6 @@
 // src/components/MovieShowtimes.tsx
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
   Title,
@@ -19,17 +19,17 @@ import {
   Modal,
   useMantineColorScheme,
   Box,
-  Switch,
   Alert,
+  SimpleGrid,
+  Stack,
 } from "@mantine/core";
 import {
   IconCalendar,
   IconPlayerPlay,
   IconBuilding,
-  IconTheater,
   IconTicket,
-  IconClock,
   IconCurrentLocation,
+  IconBuildingEstate,
 } from "@tabler/icons-react";
 import {
   movieApi,
@@ -38,6 +38,8 @@ import {
   MovieDTO,
   ShowtimeDTO,
 } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import MovieRating from "./MovieRating";
 
 interface TheaterWithLocation {
   id: number;
@@ -57,30 +59,32 @@ interface GeolocationError {
   message: string;
 }
 
+interface TheaterShowtimes {
+  theater: TheaterWithLocation;
+  showtimes: ShowtimeDTO[];
+}
+
 const MovieShowtimes = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  useAuth();
   const [movie, setMovie] = useState<MovieDTO | null>(null);
   const [showtimes, setShowtimes] = useState<ShowtimeDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [trailerOpen, setTrailerOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [theaters, setTheaters] = useState<Record<number, TheaterWithLocation>>(
     {}
   );
   const [userLocation, setUserLocation] = useState<UserLocation>(undefined);
   const [sortByDistance, setSortByDistance] = useState(true);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
+  const [, setLocationLoading] = useState(false);
+  const [] = useState<TheaterShowtimes[]>(
+    []
+  );
 
-  const { colorScheme } = useMantineColorScheme();
-  const isDark = colorScheme === "dark";
-  const mainTicketColor = "#c70036";
-
-  useEffect(() => {
-    setIsAdmin(true);
-  }, []);
+  useMantineColorScheme();
 
   useEffect(() => {
     getUserLocation();
@@ -113,14 +117,17 @@ const MovieShowtimes = () => {
 
   const getCoordinatesForAddress = (address: string) => {
     const addressMap: Record<string, { lat: number; lng: number }> = {
-      "New York:": { lat: 40.7489, lng: -73.968 },
-      "New Orleans:": { lat: 29.9647, lng: -90.0758 },
-      "Los Angeles:": { lat: 34.0118, lng: -118.3373 },
+      "New York": { lat: 40.7489, lng: -73.968 },
+      "New Orleans": { lat: 29.9647, lng: -90.0758 },
+      "Los Angeles": { lat: 34.0118, lng: -118.3373 },
     };
-    for (const key in addressMap) {
-      if (address.includes(key)) return addressMap[key];
+
+    for (const city in addressMap) {
+      if (address.toLowerCase().includes(city.toLowerCase())) {
+        return addressMap[city];
+      }
     }
-    return { lat: 39.8283, lng: -98.5795 };
+    return null; // Return null instead of default coordinates if no match is found
   };
 
   const calculateDistance = (
@@ -141,67 +148,151 @@ const MovieShowtimes = () => {
   };
 
   useEffect(() => {
-    if (userLocation && Object.keys(theaters).length) {
-      const updated = { ...theaters };
-      for (const id in updated) {
-        const t = updated[+id];
-        if (t.coordinates) {
-          updated[+id] = {
-            ...t,
-            distance: calculateDistance(
-              userLocation.lat,
-              userLocation.lng,
-              t.coordinates.lat,
-              t.coordinates.lng
-            ),
-          };
-        }
-      }
-      setTheaters(updated);
-    }
-  }, [userLocation, theaters]);
-
-  useEffect(() => {
     (async () => {
       if (!id) return;
       try {
-        const m = await movieApi.getMovieById(+id);
-        setMovie(m);
-        const all = await showtimeApi.getShowtimesByMovie(+id);
-        const allowedIds = new Set(await movieApi.getTheatersByMovie(+id));
-        const theaterInfo: Record<number, TheaterWithLocation> = {};
-        for (const st of all) {
-          if (!theaterInfo[st.theaterId]) {
-            try {
-              const td = await theaterApi.getTheaterById(st.theaterId);
-              theaterInfo[st.theaterId] = {
-                id: td.id,
-                name: td.name,
-                address: td.address,
-                coordinates: getCoordinatesForAddress(td.address),
-              };
-            } catch {
-              theaterInfo[st.theaterId] = {
-                id: st.theaterId,
-                name: "Unknown Theater",
-                address: "N/A",
-              };
-            }
-          }
+        setLoading(true);
+        setError(null);
+
+        // Fetch movie details and showtimes
+        const movieData = await movieApi.getMovieById(+id);
+        const showtimeData = await showtimeApi.getShowtimesByMovie(+id);
+
+        // Get current date/time
+        const now = new Date();
+        const releaseDate = new Date(movieData.releaseDate);
+
+        // Check if movie is a future release
+        if (releaseDate > now) {
+          setMovie(movieData);
+          setShowtimes([]);
+          setLoading(false);
+          return;
         }
-        setTheaters(theaterInfo);
-        setShowtimes(
-          all.filter(
-            (st) => allowedIds.size === 0 || allowedIds.has(st.theaterId)
-          )
+
+        // Filter out any past showtimes
+        const futureShowtimes = showtimeData.filter(
+          (st) => new Date(st.startTime) > now
         );
-      } catch {
+
+        if (futureShowtimes.length === 0) {
+          console.log("No future showtimes found");
+        }
+
+        // Get all unique theater IDs from showtimes
+        const theaterIds = [
+          ...new Set(futureShowtimes.map((st) => st.theaterId)),
+        ];
+
+        // Fetch theater details
+        const theaterInfo: Record<number, TheaterWithLocation> = {};
+        await Promise.all(
+          theaterIds.map(async (theaterId) => {
+            try {
+              const theaterData = await theaterApi.getTheaterById(theaterId);
+              const coordinates = getCoordinatesForAddress(theaterData.address);
+
+              let distance = undefined;
+              if (userLocation && coordinates) {
+                distance = calculateDistance(
+                  userLocation.lat,
+                  userLocation.lng,
+                  coordinates.lat,
+                  coordinates.lng
+                );
+              }
+
+              theaterInfo[theaterId] = {
+                id: theaterData.id,
+                name: theaterData.name,
+                address: theaterData.address,
+                coordinates,
+                distance,
+              };
+            } catch (error) {
+              console.error(`Error fetching theater ${theaterId}:`, error);
+            }
+          })
+        );
+
+        setMovie(movieData);
+        setTheaters(theaterInfo);
+        setShowtimes(futureShowtimes);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading movie data:", error);
         setError("Failed to load movie information");
-      } finally {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, userLocation]);
+
+  const getShowtimeStatus = () => {
+    if (!movie) return null;
+
+    const now = new Date();
+    const releaseDate = new Date(movie.releaseDate);
+
+    if (releaseDate > now) {
+      const formattedDate = releaseDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      return {
+        message: `Coming soon! Releases on ${formattedDate}`,
+        type: "future" as const,
+      };
+    }
+
+    if (showtimes.length === 0) {
+      return {
+        message: "Not currently showing in any theaters",
+        type: "no-showtimes" as const,
+      };
+    }
+
+    return {
+      type: "has-showtimes" as const,
+    };
+  };
+
+  // Filter showtimes based on view type
+  const getFilteredShowtimes = (viewType: "by-theater" | "by-date") => {
+    const now = new Date();
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfterTomorrow = new Date(tomorrow);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+
+    if (viewType === "by-date") {
+      // For "By Date" view, show all future showtimes
+      return showtimes.filter((st) => new Date(st.startTime) > now);
+    } else {
+      // For "By Theater" view, show today's remaining showtimes
+      // and if it's past 3 PM and few showtimes left, show tomorrow's too
+      const todayShowtimes = showtimes.filter((st) => {
+        const showtime = new Date(st.startTime);
+        return showtime > now && showtime < tomorrow;
+      });
+
+      const isPastThreePM = now.getHours() >= 15;
+      const fewShowtimesLeft = todayShowtimes.length <= 2;
+
+      if (isPastThreePM && fewShowtimesLeft) {
+        // Show today's and tomorrow's showtimes
+        return showtimes.filter((st) => {
+          const showtime = new Date(st.startTime);
+          return showtime > now && showtime < dayAfterTomorrow;
+        });
+      }
+
+      return todayShowtimes;
+    }
+  };
 
   const handleSelectShowtime = (sid: number) =>
     navigate(`/reservations/create/${sid}`);
@@ -225,16 +316,11 @@ const MovieShowtimes = () => {
 
   const showtimesByDate = showtimes.reduce<Record<string, ShowtimeDTO[]>>(
     (acc, s) => {
-      const date = new Date(s.startTime).toLocaleDateString();
-      (acc[date] ||= []).push(s);
-      return acc;
-    },
-    {}
-  );
-
-  const showtimesByTheater = showtimes.reduce<Record<string, ShowtimeDTO[]>>(
-    (acc, s) => {
-      (acc[s.theaterName] ||= []).push(s);
+      const date = new Date(s.startTime).toISOString().split("T")[0];
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(s);
       return acc;
     },
     {}
@@ -244,423 +330,471 @@ const MovieShowtimes = () => {
     (a, b) => new Date(a).getTime() - new Date(b).getTime()
   );
 
-  const sortEntries = (entries: [string, ShowtimeDTO[]][]) => {
-    if (sortByDistance && userLocation) {
-      return entries.sort((a, b) => {
-        const da = theaters[a[1][0].theaterId].distance ?? Infinity;
-        const db = theaters[b[1][0].theaterId].distance ?? Infinity;
-        return da - db;
-      });
-    }
-    return entries;
-  };
+
 
   if (loading) {
     return (
-      <Box
-        style={{
-          backgroundColor: "var(--background-darker)",
-          minHeight: "100vh",
-        }}
-      >
-        <Center my="xl">
-          <Loader size="lg" />
-        </Center>
-      </Box>
+      <Center h={400}>
+        <Loader size="xl" />
+      </Center>
     );
   }
 
   if (error || !movie) {
     return (
-      <Box
-        style={{
-          backgroundColor: "var(--background-darker)",
-          minHeight: "100vh",
-        }}
-      >
-        <Container>
-          <Text color="red" size="lg" ta="center" my="xl">
-            {error || "Movie not found"}
-          </Text>
-        </Container>
-      </Box>
+      <Alert color="red" title="Error">
+        {error || "Movie not found"}
+      </Alert>
     );
   }
 
+  const status = getShowtimeStatus();
+
   return (
-    <Box
-      style={{
-        backgroundColor: "var(--background-darker)",
-        minHeight: "100vh",
-      }}
-    >
-      <Container size="xl" py="xl">
+    <Container size="xl" py="xl">
+      <Paper p="md" radius="md" withBorder>
         <Grid>
+          {/* Left Column - Movie Information */}
           <Grid.Col span={{ base: 12, md: 4 }}>
-            <Card
-              shadow="sm"
-              p="lg"
-              radius="md"
-              withBorder
-              style={{ borderTop: `3px solid ${mainTicketColor}` }}
-            >
-              <Card.Section>
-                <div style={{ position: "relative" }}>
+            <Stack gap="xl">
+              <Card withBorder radius="md" p={0}>
+                <Card.Section>
                   <Image
-                    src={movie.posterImageUrl || "/images/default-movie.jpg"}
-                    fit="contain"
+                    src={movie.posterImageUrl}
+                    height={600}
                     alt={movie.title}
-                    fallbackSrc="https://placehold.co/400x600/gray/white?text=No+Poster"
                   />
-                  {movie.trailerUrl && (
-                    <Button
-                      size="sm"
-                      variant="filled"
-                      color="red"
-                      leftSection={<IconPlayerPlay size={16} />}
-                      onClick={() => setTrailerOpen(true)}
-                      style={{
-                        position: "absolute",
-                        bottom: 10,
-                        right: 10,
-                        border: "2px solid rgba(255, 255, 255, 0.8)",
-                      }}
-                    >
-                      Watch Trailer
-                    </Button>
-                  )}
-                </div>
-              </Card.Section>
+                </Card.Section>
+              </Card>
 
-              <Title order={3} mt="md" mb="xs">
-                {movie.title}
-              </Title>
+              <Stack gap="md">
+                <Title order={1} size="h1" style={{ fontSize: "2.5rem" }}>
+                  {movie.title}
+                </Title>
 
-              <Group mb="md" gap="xs">
-                <Badge color="red">{movie.rating}</Badge>
-                <Text size="sm">{movie.durationMinutes} minutes</Text>
-              </Group>
-
-              <Text size="sm" mb="md">
-                {movie.description}
-              </Text>
-
-              <Divider my="md" />
-
-              <Group mb="xs" gap="xs">
-                <IconCalendar size={16} />
-                <Text size="sm">
-                  Released: {new Date(movie.releaseDate).toLocaleDateString()}
-                </Text>
-              </Group>
-
-              <Group gap="xs" mb="md" wrap="wrap">
-                {movie.genres.map((g, i) => (
-                  <Badge key={i} size="sm" variant="light" color="red">
-                    {g}
-                  </Badge>
-                ))}
-              </Group>
-
-              {isAdmin && (
-                <Button
-                  variant="outline"
-                  component={Link}
-                  to={`/movies/${movie.id}/theaters`}
-                  leftSection={<IconBuilding size={16} />}
-                  fullWidth
-                  style={{
-                    borderColor: mainTicketColor,
-                    color: mainTicketColor,
-                  }}
-                >
-                  Manage Theater Assignments
-                </Button>
-              )}
-            </Card>
-          </Grid.Col>
-
-          <Grid.Col span={{ base: 12, md: 8 }}>
-            <Paper
-              shadow="sm"
-              p="lg"
-              withBorder
-              style={{ borderTop: `3px solid ${mainTicketColor}` }}
-            >
-              <Title order={3} mb="md">
-                Showtimes for {movie.title}
-              </Title>
-
-              {locationError && (
-                <Alert color="red" mb="md" title="Location Error">
-                  {locationError}
-                </Alert>
-              )}
-
-              <Tabs defaultValue="by-date">
-                <Group justify="space-between" mb="md">
-                  <Tabs.List>
-                    <Tabs.Tab
-                      value="by-date"
-                      leftSection={<IconCalendar size={16} />}
-                    >
-                      By Date
-                    </Tabs.Tab>
-                    <Tabs.Tab
-                      value="by-theater"
-                      leftSection={<IconTheater size={16} />}
-                    >
-                      By Theater
-                    </Tabs.Tab>
-                  </Tabs.List>
-
-                  <Switch
-                    label="Sort by distance"
-                    checked={sortByDistance}
-                    onChange={(e) => setSortByDistance(e.currentTarget.checked)}
-                    disabled={!userLocation}
-                    size="sm"
+                <Group gap="xs">
+                  <MovieRating
+                    rating={movie.rating}
+                    score={movie.ratingScore}
+                    size="md"
                   />
+                  <Text fw={500}>{movie.durationMinutes} minutes</Text>
                 </Group>
 
-                <Tabs.Panel value="by-date">
-                  {sortedDates.length === 0 ? (
-                    <Text c="dimmed">
-                      No showtimes available for this movie.
-                    </Text>
-                  ) : (
-                    sortedDates.map((date) => (
-                      <Paper withBorder p="md" radius="md" mb="md" key={date}>
-                        <Group mb="sm">
-                          <IconCalendar size={20} />
-                          <Text fw={500}>
-                            {new Date(date).toLocaleDateString(undefined, {
-                              weekday: "long",
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </Text>
-                        </Group>
-                        <Divider mb="md" />
-                        {sortEntries(
-                          Object.entries(
-                            showtimesByDate[date].reduce((acc, st) => {
-                              (acc[st.theaterName] ||= []).push(st);
-                              return acc;
-                            }, {} as Record<string, ShowtimeDTO[]>)
-                          )
-                        ).map(([theater, sts]) => (
-                          <div
-                            key={`${date}-${theater}`}
-                            style={{ marginBottom: 20 }}
-                          >
-                            <Group mb="xs" align="flex-start">
-                              <IconTheater size={16} style={{ marginTop: 4 }} />
-                              <Box>
-                                <Group gap={8}>
-                                  <Text fw={500}>{theater}</Text>
-                                  {sortByDistance && userLocation && (
-                                    <Badge size="xs" color="blue">
-                                      {formatDistance(
-                                        theaters[sts[0].theaterId]?.distance
-                                      )}
-                                    </Badge>
-                                  )}
-                                </Group>
-                                <Text size="xs" c="dimmed" mt="-2px">
-                                  {theaters[sts[0].theaterId]?.address}
-                                </Text>
-                              </Box>
-                            </Group>
-                            <Group gap="sm" wrap="wrap">
-                              {sts
-                                .sort(
-                                  (a, b) =>
-                                    new Date(a.startTime).getTime() -
-                                    new Date(b.startTime).getTime()
-                                )
-                                .map((st) => (
-                                  <Button
-                                    key={st.id}
-                                    variant="outline"
-                                    color={isDark ? "yellow" : "green"}
-                                    onClick={() => handleSelectShowtime(st.id)}
-                                    leftSection={<IconTicket size={16} />}
-                                    rightSection={
-                                      <Badge size="sm" variant="light">
-                                        ${st.baseTicketPrice.toFixed(2)}
-                                      </Badge>
-                                    }
-                                  >
-                                    {new Date(st.startTime).toLocaleTimeString(
-                                      [],
-                                      {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      }
-                                    )}
-                                  </Button>
-                                ))}
-                            </Group>
-                          </div>
-                        ))}
-                      </Paper>
-                    ))
-                  )}
-                </Tabs.Panel>
+                <Text>{movie.description}</Text>
 
-                <Tabs.Panel value="by-theater">
-                  {Object.keys(showtimesByTheater).length === 0 ? (
-                    <Text c="dimmed">
-                      No showtimes available for this movie.
-                    </Text>
-                  ) : (
-                    sortEntries(Object.entries(showtimesByTheater)).map(
-                      ([theater, sts]) => (
-                        <Paper
-                          withBorder
-                          p="md"
-                          radius="md"
-                          mb="md"
-                          key={theater}
-                        >
-                          <Group mb="sm" align="flex-start">
-                            <IconTheater size={20} style={{ marginTop: 4 }} />
-                            <Box>
-                              <Group gap={8}>
-                                <Text fw={500}>{theater}</Text>
-                                {sortByDistance && userLocation && (
-                                  <Badge size="xs" color="blue">
-                                    {formatDistance(
-                                      theaters[sts[0].theaterId]?.distance
-                                    )}
-                                  </Badge>
-                                )}
-                              </Group>
-                              <Text size="xs" c="dimmed" mt="-2px">
-                                {theaters[sts[0].theaterId]?.address}
-                              </Text>
-                            </Box>
-                          </Group>
-                          <Divider mb="md" />
-                          {Object.entries(
-                            sts.reduce((acc, st) => {
-                              const d = new Date(
-                                st.startTime
-                              ).toLocaleDateString();
-                              (acc[d] ||= []).push(st);
-                              return acc;
-                            }, {} as Record<string, ShowtimeDTO[]>)
-                          )
-                            .sort(
-                              (a, b) =>
-                                new Date(a[0]).getTime() -
-                                new Date(b[0]).getTime()
-                            )
-                            .map(([date, ds]) => (
-                              <div
-                                key={`${theater}-${date}`}
-                                style={{ marginBottom: 20 }}
-                              >
-                                <Group mb="xs">
-                                  <IconCalendar size={16} />
-                                  <Text fw={500}>
-                                    {new Date(date).toLocaleDateString(
-                                      undefined,
-                                      {
-                                        weekday: "long",
-                                        month: "short",
-                                        day: "numeric",
-                                      }
-                                    )}
-                                  </Text>
-                                </Group>
-                                <Group gap="sm" wrap="wrap">
-                                  {ds
-                                    .sort(
-                                      (a, b) =>
-                                        new Date(a.startTime).getTime() -
-                                        new Date(b.startTime).getTime()
-                                    )
-                                    .map((st) => (
-                                      <Button
-                                        key={st.id}
-                                        variant="outline"
-                                        color={isDark ? "yellow" : "green"}
-                                        onClick={() =>
-                                          handleSelectShowtime(st.id)
-                                        }
-                                        leftSection={<IconClock size={16} />}
-                                        rightSection={
-                                          <Badge
-                                            size="sm"
-                                            variant="filled"
-                                            color="blue"
-                                          >
-                                            ${st.baseTicketPrice.toFixed(2)}
-                                          </Badge>
-                                        }
-                                      >
-                                        {new Date(
-                                          st.startTime
-                                        ).toLocaleTimeString([], {
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })}
-                                      </Button>
-                                    ))}
-                                </Group>
-                              </div>
-                            ))}
-                        </Paper>
-                      )
-                    )
+                {movie.trailerUrl && (
+                  <Button
+                    fullWidth
+                    variant="light"
+                    color="red"
+                    onClick={() => setTrailerOpen(true)}
+                    leftSection={<IconPlayerPlay size={18} />}
+                  >
+                    WATCH TRAILER
+                  </Button>
+                )}
+
+                {status?.type === "future" && (
+                  <Alert
+                    icon={<IconCalendar size={16} />}
+                    color="blue"
+                    title="Release Date"
+                  >
+                    {status.message}
+                  </Alert>
+                )}
+              </Stack>
+            </Stack>
+          </Grid.Col>
+
+          {/* Right Column - Showtimes */}
+          <Grid.Col span={{ base: 12, md: 8 }}>
+            <Box>
+              <Title order={2} mb="xl">
+                Showtimes
+              </Title>
+
+              {status?.type === "has-showtimes" && (
+                <>
+                  {locationError && (
+                    <Alert color="yellow" title="Location Error" mb="md">
+                      {locationError}
+                    </Alert>
                   )}
-                </Tabs.Panel>
-              </Tabs>
-            </Paper>
+
+                  <Tabs defaultValue="by-theater">
+                    <Tabs.List>
+                      <Tabs.Tab
+                        value="by-theater"
+                        leftSection={<IconBuildingEstate size={16} />}
+                      >
+                        By Theater
+                      </Tabs.Tab>
+                      <Tabs.Tab
+                        value="by-date"
+                        leftSection={<IconCalendar size={16} />}
+                      >
+                        By Date
+                      </Tabs.Tab>
+                    </Tabs.List>
+
+                    <Tabs.Panel value="by-theater" pt="xs">
+                      {Object.keys(theaters).length === 0 ? (
+                        <Text size="md" c="dimmed">
+                          No showtimes available for this movie.
+                        </Text>
+                      ) : (
+                        Array.from(
+                          getFilteredShowtimes("by-theater").reduce(
+                            (acc, st) => {
+                              if (!theaters[st.theaterId]) return acc;
+                              if (!acc.has(st.theaterId)) {
+                                acc.set(st.theaterId, []);
+                              }
+                              acc.get(st.theaterId)?.push(st);
+                              return acc;
+                            },
+                            new Map<number, ShowtimeDTO[]>()
+                          )
+                        )
+                          .sort(([idA, _a], [idB, _b]) => {
+                            const theaterA = theaters[idA];
+                            const theaterB = theaters[idB];
+                            if (
+                              sortByDistance &&
+                              theaterA?.distance != null &&
+                              theaterB?.distance != null
+                            ) {
+                              return theaterA.distance - theaterB.distance;
+                            }
+                            return (
+                              theaterA?.name.localeCompare(
+                                theaterB?.name || ""
+                              ) || 0
+                            );
+                          })
+                          .map(([theaterId, theaterShowtimes]) => {
+                            const theater = theaters[theaterId];
+                            if (!theater) return null;
+
+                            return (
+                              <Paper
+                                key={theaterId}
+                                p="md"
+                                radius="md"
+                                withBorder
+                                mb="md"
+                              >
+                                <Group justify="space-between" mb="xs">
+                                  <Group>
+                                    <IconBuilding size={20} />
+                                    <Text fw={500}>{theater.name}</Text>
+                                    {theater.distance !== undefined && (
+                                      <Badge color="blue" variant="light">
+                                        {formatDistance(theater.distance)}
+                                      </Badge>
+                                    )}
+                                  </Group>
+                                </Group>
+                                <Text size="sm" c="dimmed" mb="md">
+                                  <IconCurrentLocation
+                                    size={16}
+                                    style={{
+                                      display: "inline",
+                                      verticalAlign: "text-bottom",
+                                    }}
+                                  />{" "}
+                                  {theater.address}
+                                </Text>
+                                <Stack gap="xs">
+                                  {Array.from(
+                                    theaterShowtimes.reduce((acc, st) => {
+                                      const date = new Date(
+                                        st.startTime
+                                      ).toLocaleDateString(undefined, {
+                                        weekday: "short" as const,
+                                        month: "short" as const,
+                                        day: "numeric" as const,
+                                      });
+                                      if (!acc.has(date)) {
+                                        acc.set(date, []);
+                                      }
+                                      acc.get(date)?.push(st);
+                                      return acc;
+                                    }, new Map<string, ShowtimeDTO[]>())
+                                  ).map(([date, dateShowtimes]) => (
+                                    <div key={date}>
+                                      <Text size="sm" fw={500} mb="xs">
+                                        {date}
+                                      </Text>
+                                      {Array.from(
+                                        dateShowtimes.reduce((acc, st) => {
+                                          if (!acc.has(st.theaterRoomId)) {
+                                            acc.set(st.theaterRoomId, []);
+                                          }
+                                          acc.get(st.theaterRoomId)?.push(st);
+                                          return acc;
+                                        }, new Map<number, ShowtimeDTO[]>())
+                                      )
+                                        .sort(
+                                          ([roomA], [roomB]) => roomA - roomB
+                                        )
+                                        .map(([roomId, roomShowtimes]) => (
+                                          <Box key={roomId} mb="md">
+                                            <Text size="sm" c="dimmed" mb="xs">
+                                              Room {roomId}
+                                            </Text>
+                                            <SimpleGrid cols={4} spacing="xs">
+                                              {roomShowtimes
+                                                .sort(
+                                                  (a, b) =>
+                                                    new Date(
+                                                      a.startTime
+                                                    ).getTime() -
+                                                    new Date(
+                                                      b.startTime
+                                                    ).getTime()
+                                                )
+                                                .map((showtime) => (
+                                                  <Button
+                                                    key={showtime.id}
+                                                    variant="light"
+                                                    color="red"
+                                                    onClick={() =>
+                                                      handleSelectShowtime(
+                                                        showtime.id
+                                                      )
+                                                    }
+                                                    leftSection={
+                                                      <IconTicket size={16} />
+                                                    }
+                                                    title={`Room ${showtime.theaterRoomId}`}
+                                                  >
+                                                    {new Date(
+                                                      showtime.startTime
+                                                    ).toLocaleTimeString([], {
+                                                      hour: "numeric",
+                                                      minute: "2-digit",
+                                                    })}
+                                                  </Button>
+                                                ))}
+                                            </SimpleGrid>
+                                          </Box>
+                                        ))}
+                                    </div>
+                                  ))}
+                                </Stack>
+                              </Paper>
+                            );
+                          })
+                          .filter(Boolean)
+                      )}
+                    </Tabs.Panel>
+
+                    <Tabs.Panel value="by-date" pt="xs">
+                      {sortedDates.length === 0 ? (
+                        <Text size="md" c="dimmed">
+                          No showtimes available for this movie.
+                        </Text>
+                      ) : (
+                        Array.from(
+                          getFilteredShowtimes("by-date").reduce((acc, st) => {
+                            const date = new Date(
+                              st.startTime
+                            ).toLocaleDateString(undefined, {
+                              weekday: "short" as const,
+                              month: "short" as const,
+                              day: "numeric" as const,
+                            });
+                            if (!acc.has(date)) {
+                              acc.set(date, []);
+                            }
+                            acc.get(date)?.push(st);
+                            return acc;
+                          }, new Map<string, ShowtimeDTO[]>())
+                        ).map(([date, dateShowtimes]) => (
+                          <Paper
+                            withBorder
+                            p="lg"
+                            radius="md"
+                            mb="lg"
+                            key={date}
+                          >
+                            <Group mb="md">
+                              <IconCalendar size={22} />
+                              <Text fw={600} size="lg">
+                                {new Date(date).toLocaleDateString(undefined, {
+                                  weekday: "long",
+                                  month: "long",
+                                  day: "numeric",
+                                })}
+                              </Text>
+                            </Group>
+                            <Divider mb="lg" />
+                            {Array.from(
+                              dateShowtimes.reduce((acc, st) => {
+                                if (!theaters[st.theaterId]) return acc;
+                                if (!acc.has(st.theaterId)) {
+                                  acc.set(st.theaterId, []);
+                                }
+                                acc.get(st.theaterId)?.push(st);
+                                return acc;
+                              }, new Map<number, ShowtimeDTO[]>())
+                            )
+                              .sort(([idA, _a], [idB, _b]) => {
+                                const theaterA = theaters[idA];
+                                const theaterB = theaters[idB];
+                                if (
+                                  sortByDistance &&
+                                  theaterA?.distance != null &&
+                                  theaterB?.distance != null
+                                ) {
+                                  return theaterA.distance - theaterB.distance;
+                                }
+                                return (
+                                  theaterA?.name.localeCompare(
+                                    theaterB?.name || ""
+                                  ) || 0
+                                );
+                              })
+                              .map(([theaterId, theaterShowtimes]) => {
+                                const theater = theaters[theaterId];
+                                if (!theater) return null;
+
+                                return (
+                                  <Box key={theaterId} mb="md">
+                                    <Group>
+                                      <IconBuilding size={20} />
+                                      <Text fw={500}>{theater.name}</Text>
+                                      {theater.distance !== undefined && (
+                                        <Badge color="blue" variant="light">
+                                          {formatDistance(theater.distance)}
+                                        </Badge>
+                                      )}
+                                    </Group>
+                                    <Text size="sm" c="dimmed" mb="md">
+                                      <IconCurrentLocation
+                                        size={16}
+                                        style={{
+                                          display: "inline",
+                                          verticalAlign: "text-bottom",
+                                        }}
+                                      />{" "}
+                                      {theater.address}
+                                    </Text>
+                                    {Array.from(
+                                      theaterShowtimes.reduce((acc, st) => {
+                                        if (!acc.has(st.theaterRoomId)) {
+                                          acc.set(st.theaterRoomId, []);
+                                        }
+                                        acc.get(st.theaterRoomId)?.push(st);
+                                        return acc;
+                                      }, new Map<number, ShowtimeDTO[]>())
+                                    )
+                                      .sort(([roomA], [roomB]) => roomA - roomB)
+                                      .map(([roomId, roomShowtimes]) => (
+                                        <Box key={roomId} mb="md">
+                                          <Text size="sm" c="dimmed" mb="xs">
+                                            Room {roomId}
+                                          </Text>
+                                          <SimpleGrid cols={4} spacing="xs">
+                                            {roomShowtimes
+                                              .sort(
+                                                (a, b) =>
+                                                  new Date(
+                                                    a.startTime
+                                                  ).getTime() -
+                                                  new Date(
+                                                    b.startTime
+                                                  ).getTime()
+                                              )
+                                              .map((showtime) => (
+                                                <Button
+                                                  key={showtime.id}
+                                                  variant="light"
+                                                  color="red"
+                                                  onClick={() =>
+                                                    handleSelectShowtime(
+                                                      showtime.id
+                                                    )
+                                                  }
+                                                  leftSection={
+                                                    <IconTicket size={16} />
+                                                  }
+                                                  title={`Room ${showtime.theaterRoomId}`}
+                                                >
+                                                  {new Date(
+                                                    showtime.startTime
+                                                  ).toLocaleTimeString([], {
+                                                    hour: "numeric",
+                                                    minute: "2-digit",
+                                                  })}
+                                                </Button>
+                                              ))}
+                                          </SimpleGrid>
+                                        </Box>
+                                      ))}
+                                  </Box>
+                                );
+                              })}
+                          </Paper>
+                        ))
+                      )}
+                    </Tabs.Panel>
+                  </Tabs>
+                </>
+              )}
+
+              {status?.type === "no-showtimes" && (
+                <Box mt="md">
+                  <Text size="lg" c="dimmed">
+                    Not currently showing in any theaters
+                  </Text>
+                </Box>
+              )}
+            </Box>
           </Grid.Col>
         </Grid>
+      </Paper>
 
+      {/* Trailer Modal */}
+      {movie.trailerUrl && (
         <Modal
           opened={trailerOpen}
           onClose={() => setTrailerOpen(false)}
-          title={movie ? `${movie.title} - Official Trailer` : ""}
           size="xl"
           centered
+          padding="xl"
+          styles={{
+            header: {
+              display: "none",
+            },
+            content: {
+              backgroundColor: "var(--mantine-color-dark-7)",
+              borderRadius: "12px",
+            },
+          }}
         >
-          {movie && movie.trailerUrl ? (
-            <div
+          <Stack gap="xl">
+            <Title order={2} c="white" ta="center">
+              Watch Trailer
+            </Title>
+            <Box
+              component="iframe"
+              src={getYoutubeEmbedUrl(movie.trailerUrl)}
+              height={500}
               style={{
-                position: "relative",
-                paddingBottom: "56.25%",
-                height: 0,
+                border: 0,
+                width: "100%",
+                borderRadius: "8px",
               }}
-            >
-              <iframe
-                src={getYoutubeEmbedUrl(movie.trailerUrl)}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  border: 0,
-                }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={`${movie.title} Trailer`}
-              />
-            </div>
-          ) : (
-            <Text ta="center" c="dimmed">
-              Trailer not available or URL is invalid.
-            </Text>
-          )}
+              allowFullScreen
+            />
+          </Stack>
         </Modal>
-      </Container>
-    </Box>
+      )}
+    </Container>
   );
 };
 

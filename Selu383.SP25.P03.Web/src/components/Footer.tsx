@@ -81,7 +81,17 @@ const Footer = () => {
         <Stack gap="md">
           <Group justify="space-between" align="flex-start">
             <Stack gap="xs">
-              <Text fw={700} size="lg" className="navbar-title">
+              <Text
+                fw={700}
+                size="lg"
+                style={{
+                  fontSize: "1.35rem",
+                  letterSpacing: "0.5px",
+                  position: "relative",
+                  transition: "all 0.3s ease",
+                  color: "#ffffff",
+                }}
+              >
                 Lions Den Cinemas
               </Text>
               <Text size="sm" c="dimmed">
@@ -99,7 +109,9 @@ const Footer = () => {
                   style={{
                     color: "var(--text-secondary)",
                     textDecoration: "none",
+                    transition: "color 0.2s ease",
                   }}
+                  className="footer-link"
                 >
                   Movies
                 </Link>
@@ -108,7 +120,9 @@ const Footer = () => {
                   style={{
                     color: "var(--text-secondary)",
                     textDecoration: "none",
+                    transition: "color 0.2s ease",
                   }}
+                  className="footer-link"
                 >
                   Theaters
                 </Link>
@@ -118,7 +132,9 @@ const Footer = () => {
                   style={{
                     color: "var(--text-secondary)",
                     textDecoration: "none",
+                    transition: "color 0.2s ease",
                   }}
+                  className="footer-link"
                 >
                   My Tickets
                 </Link>

@@ -5,11 +5,12 @@ import {
   Tooltip,
   Rating,
   useMantineColorScheme,
+  RatingProps,
 } from "@mantine/core";
 
-interface MovieRatingProps {
+interface MovieRatingProps extends Omit<RatingProps, "value"> {
   rating?: string; // MPAA Rating like "PG", "R", etc.
-  score?: number; // Optional score out of 10
+  score?: number | null;
   size?: "sm" | "md" | "lg";
   showTooltip?: boolean;
 }
@@ -19,6 +20,7 @@ const MovieRating = ({
   score,
   size = "md",
   showTooltip = true,
+  ...props
 }: MovieRatingProps) => {
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
@@ -109,6 +111,13 @@ const MovieRating = ({
     </Box>
   ) : null;
 
+  if (score === undefined || score === null) {
+    return null;
+  }
+
+  // Convert score to a 0-5 scale if it's on a different scale
+  const normalizedScore = Math.min(5, Math.max(0, score));
+
   return (
     <Group gap={score !== undefined ? "sm" : "xs"} wrap="nowrap" align="center">
       {rating &&
@@ -129,10 +138,11 @@ const MovieRating = ({
       {score !== undefined && (
         <Group gap={4} wrap="nowrap" align="center">
           <Rating
-            value={getStars(score)}
+            value={normalizedScore}
             fractions={2}
             readOnly
             size={currentSize.ratingSize}
+            {...props}
           />
           <Text
             size={currentSize.fontSize}

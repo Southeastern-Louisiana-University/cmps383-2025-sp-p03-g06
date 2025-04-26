@@ -1,5 +1,5 @@
 // src/components/Navbar.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 // import LoginSignupModal from "./LoginSignupModal"; // Commented out since file doesn't exist yet
@@ -14,7 +14,6 @@ import {
   Drawer,
   Stack,
   Avatar,
-  UnstyledButton,
 } from "@mantine/core";
 import {
   IconLogout,
@@ -28,6 +27,7 @@ import {
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import LoginSignupModal from "./LoginSignupModal";
+import AnimatedLion from "./AnimatedLion";
 
 const Navbar = () => {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
@@ -38,21 +38,9 @@ const Navbar = () => {
 
   const location = useLocation();
   const [opened, { toggle, close }] = useDisclosure(false);
-  const [scrolled, setScrolled] = useState(false);
 
-  // Consistent red accent color
+  // Remove scroll state since we'll keep it at the smaller size
   const redButtonColor = "#e03131";
-
-  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      const offset = window.scrollY;
-      setScrolled(offset > 50);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const handleLogout = async () => {
     try {
@@ -65,8 +53,6 @@ const Navbar = () => {
 
   const activeLink = (path: string) => location.pathname === path;
 
-  // Custom Link component that handles React Router integration
-  // This is a simpler approach than using complex typings
   const NavLink = ({ to, children, ...props }: any) => (
     <Link to={to} {...props}>
       {children}
@@ -84,78 +70,67 @@ const Navbar = () => {
   };
 
   return (
-    <>
+    <Box>
       <Box
-        component="header"
-        h={64}
-        px="md"
         style={{
-          backgroundColor: scrolled
-            ? "rgba(18, 18, 18, 0.95)"
-            : "rgba(18, 18, 18, 1)",
-          color: "#ffffff",
-          position: "sticky",
+          height: 60,
+          backgroundColor: "rgba(18, 18, 18, 1)",
+          position: "fixed",
           top: 0,
-          zIndex: 100,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
           borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-          boxShadow: scrolled ? "0 4px 10px rgba(0, 0, 0, 0.1)" : "none",
-          backdropFilter: "blur(8px)",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
         }}
       >
-        <Group justify="space-between" h="100%" wrap="nowrap">
-          <Group>
-            {/* Updated branding button */}
-            <UnstyledButton
-              component={NavLink}
+        <Group
+          justify="space-between"
+          style={{
+            height: "100%",
+            padding: "0 80px",
+            maxWidth: 1800,
+            margin: "0 auto",
+          }}
+        >
+          {/* Logo and Brand */}
+          <Group style={{ flex: 1, marginLeft: "-40px" }}>
+            <NavLink
               to="/"
               style={{
+                textDecoration: "none",
                 display: "flex",
                 alignItems: "center",
-                textDecoration: "none",
-                padding: "8px", // Direct value instead of theme
-                borderRadius: "8px", // Direct value instead of theme
-                transition: "background-color 0.2s, transform 0.2s",
+                gap: "10px",
               }}
-              sx={() => ({
-                "&:hover": {
-                  backgroundColor: `rgba(224, 49, 49, 0.1)`,
-                  transform: "scale(1.03)",
-                },
-              })}
             >
-              <Box
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "8px", // Direct value instead of theme
-                  backgroundColor: "#e03131", // Direct color value
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: "12px", // Direct value instead of theme
-                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)", // Direct shadow
-                }}
-              >
-                <IconMovie size={24} color="#fff" stroke={2} />
-              </Box>
-
+              <AnimatedLion
+                size={40}
+                primaryColor="#d4af37"
+                secondaryColor="#6B4226"
+              />
               <Text
-                size="xl"
+                size="lg"
                 fw={700}
                 style={{
-                  background: "linear-gradient(90deg, #e03131, #ff6b6b)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  letterSpacing: 0.5,
+                  color: "#ffffff",
                 }}
+                visibleFrom="xs"
               >
                 Lions Den Cinemas
               </Text>
-            </UnstyledButton>
+            </NavLink>
           </Group>
 
           {/* Desktop menu */}
-          <Group visibleFrom="sm">
+          <Group
+            visibleFrom="sm"
+            style={{
+              flex: 2,
+              justifyContent: "flex-end",
+              marginRight: "-40px",
+            }}
+          >
             <Group gap="md">
               {isAuthenticated ? (
                 <>
@@ -165,7 +140,9 @@ const Navbar = () => {
                     variant={activeLink("/") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconHome size={18} />}
-                    style={{ color: "white" }}
+                    style={{
+                      color: "white",
+                    }}
                   >
                     Home
                   </Button>
@@ -176,7 +153,9 @@ const Navbar = () => {
                     variant={activeLink("/movies") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconMovie size={18} />}
-                    style={{ color: "white" }}
+                    style={{
+                      color: "white",
+                    }}
                   >
                     Movies
                   </Button>
@@ -187,7 +166,9 @@ const Navbar = () => {
                     variant={activeLink("/theaters") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconTheater size={18} />}
-                    style={{ color: "white" }}
+                    style={{
+                      color: "white",
+                    }}
                   >
                     Our Theaters
                   </Button>
@@ -200,7 +181,9 @@ const Navbar = () => {
                     }
                     color="primary"
                     leftSection={<IconTicket size={18} />}
-                    style={{ color: "white" }}
+                    style={{
+                      color: "white",
+                    }}
                   >
                     My Tickets
                   </Button>
@@ -256,7 +239,9 @@ const Navbar = () => {
                     variant={activeLink("/") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconHome size={18} />}
-                    style={{ color: "white" }}
+                    style={{
+                      color: "white",
+                    }}
                   >
                     Home
                   </Button>
@@ -267,7 +252,9 @@ const Navbar = () => {
                     variant={activeLink("/movies") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconMovie size={18} />}
-                    style={{ color: "white" }}
+                    style={{
+                      color: "white",
+                    }}
                   >
                     Movies
                   </Button>
@@ -277,7 +264,9 @@ const Navbar = () => {
                     variant={activeLink("/theaters") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconTheater size={18} />}
-                    style={{ color: "white" }}
+                    style={{
+                      color: "white",
+                    }}
                   >
                     Our Theaters
                   </Button>
@@ -285,9 +274,16 @@ const Navbar = () => {
                   <Group gap="sm">
                     <Button
                       variant="subtle"
-                      color="gray"
+                      color="primary"
                       onClick={handleOpenLogin}
-                      leftSection={<IconUser size={18} />}
+                      styles={(theme) => ({
+                        root: {
+                          color: "white",
+                          "&:hover": {
+                            backgroundColor: theme.colors.red[6],
+                          },
+                        },
+                      })}
                     >
                       Login
                     </Button>
@@ -296,6 +292,7 @@ const Navbar = () => {
                       color="red"
                       onClick={handleOpenSignup}
                       leftSection={<IconUserPlus size={18} />}
+                      style={{}}
                     >
                       Sign Up
                     </Button>
@@ -316,6 +313,9 @@ const Navbar = () => {
         </Group>
       </Box>
 
+      {/* Fixed height spacing element */}
+      <Box style={{ height: 60 }} />
+
       <LoginSignupModal
         opened={modalOpened}
         onClose={closeModal}
@@ -329,15 +329,22 @@ const Navbar = () => {
         size="xs"
         padding="md"
         title={
-          <Text
-            fw={700}
-            size="lg"
-            style={{
-              color: redButtonColor,
-            }}
-          >
-            Lions Den Cinemas
-          </Text>
+          <Group align="center" gap="sm">
+            <AnimatedLion
+              size={40}
+              primaryColor="#d4af37"
+              secondaryColor="#6B4226"
+            />
+            <Text
+              fw={700}
+              size="lg"
+              style={{
+                color: redButtonColor,
+              }}
+            >
+              Lions Den Cinemas
+            </Text>
+          </Group>
         }
         hiddenFrom="sm"
         withCloseButton
@@ -440,7 +447,7 @@ const Navbar = () => {
           )}
         </Stack>
       </Drawer>
-    </>
+    </Box>
   );
 };
 

@@ -60,3 +60,7 @@ html[data-color-scheme="light"] {
   color: #c1c2c5;
   background-color: #1a1b1e;
 }
+
+.footer-link:hover {
+  color: var(--primary-color) !important;
+}

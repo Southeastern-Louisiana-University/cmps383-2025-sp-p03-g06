@@ -293,7 +293,10 @@ namespace Selu383.SP25.P03.Api.Controllers
                 ReservationTime = DateTime.UtcNow,
                 TotalPrice = totalPrice,
                 Status = "Confirmed",
-                TicketCode = GenerateTicketCode()
+                TicketCode = GenerateTicketCode(),
+                // Store guest information if available
+                GuestEmail = dto.GuestInfo?.Email,
+                GuestPhone = dto.GuestInfo?.PhoneNumber
             };
 
             _reservations.Add(reservation);
@@ -376,6 +379,30 @@ namespace Selu383.SP25.P03.Api.Controllers
             reservation.Status = "Cancelled";
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        [HttpGet("lookup")]
+        [AllowAnonymous]
+        public async Task<ActionResult<List<ReservationDTO>>> LookupReservationsByEmail([FromQuery] string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest("Email is required");
+            }
+
+            var reservations = await _reservations
+                .Include(r => r.Showtime)
+                    .ThenInclude(s => s!.Movie)
+                .Include(r => r.Showtime)
+                    .ThenInclude(s => s!.TheaterRoom)
+                        .ThenInclude(tr => tr!.Theater)
+                .Include(r => r.ReservationSeats)
+                    .ThenInclude(rs => rs.Seat)
+                .Where(r => r.GuestEmail == email || (r.User != null && r.User.Email == email))
+                .OrderByDescending(r => r.ReservationTime)
+                .ToListAsync();
+
+            return Ok(reservations.Select(r => r.ToDto()));
         }
 
         private static string GenerateTicketCode()

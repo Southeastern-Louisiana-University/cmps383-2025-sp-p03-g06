@@ -237,19 +237,11 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Invalid reservation: missing showtime information");
             }
 
-            // Allow orders from 24 hours before showtime until the end of the movie
+            // Verify the showtime hasn't started yet or is currently playing
             var currentTime = DateTime.UtcNow;
-            var orderWindowStart = reservation.Showtime.StartTime.AddHours(-24);
-            
-            if (currentTime < orderWindowStart)
+            if (currentTime > reservation.Showtime.StartTime.AddMinutes(30))
             {
-                var hoursUntilWindow = (orderWindowStart - currentTime).TotalHours;
-                return BadRequest($"Concession orders will be available {(int)hoursUntilWindow} hours before the showtime");
-            }
-
-            if (reservation.Showtime.EndTime < currentTime)
-            {
-                return BadRequest("Cannot place concession orders after showtime has ended");
+                return BadRequest("Cannot place concession orders more than 30 minutes after the movie has started");
             }
 
             // Validate order items

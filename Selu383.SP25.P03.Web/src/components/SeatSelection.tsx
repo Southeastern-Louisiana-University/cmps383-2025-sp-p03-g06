@@ -143,38 +143,45 @@ const SeatSelection = () => {
 
   useEffect(() => {
     const fetchShowtimeAndSeats = async () => {
-      if (!id) return;
+      if (!id) {
+        setError("Invalid showtime ID");
+        setLoading(false);
+        return;
+      }
 
       try {
+        setLoading(true);
+        setError(null);
+
         const showtimeData = await showtimeApi.getShowtimeById(parseInt(id));
         setShowtime(showtimeData);
-        console.log("Fetched showtime:", showtimeData);
+
+        // Check if showtime is in the past
+        const showtimeDate = new Date(showtimeData.startTime);
+        if (showtimeDate < new Date()) {
+          throw new Error("This showtime has already started");
+        }
 
         const seatsData = await seatApi.getSeatsByRoomId(
           showtimeData.theaterRoomId
         );
-        console.log("Fetched seats:", seatsData);
+        if (!seatsData || seatsData.length === 0) {
+          throw new Error("No seats available for this showtime");
+        }
 
         // Seed some seats as unavailable for demonstration
         const seededSeats = seatsData.map((seat) => {
-          // Make specific seats unavailable
           if (
-            // Middle section of row C
             (seat.row === "C" && seat.number >= 4 && seat.number <= 8) ||
-            // A couple of VIP seats in row A
             (seat.row === "A" && (seat.number === 3 || seat.number === 4)) ||
-            // Some premium seats in row B
             (seat.row === "B" && (seat.number === 5 || seat.number === 6)) ||
-            // One accessible seat
             (seat.seatType === "Accessible" && seat.row === "D")
           ) {
             return { ...seat, isAvailable: false };
           }
           return seat;
         });
-        console.log("Seeded seats:", seededSeats);
 
-        // Add different seat types for demonstration
         const enhancedSeats = seededSeats.map((seat) => {
           if (seat.row === "A") {
             return { ...seat, seatType: "VIP" };
@@ -187,19 +194,26 @@ const SeatSelection = () => {
           }
           return seat;
         });
-        console.log("Enhanced seats:", enhancedSeats);
 
         setSeats(enhancedSeats);
       } catch (error) {
         console.error("Error fetching showtime/seats:", error);
-        setError("Failed to fetch showtime information");
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError("Failed to load showtime information. Please try again.");
+        }
+        // Add a small delay before navigating back to prevent immediate navigation
+        setTimeout(() => {
+          navigate(-1);
+        }, 2000);
       } finally {
         setLoading(false);
       }
     };
 
     fetchShowtimeAndSeats();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleSeatClick = (seat: SeatDTO) => {
     if (!seat.isAvailable) return;
@@ -230,43 +244,80 @@ const SeatSelection = () => {
         ...(guestInfo && { guestInfo }),
       };
 
+      console.log("Creating reservation with data:", reservationData);
       const created = await reservationApi.createReservation(reservationData);
+      console.log("Reservation created successfully:", created);
+
+      if (!created || !created.id) {
+        throw new Error("Created reservation is missing ID");
+      }
 
       modals.open({
-        title: <Text fw={700}>Reservation Confirmed!</Text>,
-        centered: true,
+        title: (
+          <Title order={2} style={{ color: "#fff" }}>
+            Reservation Confirmed!
+          </Title>
+        ),
+        styles: {
+          header: {
+            backgroundColor: "transparent",
+            padding: "24px 24px 0",
+            borderBottom: "none",
+          },
+          content: {
+            backgroundColor: isDark ? "#1A1B1E" : "#2C2E33",
+            padding: "24px",
+          },
+          close: {
+            color: "#fff",
+          },
+        },
         children: (
-          <>
-            <Text mb="md">
+          <Stack>
+            <Text style={{ color: "#fff" }}>
               Your seats have been reserved successfully! Would you like to add
               concessions to your order?
             </Text>
             <Group justify="center" mt="md">
               <Button
                 variant="outline"
-                color={MAIN_COLOR}
+                color="red"
                 onClick={() => {
+                  console.log(
+                    "Skipping concessions, navigating to my-reservations"
+                  );
                   modals.closeAll();
-                  navigate("/my-reservations");
+                  navigate("/my-reservations", { replace: true });
                 }}
               >
-                Skip
+                SKIP
               </Button>
               <Button
-                color={MAIN_COLOR}
+                color="red"
                 onClick={() => {
+                  const concessionUrl = `/concessions/${created.id}`;
+                  console.log("Navigating to concessions:", concessionUrl);
+                  // First store the URL we want to navigate to
+                  const targetUrl = concessionUrl;
+                  // Close the modal
                   modals.closeAll();
-                  navigate(`/concessions/${created.id}`);
+                  // Use setTimeout to ensure navigation happens after modal is closed
+                  setTimeout(() => {
+                    navigate(targetUrl, { replace: true });
+                  }, 0);
                 }}
               >
-                Add Food & Drinks
+                ADD FOOD & DRINKS
               </Button>
             </Group>
-          </>
+          </Stack>
         ),
         onClose: () => {
-          navigate(`/concessions/${created.id}`);
+          console.log("Modal closed, navigating to my-reservations");
+          navigate("/my-reservations", { replace: true });
         },
+        closeOnClickOutside: false,
+        closeOnEscape: false,
       });
     } catch (error) {
       console.error("Error creating reservation:", error);
@@ -380,32 +431,35 @@ const SeatSelection = () => {
     }
   };
 
+  // Show loading state with a nice centered loader
   if (loading) {
     return (
-      <Center my="xl">
-        <Loader size="lg" color={MAIN_COLOR} />
+      <Center style={{ height: "calc(100vh - 60px)" }}>
+        <Stack align="center" gap="md">
+          <Loader size="xl" />
+          <Text size="lg" c="dimmed">
+            Loading seat selection...
+          </Text>
+        </Stack>
       </Center>
     );
   }
 
-  if (error && !showtime) {
+  // Show error state with a nice error message
+  if (error) {
     return (
-      <Container>
-        <Alert
-          icon={<IconAlertCircle size={16} />}
-          title="Error"
-          color="red"
-          my="xl"
-        >
-          {error}
-        </Alert>
-        <Button
-          variant="outline"
-          onClick={() => navigate(-1)}
-          leftSection={<IconArrowLeft size={16} />}
-        >
-          Go Back
-        </Button>
+      <Container size="md" py="xl">
+        <Paper shadow="sm" p="xl" withBorder>
+          <Stack align="center" gap="md">
+            <IconAlertCircle size={48} color="red" />
+            <Title order={2} ta="center">
+              {error}
+            </Title>
+            <Text c="dimmed" ta="center">
+              You will be redirected back to the showtimes page...
+            </Text>
+          </Stack>
+        </Paper>
       </Container>
     );
   }

@@ -114,25 +114,32 @@ const LandingPage = () => {
               padding: "0 20px",
             },
             control: {
-              width: 100,
-              height: 60,
-              backgroundColor: "rgba(224, 224, 224, 0.9)",
-              color: "#000000",
-              borderRadius: "8px",
-              border: "2px solid rgba(255, 255, 255, 0.8)",
-              boxShadow: "0 0 0 4px rgba(0, 0, 0, 0.2)",
+              width: 80,
+              height: 80,
+              backgroundColor: "#e03131",
+              color: "white",
+              borderRadius: "12px",
+              border: "3px solid black",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
               transition: "all 0.2s ease",
-              backdropFilter: "blur(4px)",
-              outline: "1px solid rgba(0, 0, 0, 0.1)",
+              outline: "none",
+              "& svg": {
+                width: 40,
+                height: 40,
+              },
               "&:hover": {
-                backgroundColor: "rgba(192, 192, 192, 0.95)",
-                boxShadow: "0 0 0 6px rgba(0,0,0,0.3)",
-                transform: "scale(1.05)",
-                border: "2px solid rgba(255, 255, 255, 1)",
+                backgroundColor: "#c92a2a",
+                color: "white",
+                boxShadow: "0 6px 16px rgba(0, 0, 0, 0.4)",
+                transform: "scale(1.1)",
+                border: "3px solid black",
+              },
+              "&:active": {
+                transform: "scale(0.95)",
               },
             },
             controls: {
-              padding: "0 80px",
+              padding: "0 40px",
               justifyContent: "space-between",
               width: "100%",
             },
@@ -140,13 +147,14 @@ const LandingPage = () => {
               bottom: "-30px",
             },
             indicator: {
-              width: 10,
-              height: 10,
-              backgroundColor: "rgba(136, 136, 136, 0.7)",
-              border: "1px solid rgba(0, 0, 0, 0.2)",
+              width: 16,
+              height: 16,
+              backgroundColor: "#e03131",
+              borderRadius: "50%",
+              transition: "all 0.2s ease",
               "&[data-active]": {
-                backgroundColor: "rgba(0, 0, 0, 0.9)",
-                border: "1px solid rgba(255, 255, 255, 0.5)",
+                backgroundColor: "#c92a2a",
+                transform: "scale(1.2)",
               },
             },
           }}
@@ -207,25 +215,12 @@ const LandingPage = () => {
                       </Group>
                     </Badge>
 
-                    {movie.rating && (
-                      <MovieRating
-                        rating={movie.rating}
-                        size="sm"
-                        showTooltip={true}
-                      />
-                    )}
-                  </Group>
-
-                  <Group gap={5} mt={5}>
-                    <Rating
-                      value={getRatingStars(movie.ratingScore)}
-                      fractions={2}
-                      readOnly
+                    <MovieRating
+                      rating={movie.rating}
+                      score={movie.ratingScore}
                       size="sm"
+                      showTooltip={true}
                     />
-                    <Text size="xs" c="dimmed">
-                      {formatScore(movie.ratingScore)}/10
-                    </Text>
                   </Group>
 
                   <Text size="xs" c="dimmed" ta="center" mb={5}>

@@ -31,8 +31,10 @@ import {
   IconStar,
   IconStarFilled,
   IconStarHalfFilled,
+  IconChevronDown,
+  IconChevronUp,
 } from "@tabler/icons-react";
-import { DateInput } from "@mantine/dates";
+import { DatePickerInput } from "@mantine/dates";
 import { movieApi, MovieDTO, theaterApi } from "../services/api";
 import MovieRating from "./MovieRating";
 
@@ -102,7 +104,41 @@ const MovieManager: React.FC = () => {
     try {
       setLoading(true);
       const data = await movieApi.getAllMovies();
-      setMovies(data);
+
+      // Fetch theaters for each movie
+      const moviesWithTheaters = await Promise.all(
+        data.map(async (movie) => {
+          try {
+            const theaterIds = await movieApi.getTheatersByMovie(movie.id);
+            const theaterPromises = theaterIds.map((id) =>
+              theaterApi.getTheaterById(id)
+            );
+            const theaters = await Promise.all(theaterPromises);
+            const validTheaters = theaters.filter(
+              (theater) => theater !== null
+            );
+
+            return {
+              ...movie,
+              theaters: validTheaters.map((theater) => ({
+                id: theater.id,
+                name: theater.name,
+              })),
+            };
+          } catch (error) {
+            console.error(
+              `Failed to fetch theaters for movie ${movie.id}:`,
+              error
+            );
+            return {
+              ...movie,
+              theaters: [],
+            };
+          }
+        })
+      );
+
+      setMovies(moviesWithTheaters);
       setError(null);
     } catch (err) {
       setError("Failed to load movies");
@@ -198,17 +234,11 @@ const MovieManager: React.FC = () => {
         await Promise.all([
           // Remove from unselected theaters
           ...theatersToRemove.map((theaterId) =>
-            theaterApi.unassignMovieFromTheater({
-              movieId: savedMovie.id,
-              theaterId: theaterId,
-            })
+            movieApi.unassignTheaterFromMovie(savedMovie.id, theaterId)
           ),
           // Add to selected theaters
           ...theatersToAdd.map((theaterId) =>
-            theaterApi.assignMovieToTheater({
-              movieId: savedMovie.id,
-              theaterId: theaterId,
-            })
+            movieApi.assignTheaterToMovie(savedMovie.id, theaterId)
           ),
         ]);
       }
@@ -245,30 +275,34 @@ const MovieManager: React.FC = () => {
   }
 
   return (
-    <Box p="xl">
-      <Paper p="xl" radius="md">
+    <Box
+      p="xl"
+      style={{
+        maxWidth: "100%",
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      <Paper
+        p="xl"
+        radius="md"
+        style={{
+          width: "95%",
+          maxWidth: "1600px",
+          backgroundColor: "var(--mantine-color-dark-7)",
+          margin: "0 auto",
+        }}
+      >
         <Group justify="space-between" mb="xl">
-          <Title order={2}>Movie Management</Title>
+          <Title order={2} c="white">
+            Movie Management
+          </Title>
           <Button
-            onClick={() => {
-              setIsEditing(false);
-              setCurrentMovie(null);
-              setFormData({
-                title: "",
-                description: "",
-                durationMinutes: 90,
-                rating: "PG",
-                posterImageUrl: "",
-                trailerUrl: "",
-                releaseDate: new Date().toISOString(),
-                genres: [],
-                ratingScore: undefined,
-                theaters: [],
-              });
-              setIsModalOpen(true);
-            }}
+            onClick={handleCreateMovie}
             leftSection={<IconPlus size={18} />}
+            variant="filled"
             color="red"
+            radius="md"
           >
             Add Movie
           </Button>
@@ -280,29 +314,56 @@ const MovieManager: React.FC = () => {
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
           mb="lg"
           leftSection={<IconSearch size={18} />}
+          styles={{
+            input: {
+              backgroundColor: "var(--mantine-color-dark-6)",
+            },
+          }}
         />
 
-        <Table striped highlightOnHover withTableBorder withColumnBorders>
+        <Table
+          striped
+          highlightOnHover
+          withTableBorder
+          withColumnBorders
+          style={{ width: "100%" }}
+          styles={{
+            th: {
+              backgroundColor: "var(--mantine-color-dark-6)",
+              color: "var(--mantine-color-white)",
+              padding: "12px 16px",
+            },
+            td: {
+              padding: "12px 16px",
+            },
+            tr: {
+              "&:hover": {
+                backgroundColor: "var(--mantine-color-dark-5)",
+              },
+            },
+          }}
+        >
           <Table.Thead>
             <Table.Tr>
-              <Table.Th style={{ width: "80px" }}></Table.Th>
-              <Table.Th style={{ width: "25%" }}>Title</Table.Th>
-              <Table.Th style={{ width: "100px", textAlign: "center" }}>
+              <Table.Th style={{ width: "60px", textAlign: "center" }}>
+                Poster
+              </Table.Th>
+              <Table.Th style={{ width: "20%" }}>Title</Table.Th>
+              <Table.Th style={{ width: "80px", textAlign: "center" }}>
                 Duration
               </Table.Th>
-              <Table.Th style={{ width: "100px", textAlign: "center" }}>
+              <Table.Th style={{ width: "80px", textAlign: "center" }}>
                 Rating
               </Table.Th>
-              <Table.Th style={{ width: "150px", textAlign: "center" }}>
+              <Table.Th style={{ width: "100px", textAlign: "center" }}>
                 Stars
               </Table.Th>
-              <Table.Th style={{ width: "25%", textAlign: "center" }}>
-                Genres
+              <Table.Th style={{ width: "20%" }}>Genres</Table.Th>
+              <Table.Th style={{ width: "20%" }}>Theaters</Table.Th>
+              <Table.Th style={{ width: "100px", textAlign: "center" }}>
+                Release
               </Table.Th>
-              <Table.Th style={{ width: "120px", textAlign: "center" }}>
-                Release Date
-              </Table.Th>
-              <Table.Th style={{ width: "120px", textAlign: "center" }}>
+              <Table.Th style={{ width: "80px", textAlign: "center" }}>
                 Actions
               </Table.Th>
             </Table.Tr>
@@ -314,7 +375,13 @@ const MovieManager: React.FC = () => {
               )
               .map((movie) => (
                 <Table.Tr key={movie.id}>
-                  <Table.Td style={{ textAlign: "center", padding: "8px" }}>
+                  <Table.Td
+                    style={{
+                      textAlign: "center",
+                      padding: "8px",
+                      verticalAlign: "middle",
+                    }}
+                  >
                     <Image
                       src={movie.posterImageUrl || "/images/default-movie.jpg"}
                       h={60}
@@ -323,45 +390,79 @@ const MovieManager: React.FC = () => {
                       alt={movie.title}
                     />
                   </Table.Td>
-                  <Table.Td style={{ padding: "16px" }}>
+                  <Table.Td style={{ verticalAlign: "middle" }}>
                     <Text fw={500}>{movie.title}</Text>
                   </Table.Td>
-                  <Table.Td style={{ textAlign: "center" }}>
+                  <Table.Td
+                    style={{ textAlign: "center", verticalAlign: "middle" }}
+                  >
                     {movie.durationMinutes} min
                   </Table.Td>
-                  <Table.Td style={{ textAlign: "center" }}>
+                  <Table.Td
+                    style={{ textAlign: "center", verticalAlign: "middle" }}
+                  >
                     <MovieRating
                       rating={movie.rating}
-                      size="sm"
-                      showTooltip={false}
-                    />
-                  </Table.Td>
-                  <Table.Td style={{ textAlign: "center" }}>
-                    <MovieRating
                       score={movie.ratingScore}
                       size="sm"
-                      showTooltip={false}
+                      showTooltip={true}
                     />
                   </Table.Td>
-                  <Table.Td style={{ textAlign: "center" }}>
-                    <Group gap={4} justify="center" wrap="wrap">
+                  <Table.Td
+                    style={{ textAlign: "center", verticalAlign: "middle" }}
+                  >
+                    {movie.ratingScore ? movie.ratingScore.toFixed(1) : "-"}
+                  </Table.Td>
+                  <Table.Td style={{ verticalAlign: "middle" }}>
+                    <Group gap={4} wrap="wrap">
                       {movie.genres.map((genre, index) => (
                         <Badge
                           key={index}
                           size="sm"
-                          variant="light"
+                          variant="filled"
                           color="red"
+                          radius="sm"
                         >
                           {genre}
                         </Badge>
                       ))}
                     </Group>
                   </Table.Td>
-                  <Table.Td style={{ textAlign: "center" }}>
+                  <Table.Td style={{ verticalAlign: "middle" }}>
+                    <Group gap={4} wrap="wrap">
+                      {Array.isArray(movie.theaters) &&
+                      movie.theaters.length > 0 ? (
+                        movie.theaters.map((theater) => (
+                          <Badge
+                            key={theater.id}
+                            size="sm"
+                            variant="filled"
+                            color="blue"
+                            radius="sm"
+                          >
+                            {theater.name}
+                          </Badge>
+                        ))
+                      ) : (
+                        <Text
+                          size="sm"
+                          c="dimmed"
+                          style={{ fontStyle: "italic" }}
+                        >
+                          Not showing
+                        </Text>
+                      )}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td
+                    style={{ textAlign: "center", verticalAlign: "middle" }}
+                  >
                     {new Date(movie.releaseDate).toLocaleDateString()}
                   </Table.Td>
-                  <Table.Td style={{ textAlign: "center" }}>
-                    <Group gap={8} justify="center">
+                  <Table.Td
+                    style={{ textAlign: "center", verticalAlign: "middle" }}
+                  >
+                    <Group gap={8} justify="center" wrap="nowrap">
                       <ActionIcon
                         variant="light"
                         color="blue"
@@ -391,6 +492,14 @@ const MovieManager: React.FC = () => {
           onClose={() => setIsModalOpen(false)}
           title={isEditing ? "Edit Movie" : "New Movie"}
           size="lg"
+          styles={{
+            header: {
+              backgroundColor: "var(--mantine-color-dark-7)",
+            },
+            content: {
+              backgroundColor: "var(--mantine-color-dark-7)",
+            },
+          }}
         >
           <Stack>
             <TextInput
@@ -437,16 +546,89 @@ const MovieManager: React.FC = () => {
                 handleInputChange("trailerUrl", e.currentTarget.value)
               }
             />
-            <DateInput
+            <DatePickerInput
               label="Release Date"
               value={new Date(formData.releaseDate)}
               onChange={(val) =>
-                handleInputChange(
-                  "releaseDate",
-                  val ? val.toISOString() : new Date().toISOString()
-                )
+                handleInputChange("releaseDate", val ? val.toISOString() : "")
               }
-              required
+              placeholder="Select release date"
+              clearable
+              size="sm"
+              radius="md"
+              popoverProps={{
+                width: "target",
+                withinPortal: true,
+                styles: {
+                  dropdown: {
+                    backgroundColor: "var(--mantine-color-dark-7)",
+                    padding: "20px",
+                    minWidth: "340px",
+                    display: "flex",
+                    justifyContent: "center",
+                  },
+                },
+              }}
+              nextIcon={<IconChevronDown size={18} />}
+              previousIcon={<IconChevronUp size={18} />}
+              styles={{
+                input: {
+                  width: "200px",
+                },
+                calendarHeader: {
+                  padding: "8px 0",
+                  width: "300px",
+                  margin: "0 auto",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                },
+                calendarHeaderLevel: {
+                  fontSize: "15px",
+                  fontWeight: 500,
+                  textAlign: "center",
+                  flex: 1,
+                },
+                calendarHeaderControl: {
+                  width: "28px",
+                  height: "28px",
+                  backgroundColor: "var(--mantine-color-dark-6)",
+                  margin: "0 12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  "&:hover": {
+                    backgroundColor: "var(--mantine-color-dark-5)",
+                  },
+                },
+                day: {
+                  height: "38px",
+                  width: "38px",
+                  backgroundColor: "var(--mantine-color-dark-6)",
+                  margin: "2px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  "&:hover": {
+                    backgroundColor: "var(--mantine-color-dark-5)",
+                  },
+                  "&[data-selected]": {
+                    backgroundColor: "var(--mantine-color-blue-filled)",
+                  },
+                },
+                weekday: {
+                  width: "38px",
+                  height: "38px",
+                  padding: "8px 0",
+                  textAlign: "center",
+                },
+                month: {
+                  padding: "4px 0",
+                  width: "300px",
+                  margin: "0 auto",
+                },
+              }}
+              dropdownType="popover"
             />
             <NumberInput
               label="Stars"
@@ -491,6 +673,30 @@ const MovieManager: React.FC = () => {
               placeholder="Select theaters where this movie will be shown"
               searchable
               clearable
+              styles={{
+                input: {
+                  backgroundColor: "var(--mantine-color-dark-6)",
+                },
+                pill: {
+                  backgroundColor: "var(--mantine-color-blue-filled)",
+                  color: "white",
+                  fontSize: "13px",
+                  padding: "2px 8px",
+                  borderRadius: "4px",
+                  margin: "3px",
+                },
+                dropdown: {
+                  backgroundColor: "var(--mantine-color-dark-6)",
+                },
+                option: {
+                  "&[data-selected]": {
+                    backgroundColor: "var(--mantine-color-blue-filled)",
+                  },
+                  "&[data-hovered]": {
+                    backgroundColor: "var(--mantine-color-dark-5)",
+                  },
+                },
+              }}
             />
             <Group justify="right" mt="md">
               <Button variant="outline" onClick={() => setIsModalOpen(false)}>

@@ -1,5 +1,7 @@
 // src/services/api.ts
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
+import { useQueryClient } from "react-query";
+import { apiCache } from "./apiCache";
 
 // Base URL for API requests
 const API_BASE_URL = "/api";
@@ -807,23 +809,37 @@ export const movieApi = {
 // Showtime API methods
 export const showtimeApi = {
   getAllShowtimes: async (): Promise<ShowtimeDTO[]> => {
+    console.log("Starting getAllShowtimes request");
     const cachedShowtimes = apiCache.get<ShowtimeDTO[]>("showtimes");
-    if (cachedShowtimes) return cachedShowtimes;
+    if (cachedShowtimes) {
+      console.log("Returning cached showtimes");
+      return cachedShowtimes;
+    }
 
     try {
+      console.log("Making API request to fetch showtimes");
       const data = await axiosWithRetry<ShowtimeDTO[]>({
         url: `/showtimes`,
         method: "GET",
+      });
+
+      console.log("Received showtimes response:", {
+        dataLength: data?.length,
       });
 
       // Cache showtimes for 5 minutes
       apiCache.set("showtimes", data, 5 * 60 * 1000);
       return data;
     } catch (error) {
-      return handleApiError(
-        error,
-        "Failed to fetch showtimes. Please try again later."
-      );
+      console.error("Error in getAllShowtimes:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("API Error Details:", {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+        });
+      }
+      throw error;
     }
   },
 
@@ -881,13 +897,20 @@ export const showtimeApi = {
         method: "GET",
       });
 
+      if (!data) {
+        throw new Error("Showtime not found");
+      }
+
       // Cache individual showtime for 5 minutes
       apiCache.set(cacheKey, data, 5 * 60 * 1000);
       return data;
-    } catch (error) {
-      return handleApiError(
-        error,
-        "Failed to fetch showtime details. Please try again later."
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new Error("Showtime not found");
+      }
+      throw new Error(
+        error.response?.data ||
+          "Failed to fetch showtime details. Please try again later."
       );
     }
   },
@@ -906,8 +929,7 @@ export const showtimeApi = {
       });
 
       // Clear showtimes cache
-      apiCache.delete("showtimes");
-      apiCache.delete("upcoming_showtimes");
+      apiCache.invalidate(/^showtimes/);
       return data;
     } catch (error) {
       return handleApiError(
@@ -921,41 +943,73 @@ export const showtimeApi = {
     id: number,
     showtime: ShowtimeDTO
   ): Promise<ShowtimeDTO> => {
+    console.log(`Attempting to update showtime ${id} with data:`, showtime);
     try {
       const data = await axiosWithRetry<ShowtimeDTO>({
         url: `/showtimes/${id}`,
         method: "PUT",
         data: showtime,
       });
-
-      // Clear showtimes cache
-      apiCache.delete("showtimes");
-      apiCache.delete("upcoming_showtimes");
-      apiCache.delete(`showtime_${id}`);
+      console.log(`Successfully updated showtime ${id}`);
+      apiCache.invalidate(/^showtimes/);
       return data;
     } catch (error) {
-      return handleApiError(
-        error,
-        "Failed to update showtime. Please try again later."
+      console.error(`Error updating showtime ${id}:`, error);
+      if (axios.isAxiosError(error)) {
+        console.error("Update error details:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          config: error.config,
+        });
+      }
+      throw new Error(
+        error instanceof Error ? error.message : "Failed to update showtime"
       );
     }
   },
 
   deleteShowtime: async (id: number): Promise<void> => {
+    console.log(`Attempting to delete showtime ${id}`);
     try {
       await axiosWithRetry<void>({
         url: `/showtimes/${id}`,
         method: "DELETE",
       });
+      console.log(`Successfully deleted showtime ${id}`);
+      apiCache.invalidate(/^showtimes/);
+    } catch (error) {
+      console.error(`Error deleting showtime ${id}:`, error);
+      if (axios.isAxiosError(error)) {
+        console.error("Delete error details:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          config: error.config,
+        });
+      }
+      throw new Error(
+        error instanceof Error ? error.message : "Failed to delete showtime"
+      );
+    }
+  },
 
-      // Clear showtimes cache
-      apiCache.delete("showtimes");
-      apiCache.delete("upcoming_showtimes");
-      apiCache.delete(`showtime_${id}`);
+  getShowtimesByTheater: async (theaterId: number): Promise<ShowtimeDTO[]> => {
+    const cacheKey = `theater_showtimes_${theaterId}`;
+    const cachedShowtimes = apiCache.get<ShowtimeDTO[]>(cacheKey);
+    if (cachedShowtimes) return cachedShowtimes;
+
+    try {
+      const data = await axiosWithRetry<ShowtimeDTO[]>({
+        url: `/showtimes/theater/${theaterId}`,
+        method: "GET",
+      });
+
+      // Cache theater showtimes for 5 minutes
+      apiCache.set(cacheKey, data, 5 * 60 * 1000);
+      return data;
     } catch (error) {
       return handleApiError(
         error,
-        "Failed to delete showtime. Please try again later."
+        "Failed to fetch theater showtimes. Please try again later."
       );
     }
   },
@@ -1037,7 +1091,22 @@ export const reservationApi = {
       );
     }
   },
+
+  lookupReservationsByEmail: async (
+    email: string
+  ): Promise<ReservationDTO[]> => {
+    try {
+      return await axiosWithRetry<ReservationDTO[]>({
+        url: `/reservations/lookup`,
+        method: "GET",
+        params: { email },
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to look up reservations");
+    }
+  },
 };
+
 // Concession API methods
 export const concessionApi = {
   getCategories: async (): Promise<ConcessionCategoryDTO[]> => {

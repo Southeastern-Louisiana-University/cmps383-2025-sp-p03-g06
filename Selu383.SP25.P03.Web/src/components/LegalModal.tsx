@@ -1,6 +1,20 @@
 // src/components/LegalModal.tsx
-import { Modal, Box, Text, Title, ScrollArea, Divider } from "@mantine/core";
+import {
+  Modal,
+  Box,
+  Text,
+  Title,
+  ScrollArea,
+  Divider,
+  useMantineTheme,
+  Group,
+  Stack,
+  ActionIcon,
+  Paper,
+} from "@mantine/core";
 import { useState, useEffect } from "react";
+import AnimatedLion from "./AnimatedLion";
+import { IconX } from "@tabler/icons-react";
 
 interface LegalModalProps {
   opened: boolean;
@@ -56,7 +70,7 @@ We implement industry-standard safeguards (encryption, access controls) to prote
 
 Our Services use cookies and similar technologies to enhance functionality and analytics. You can manage these via your browser settings.  
 
-## Children’s Privacy  
+## Children's Privacy  
 
 Our Services are not intended for children under 13. We do not knowingly collect personal data from minors without parental consent.  
 
@@ -144,6 +158,7 @@ www.lionsdencinemas.com
 const LegalModal = ({ opened, onClose, type }: LegalModalProps) => {
   const [content, setContent] = useState<string>("");
   const [title, setTitle] = useState<string>("");
+  const theme = useMantineTheme();
 
   useEffect(() => {
     if (type === "privacy") {
@@ -159,12 +174,10 @@ const LegalModal = ({ opened, onClose, type }: LegalModalProps) => {
     content.split("\n").map((rawLine, idx) => {
       const line = rawLine.trim();
 
-      // true blank line → insert an empty div (or <br />)
       if (line === "") {
         return <Box key={idx} my="sm" />;
       }
 
-      // headings
       if (line.startsWith("##")) {
         return (
           <Title
@@ -173,9 +186,9 @@ const LegalModal = ({ opened, onClose, type }: LegalModalProps) => {
             mt={20}
             mb={10}
             style={{
-              borderBottom: "2px solid var(--primary-color)",
+              borderBottom: `2px solid ${theme.colors.red[6]}`,
               paddingBottom: 5,
-              color: "var(--primary-color)",
+              color: theme.colors.red[6],
             }}
           >
             {line.replace(/^##\s*/, "")}
@@ -183,8 +196,6 @@ const LegalModal = ({ opened, onClose, type }: LegalModalProps) => {
         );
       }
 
-      // bold + italic parsing
-      // split on **bold**
       const boldSplit = line.split(/\*\*(.*?)\*\*/g);
       const withBold = boldSplit.map((chunk, i) =>
         i % 2 === 1 ? (
@@ -196,7 +207,6 @@ const LegalModal = ({ opened, onClose, type }: LegalModalProps) => {
         )
       );
 
-      // within each, split on *italic*
       const final = withBold.map((part, j) => {
         if (typeof part === "string") {
           return part.split(/\*(.*?)\*/g).map((sub, k) =>
@@ -213,7 +223,7 @@ const LegalModal = ({ opened, onClose, type }: LegalModalProps) => {
       });
 
       return (
-        <Text key={idx} component="div" style={{ lineHeight: 1.7 }}>
+        <Text key={idx} component="div" style={{ lineHeight: 1.7 }} c="gray.3">
           {final}
         </Text>
       );
@@ -225,39 +235,43 @@ const LegalModal = ({ opened, onClose, type }: LegalModalProps) => {
       onClose={onClose}
       size="lg"
       padding="xl"
-      title={
-        <Title
-          order={2}
-          style={{
-            color: "var(--primary-color)",
-            borderBottom: "3px solid var(--primary-color)",
-            paddingBottom: 10,
-            width: "100%",
-          }}
-        >
-          {title}
-        </Title>
-      }
-      styles={{
-        header: { marginBottom: 10, width: "100%" },
-        title: { textAlign: "center", fontWeight: "bold" },
-        body: { padding: "0 20px" },
-      }}
-      overlayProps={{ backgroundOpacity: 0.65, blur: 3 }}
       centered
+      withCloseButton={false}
+      overlayProps={{
+        backgroundOpacity: 0.55,
+        blur: 3,
+      }}
+      styles={{
+        content: {
+          backgroundColor: theme.colors.dark[7],
+        },
+        header: {
+          display: "none",
+        },
+      }}
     >
-      <Divider mb={20} />
-      <ScrollArea h={500} offsetScrollbars scrollbarSize={6}>
-        <Box
-          style={{
-            padding: "1rem",
-            background: "var(--bg-color)",
-            color: "var(--text-color)",
-          }}
-        >
-          {processedContent()}
-        </Box>
-      </ScrollArea>
+      <Stack gap="md">
+        <Group justify="space-between" align="center">
+          <Text size="xl" fw={700}>
+            {type === "privacy" ? "Privacy Policy" : "Terms of Service"}
+          </Text>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            onClick={onClose}
+            aria-label="Close modal"
+          >
+            <IconX size={20} />
+          </ActionIcon>
+        </Group>
+        <ScrollArea h={500}>
+          <Paper p="md" bg="dark.8" radius="md">
+            <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+              {processedContent()}
+            </Text>
+          </Paper>
+        </ScrollArea>
+      </Stack>
     </Modal>
   );
 };

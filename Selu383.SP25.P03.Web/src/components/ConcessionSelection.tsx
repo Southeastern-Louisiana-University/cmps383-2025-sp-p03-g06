@@ -19,6 +19,8 @@ import {
   Tabs,
   TextInput,
   useMantineColorScheme,
+  Group,
+  Stack,
 } from "@mantine/core";
 import {
   IconAlertCircle,
@@ -45,7 +47,7 @@ const ConcessionSelection = () => {
   const navigate = useNavigate();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
-  const { isAuthenticated, isGuest, guestInfo } = useAuth();
+  const { isGuest, guestInfo } = useAuth();
 
   const [reservation, setReservation] = useState<ReservationDTO | null>(null);
   const [categories, setCategories] = useState<ConcessionCategoryDTO[]>([]);
@@ -141,13 +143,7 @@ const ConcessionSelection = () => {
               }
             : undefined,
       });
-      navigate(isAuthenticated ? "/my-reservations" : "/", {
-        state: {
-          message: isAuthenticated
-            ? "Your order has been placed!"
-            : "Your order has been placed! You'll receive a confirmation email.",
-        },
-      });
+      navigate("/my-reservations");
     } catch (err) {
       console.error(err);
       if (err instanceof Error) {
@@ -160,15 +156,6 @@ const ConcessionSelection = () => {
     }
   };
 
-  const handleSkip = () => {
-    navigate(isAuthenticated ? "/my-reservations" : "/", {
-      state: {
-        message: isAuthenticated
-          ? "Your reservation is confirmed!"
-          : "Your reservation is confirmed! You'll receive a confirmation email.",
-      },
-    });
-  };
 
   if (loading) {
     return (
@@ -226,22 +213,15 @@ const ConcessionSelection = () => {
                 marginBottom: 24,
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: 16,
-                }}
-              >
+              <Group mb={24}>
                 <IconShoppingCart size={24} color="#e03131" />
-                <Text
-                  style={{ fontWeight: 600, color: "#e03131", marginLeft: 8 }}
-                >
+                <Text fw={600} c="#e03131">
                   What tasty treats can we get for you?
                 </Text>
-              </div>
+              </Group>
+
               {reservation && (
-                <Alert color="red" style={{ marginBottom: 16 }} radius={4}>
+                <Alert color="red" radius="md" mb={24}>
                   <Text>
                     Seats reserved for "{reservation.movieTitle}" at{" "}
                     {new Date(reservation.showtimeStartTime).toLocaleTimeString(
@@ -252,11 +232,13 @@ const ConcessionSelection = () => {
                   </Text>
                 </Alert>
               )}
+
               <Tabs
                 value={activeCategory}
                 onChange={(value: SetStateAction<string | null>) =>
                   setActiveCategory(value)
                 }
+                mb={24}
               >
                 <Tabs.List>
                   {categories.map((cat) => (
@@ -266,26 +248,25 @@ const ConcessionSelection = () => {
                   ))}
                 </Tabs.List>
               </Tabs>
-              <Grid gutter="lg" style={{ marginTop: 16 }}>
+
+              <Grid gutter="lg">
                 {items
                   .filter((i) =>
                     activeCategory ? i.categoryId === +activeCategory : true
                   )
                   .map((item) => (
-                    <Grid.Col key={item.id} span={{ base: 6, md: 4 }}>
+                    <Grid.Col key={item.id} span={{ base: 12, sm: 6, md: 4 }}>
                       <Card
+                        padding="md"
+                        radius="md"
                         style={{
                           backgroundColor: isDark ? "#2a2a2a" : "#fafafa",
-                          marginBottom: 16,
+                          height: "100%",
+                          display: "flex",
+                          flexDirection: "column",
                         }}
                       >
-                        <Card.Section
-                          style={{
-                            overflow: "hidden",
-                            borderRadius: 8,
-                            marginBottom: 8,
-                          }}
-                        >
+                        <Card.Section>
                           <Image
                             src={
                               item.imageUrl
@@ -295,49 +276,38 @@ const ConcessionSelection = () => {
                                     ?.replace(".jpg", "")}.jpg`
                                 : undefined
                             }
-                            height={120}
+                            height={160}
                             alt={item.name}
                             fallbackSrc="https://placehold.co/400x200/gray/white?text=Food+Item"
+                            style={{ objectFit: "cover" }}
                           />
                         </Card.Section>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: 8,
-                          }}
-                        >
-                          <Text style={{ fontWeight: 500, color: "#fff" }}>
+
+                        <Group justify="space-between" mt="md" mb="xs">
+                          <Text fw={500} c={isDark ? "#fff" : "#000"} size="lg">
                             {item.name}
                           </Text>
-                          <Badge color="red" variant="outline">
+                          <Badge color="red" variant="filled" size="lg">
                             ${item.price.toFixed(2)}
                           </Badge>
-                        </div>
-                        <Text
-                          style={{
-                            color: "#ccc",
-                            fontSize: 14,
-                            marginBottom: 16,
-                          }}
-                        >
+                        </Group>
+
+                        <Text c="dimmed" size="sm" mb="md" style={{ flex: 1 }}>
                           {item.description || "No description available."}
                         </Text>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <div
-                            style={{ display: "flex", alignItems: "center" }}
-                          >
+
+                        <Group justify="space-between" align="center">
+                          <Group gap="xs">
                             <Button
                               size="sm"
-                              variant="light"
+                              variant="filled"
                               color="red"
+                              radius="md"
+                              style={{
+                                width: 32,
+                                height: 32,
+                                padding: 0,
+                              }}
                               onClick={() =>
                                 handleQuantityChange(
                                   item.id,
@@ -348,18 +318,23 @@ const ConcessionSelection = () => {
                               <IconMinus size={16} />
                             </Button>
                             <Text
-                              style={{
-                                color: "#fff",
-                                fontWeight: 500,
-                                margin: "0 8px",
-                              }}
+                              fw={500}
+                              w={30}
+                              ta="center"
+                              c={isDark ? "#fff" : "#000"}
                             >
                               {getItemQuantity(item.id)}
                             </Text>
                             <Button
                               size="sm"
-                              variant="light"
+                              variant="filled"
                               color="red"
+                              radius="md"
+                              style={{
+                                width: 32,
+                                height: 32,
+                                padding: 0,
+                              }}
                               onClick={() =>
                                 handleQuantityChange(
                                   item.id,
@@ -369,18 +344,26 @@ const ConcessionSelection = () => {
                             >
                               <IconPlus size={16} />
                             </Button>
-                          </div>
+                          </Group>
+
                           {getItemQuantity(item.id) > 0 && (
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="subtle"
                               color="red"
+                              radius="md"
                               onClick={() => handleQuantityChange(item.id, 0)}
+                              style={{
+                                width: 32,
+                                height: 32,
+                                padding: 0,
+                              }}
                             >
-                              <IconTrash size={14} />
+                              <IconTrash size={16} />
                             </Button>
                           )}
-                        </div>
+                        </Group>
+
                         {getItemQuantity(item.id) > 0 && (
                           <TextInput
                             placeholder="Special instructions..."
@@ -391,7 +374,9 @@ const ConcessionSelection = () => {
                                 e.currentTarget.value
                               )
                             }
-                            style={{ marginTop: 8 }}
+                            mt="md"
+                            size="sm"
+                            radius="md"
                           />
                         )}
                       </Card>
@@ -400,6 +385,7 @@ const ConcessionSelection = () => {
               </Grid>
             </Paper>
           </Grid.Col>
+
           <Grid.Col span={{ base: 12, md: 4 }}>
             <Paper
               style={{
@@ -407,78 +393,115 @@ const ConcessionSelection = () => {
                 padding: 24,
                 boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
                 borderRadius: 8,
+                position: "sticky",
+                top: 24,
               }}
             >
-              <Title order={4} style={{ color: "#fff", marginBottom: 16 }}>
+              <Title order={4} c={isDark ? "#fff" : "#000"} mb="xl">
                 Your Order
               </Title>
+
               {cart.length === 0 ? (
-                <Text style={{ color: "#ccc" }}>
+                <Text c="dimmed" ta="center" mb="xl">
                   No items yet. Add some popcorn!
                 </Text>
               ) : (
-                <>
+                <Stack gap="md">
                   {cart.map((ci) => {
                     const item = items.find(
                       (i) => i.id === ci.concessionItemId
                     );
                     if (!item) return null;
                     return (
-                      <div
+                      <Group
                         key={item.id}
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginBottom: 8,
-                        }}
+                        justify="space-between"
+                        wrap="nowrap"
+                        align="center"
                       >
-                        <Text style={{ color: "#fff" }}>{item.name}</Text>
-                        <Badge color="red" style={{ margin: "0 8px" }}>
-                          {ci.quantity}×
-                        </Badge>
-                        <Text style={{ color: "#fff" }}>
-                          ${(item.price * ci.quantity).toFixed(2)}
-                        </Text>
-                      </div>
+                        <Group gap="xs" wrap="nowrap" style={{ flex: 1 }}>
+                          <Text c={isDark ? "#fff" : "#000"} lineClamp={1}>
+                            {item.name}
+                          </Text>
+                          <Group gap={4}>
+                            <Button
+                              size="xs"
+                              variant="subtle"
+                              color="red"
+                              p={0}
+                              style={{ minWidth: 22, height: 22 }}
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.id,
+                                  Math.max(0, getItemQuantity(item.id) - 1)
+                                )
+                              }
+                            >
+                              <IconMinus size={12} />
+                            </Button>
+                            <Badge color="red" variant="light">
+                              {ci.quantity}×
+                            </Badge>
+                            <Button
+                              size="xs"
+                              variant="subtle"
+                              color="red"
+                              p={0}
+                              style={{ minWidth: 22, height: 22 }}
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.id,
+                                  getItemQuantity(item.id) + 1
+                                )
+                              }
+                            >
+                              <IconPlus size={12} />
+                            </Button>
+                          </Group>
+                        </Group>
+                        <Group gap="xs" wrap="nowrap">
+                          <Text c={isDark ? "#fff" : "#000"} fw={500}>
+                            ${(item.price * ci.quantity).toFixed(2)}
+                          </Text>
+                          <Button
+                            size="xs"
+                            variant="subtle"
+                            color="red"
+                            p={0}
+                            style={{ minWidth: 22, height: 22 }}
+                            onClick={() => handleQuantityChange(item.id, 0)}
+                          >
+                            <IconTrash size={12} />
+                          </Button>
+                        </Group>
+                      </Group>
                     );
                   })}
-                  <Divider style={{ borderColor: "#555", margin: "16px 0" }} />
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Text style={{ color: "#fff", fontWeight: 700 }}>
+
+                  <Divider my="md" />
+
+                  <Group justify="space-between">
+                    <Text c={isDark ? "#fff" : "#000"} fw={700} size="lg">
                       Total:
                     </Text>
-                    <Text style={{ color: "#fff", fontWeight: 700 }}>
+                    <Text c={isDark ? "#fff" : "#000"} fw={700} size="lg">
                       ${calculateTotal().toFixed(2)}
                     </Text>
-                  </div>
-                </>
+                  </Group>
+                </Stack>
               )}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginTop: 24,
-                }}
+
+              <Button
+                color="red"
+                onClick={handleSubmitOrder}
+                loading={orderLoading}
+                leftSection={<IconBrandCashapp size={16} />}
+                fullWidth
+                size="lg"
+                mt="xl"
               >
-                <Button
-                  variant="outline"
-                  color="gray"
-                  onClick={handleSkip}
-                  leftSection={<IconArrowLeft size={16} />}
-                >
-                  Skip
-                </Button>
-                <Button
-                  color="red"
-                  onClick={handleSubmitOrder}
-                  loading={orderLoading}
-                  leftSection={<IconBrandCashapp size={16} />}
-                >
-                  {cart.length > 0 ? "Place Order" : "Continue"}
-                </Button>
-              </div>
+                {cart.length > 0 ? "Place Order" : "Continue to My Tickets"}
+              </Button>
             </Paper>
           </Grid.Col>
         </Grid>
