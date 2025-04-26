@@ -10,11 +10,9 @@ import {
   TextInput,
   NumberInput,
   Text,
-  Alert,
   Stack,
   Loader,
   Center,
-  Tabs,
   Image,
   Badge,
   Switch,
@@ -22,15 +20,7 @@ import {
   Select,
   Box,
 } from "@mantine/core";
-import {
-  IconPlus,
-  IconEdit,
-  IconTrash,
-  IconSearch,
-  IconAlertCircle,
-  IconCoffee,
-  IconCategory,
-} from "@tabler/icons-react";
+import { IconPlus, IconEdit, IconTrash, IconSearch } from "@tabler/icons-react";
 import { concessionApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -64,11 +54,11 @@ const ConcessionManager: React.FC = () => {
     }
   }, [isAuthenticated, isAdmin, isManager, navigate]);
 
-  const [activeTab, setActiveTab] = useState<string | null>("items");
+  const [] = useState<string | null>("items");
   const [items, setItems] = useState<ConcessionItemDTO[]>([]);
   const [categories, setCategories] = useState<ConcessionCategoryDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Modal and form states
@@ -78,12 +68,10 @@ const ConcessionManager: React.FC = () => {
     null
   );
   const [isEditingItem, setIsEditingItem] = useState(false);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isCategoryDeleteModalOpen, setIsCategoryDeleteModalOpen] =
-    useState(false);
-  const [currentCategory, setCurrentCategory] =
-    useState<ConcessionCategoryDTO | null>(null);
-  const [isEditingCategory, setIsEditingCategory] = useState(false);
+  const [] = useState(false);
+  const [] = useState(false);
+  const [] = useState<ConcessionCategoryDTO | null>(null);
+  const [] = useState(false);
 
   // Form state types
   const [itemFormData, setItemFormData] = useState<
@@ -97,9 +85,7 @@ const ConcessionManager: React.FC = () => {
     categoryName: "",
     isAvailable: true,
   });
-  const [categoryFormData, setCategoryFormData] = useState<
-    Omit<ConcessionCategoryDTO, "id">
-  >({
+  const [] = useState<Omit<ConcessionCategoryDTO, "id">>({
     name: "",
   });
 
@@ -123,25 +109,6 @@ const ConcessionManager: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCreateItem = () => {
-    setIsEditingItem(false);
-    if (categories.length === 0) {
-      setError("Please create a category first");
-      return;
-    }
-    const defaultCat = categories[0];
-    setItemFormData({
-      name: "",
-      description: "",
-      price: 0,
-      imageUrl: "",
-      categoryId: defaultCat.id,
-      categoryName: defaultCat.name,
-      isAvailable: true,
-    });
-    setIsItemModalOpen(true);
   };
 
   const handleEditItem = (item: ConcessionItemDTO) => {
@@ -197,7 +164,10 @@ const ConcessionManager: React.FC = () => {
       };
 
       if (isEditingItem && currentItem) {
-        await concessionApi.updateItem(currentItem.id, itemToSave);
+        await concessionApi.updateItem(currentItem.id, {
+          ...itemToSave,
+          id: currentItem.id,
+        });
       } else {
         await concessionApi.createItem(itemToSave);
       }
@@ -210,60 +180,6 @@ const ConcessionManager: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCreateCategory = () => {
-    setIsEditingCategory(false);
-    setCategoryFormData({ name: "" });
-    setIsCategoryModalOpen(true);
-  };
-
-  const handleEditCategory = (cat: ConcessionCategoryDTO) => {
-    setIsEditingCategory(true);
-    setCurrentCategory(cat);
-    setCategoryFormData({ name: cat.name });
-    setIsCategoryModalOpen(true);
-  };
-
-  const confirmDeleteCategory = async () => {
-    if (!currentCategory) return;
-    try {
-      setLoading(true);
-      await concessionApi.deleteCategory(currentCategory.id);
-      await fetchData();
-      setIsCategoryDeleteModalOpen(false);
-      setCurrentCategory(null);
-    } catch (err) {
-      setError("Failed to delete category");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveCategory = async () => {
-    try {
-      setLoading(true);
-      if (isEditingCategory && currentCategory) {
-        await concessionApi.updateCategory(
-          currentCategory.id,
-          categoryFormData.name
-        );
-      } else {
-        await concessionApi.createCategory(categoryFormData.name);
-      }
-      await fetchData();
-      setIsCategoryModalOpen(false);
-    } catch (err) {
-      setError("Failed to save category");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleTabChange = (value: string | null) => {
-    setActiveTab(value);
   };
 
   if (loading && !items.length && !categories.length) {
@@ -329,7 +245,6 @@ const ConcessionManager: React.FC = () => {
                 i.name.toLowerCase().includes(searchQuery.toLowerCase())
               )
               .map((item) => {
-                const cat = categories.find((c) => c.id === item.categoryId);
                 return (
                   <Table.Tr key={item.id}>
                     <Table.Td style={{ textAlign: "center", padding: "8px" }}>

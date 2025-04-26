@@ -19,7 +19,6 @@ import {
   Stack,
   Loader,
   Center,
-  Alert,
   Box,
 } from "@mantine/core";
 import {
@@ -27,10 +26,7 @@ import {
   IconEdit,
   IconTrash,
   IconSearch,
-  IconAlertCircle,
   IconStar,
-  IconStarFilled,
-  IconStarHalfFilled,
   IconChevronDown,
   IconChevronUp,
 } from "@tabler/icons-react";
@@ -41,7 +37,7 @@ import MovieRating from "./MovieRating";
 const MovieManager: React.FC = () => {
   const [movies, setMovies] = useState<MovieDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [theaters, setTheaters] = useState<{ value: string; label: string }[]>(
     []

@@ -9,7 +9,6 @@ import {
   Button,
   Divider,
   ThemeIcon,
-  Box,
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";

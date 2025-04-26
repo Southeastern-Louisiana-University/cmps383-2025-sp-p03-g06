@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Paper,
   Title,
@@ -21,18 +21,15 @@ import {
   Collapse,
   Divider,
   Grid,
-  Card,
 } from "@mantine/core";
-import { DatePickerInput, MonthPicker, Calendar } from "@mantine/dates";
+import { DatePickerInput } from "@mantine/dates";
 import {
   IconPlus,
   IconEdit,
   IconTrash,
   IconSearch,
   IconAlertCircle,
-  IconClock,
   IconCalendar,
-  IconList,
   IconFilter,
   IconMovie,
   IconChevronDown,
@@ -43,14 +40,11 @@ import {
   movieApi,
   theaterApi,
   ShowtimeDTO,
-  MovieDTO,
-  TheaterDTO,
   TheaterRoomDTO,
 } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { useMantineTheme } from "@mantine/core";
-import MovieRating from "./MovieRating";
 
 interface ExtendedTheaterRoomDTO extends TheaterRoomDTO {
   theaterName: string;
@@ -101,10 +95,71 @@ const ShowtimeManager: React.FC = () => {
   });
 
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   const theme = useMantineTheme();
+
+  // Debounced search input
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Memoized filtered showtimes
+  const filteredShowtimes = useMemo(() => {
+    return showtimes
+      .filter((showtime) => {
+        const matchesSearch =
+          showtime.movieTitle
+            .toLowerCase()
+            .includes(debouncedSearch.toLowerCase()) ||
+          showtime.theaterName
+            .toLowerCase()
+            .includes(debouncedSearch.toLowerCase()) ||
+          showtime.theaterRoomName
+            .toLowerCase()
+            .includes(debouncedSearch.toLowerCase());
+        const matchesDate =
+          !dateFilter ||
+          new Date(showtime.startTime).toDateString() ===
+            dateFilter.toDateString();
+        return matchesSearch && matchesDate;
+      })
+      .sort((a, b) => {
+        const aDate = new Date(a.startTime);
+        const bDate = new Date(b.startTime);
+        if (sortBy === "date") {
+          return sortOrder === "asc"
+            ? aDate.getTime() - bDate.getTime()
+            : bDate.getTime() - aDate.getTime();
+        }
+        if (sortBy === "movie") {
+          return sortOrder === "asc"
+            ? a.movieTitle.localeCompare(b.movieTitle)
+            : b.movieTitle.localeCompare(a.movieTitle);
+        }
+        if (sortBy === "theater") {
+          return sortOrder === "asc"
+            ? a.theaterName.localeCompare(b.theaterName)
+            : b.theaterName.localeCompare(a.theaterName);
+        }
+        return 0;
+      });
+  }, [showtimes, debouncedSearch, dateFilter, sortBy, sortOrder]);
+
+  // Memoized grouped showtimes
+  const groupedShowtimes = useMemo(() => {
+    return filteredShowtimes.reduce((acc, showtime) => {
+      const date = new Date(showtime.startTime).toDateString();
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(showtime);
+      return acc;
+    }, {} as Record<string, ShowtimeDTO[]>);
+  }, [filteredShowtimes]);
 
   // Load data on component mount
   useEffect(() => {
@@ -321,19 +376,18 @@ const ShowtimeManager: React.FC = () => {
           id: currentShowtime.id,
           movieId: formData.movieId,
           theaterRoomId: formData.theaterRoomId,
-          theaterId: theaterId,
+          theaterId: formData.theaterId,
           startTime: formData.startTime,
           endTime: currentShowtime.endTime,
           baseTicketPrice: formData.baseTicketPrice,
-          movieTitle:
-            movies.find((m) => m.value === formData.movieId.toString())
-              ?.label || "",
-          theaterRoomName: selectedRoom.label.split("(")[0].trim(),
-          theaterName: `Lions Den ${theaterId}`,
+          movieTitle: currentShowtime.movieTitle,
+          theaterRoomName: currentShowtime.theaterRoomName,
+          theaterName: currentShowtime.theaterName,
         };
         console.log("Updating showtime:", updatedShowtime);
         await showtimeApi.updateShowtime(currentShowtime.id, updatedShowtime);
         toast.success("Showtime updated successfully");
+        setIsModalOpen(false);
       } else {
         console.log("Fetching movie details for ID:", formData.movieId);
         const movie = await movieApi.getMovieById(formData.movieId);
@@ -344,9 +398,6 @@ const ShowtimeManager: React.FC = () => {
         }
 
         const startTime = new Date(formData.startTime);
-        const endTime = new Date(
-          startTime.getTime() + movie.durationMinutes * 60 * 1000
-        );
 
         const newShowtime = {
           movieId: formData.movieId,
@@ -408,65 +459,12 @@ const ShowtimeManager: React.FC = () => {
   };
 
   const getShowtimeStatus = (startTime: string) => {
-    const now = new Date();
-    const showtimeDate = new Date(startTime);
-    if (showtimeDate < now) return "past";
-    if (showtimeDate.getTime() - now.getTime() < 24 * 60 * 60 * 1000)
-      return "upcoming";
+    const nowUtc = Date.now();
+    const showtimeUtc = Date.parse(startTime);
+    if (showtimeUtc < nowUtc) return "past";
+    if (showtimeUtc - nowUtc < 24 * 60 * 60 * 1000) return "upcoming";
     return "future";
   };
-
-  const filteredShowtimes = showtimes
-    .filter((showtime) => {
-      const matchesSearch =
-        showtime.movieTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        showtime.theaterName
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        showtime.theaterRoomName
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase());
-
-      const matchesDate =
-        !dateFilter ||
-        new Date(showtime.startTime).toDateString() ===
-          dateFilter.toDateString();
-
-      return matchesSearch && matchesDate;
-    })
-    .sort((a, b) => {
-      const aDate = new Date(a.startTime);
-      const bDate = new Date(b.startTime);
-
-      if (sortBy === "date") {
-        return sortOrder === "asc"
-          ? aDate.getTime() - bDate.getTime()
-          : bDate.getTime() - aDate.getTime();
-      }
-
-      if (sortBy === "movie") {
-        return sortOrder === "asc"
-          ? a.movieTitle.localeCompare(b.movieTitle)
-          : b.movieTitle.localeCompare(a.movieTitle);
-      }
-
-      if (sortBy === "theater") {
-        return sortOrder === "asc"
-          ? a.theaterName.localeCompare(b.theaterName)
-          : b.theaterName.localeCompare(a.theaterName);
-      }
-
-      return 0;
-    });
-
-  const groupedShowtimes = filteredShowtimes.reduce((acc, showtime) => {
-    const date = new Date(showtime.startTime).toDateString();
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(showtime);
-    return acc;
-  }, {} as Record<string, ShowtimeDTO[]>);
 
   const renderDayDetails = () => {
     if (!selectedDay) return null;
@@ -737,18 +735,7 @@ const ShowtimeManager: React.FC = () => {
     );
   };
 
-  const handleDateFilter = (date: Date | null) => {
-    setDateFilter(date);
-    if (date) {
-      setViewMode("list");
-    }
-  };
-
   // Add this function to handle theater assignments
-  const handleTheaterAssignments = (showtime: ShowtimeDTO) => {
-    // Implementation for theater assignments
-    console.log("Managing theater assignments for showtime:", showtime);
-  };
 
   // Add debug log for render
   console.log("Rendering ShowtimeManager with modal states:", {

@@ -5,7 +5,6 @@ import {
   Text,
   Title,
   ScrollArea,
-  Divider,
   useMantineTheme,
   Group,
   Stack,
@@ -13,7 +12,6 @@ import {
   Paper,
 } from "@mantine/core";
 import { useState, useEffect } from "react";
-import AnimatedLion from "./AnimatedLion";
 import { IconX } from "@tabler/icons-react";
 
 interface LegalModalProps {
@@ -157,7 +155,7 @@ www.lionsdencinemas.com
 
 const LegalModal = ({ opened, onClose, type }: LegalModalProps) => {
   const [content, setContent] = useState<string>("");
-  const [title, setTitle] = useState<string>("");
+  const [, setTitle] = useState<string>("");
   const theme = useMantineTheme();
 
   useEffect(() => {

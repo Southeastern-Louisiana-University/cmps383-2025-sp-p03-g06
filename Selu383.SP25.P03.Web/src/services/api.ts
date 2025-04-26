@@ -1,7 +1,5 @@
 // src/services/api.ts
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
-import { useQueryClient } from "react-query";
-import { apiCache } from "./apiCache";
 
 // Base URL for API requests
 const API_BASE_URL = "/api";

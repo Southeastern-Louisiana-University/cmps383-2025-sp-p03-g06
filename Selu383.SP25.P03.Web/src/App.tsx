@@ -7,7 +7,6 @@ import {
 } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import Login from "./components/Login";
 import TheaterList from "./components/TheaterList";
 import TheaterForm from "./components/TheaterForm";
 import Navbar from "./components/Navbar";
@@ -59,8 +58,7 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   const [showLoader, setShowLoader] = useState(false);
-  const [loginOpened, { open: openLogin, close: closeLogin }] =
-    useDisclosure(false);
+  const [, { open: openLogin, close: closeLogin }] = useDisclosure(false);
 
   useEffect(() => {
     if (loading) {

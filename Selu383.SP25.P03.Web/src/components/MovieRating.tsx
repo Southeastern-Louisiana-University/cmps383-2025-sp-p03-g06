@@ -79,10 +79,6 @@ const MovieRating = ({
   };
 
   // Convert score to stars (0-10 scale to 0-5 stars)
-  const getStars = (score: number | undefined) => {
-    if (typeof score !== "number") return 0;
-    return Math.max(0, Math.min(5, score / 2));
-  };
 
   // Format score for display
   const formatScore = (score: number | undefined) => {

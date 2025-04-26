@@ -31,9 +31,9 @@ namespace Selu383.SP25.P03.Api.Data
             var random = new Random(42); // Fixed seed for reproducibility
             var showtimes = new List<Showtime>();
 
-            // Start from today and go 14 days out
+            // Use dates relative to now so showtimes are always in the future
             var startDate = DateTime.UtcNow.Date;
-            var endDate = startDate.AddDays(14);
+            var endDate = startDate.AddDays(35); // 5 weeks of showtimes
 
             // Standard show times (24-hour format)
             var weekdayTimes = new[] { 14, 17, 20 }; // 2pm, 5pm, 8pm
@@ -58,12 +58,8 @@ namespace Selu383.SP25.P03.Api.Data
 
                     foreach (var timeslot in timeslots)
                     {
-                        var showDateTime = date.AddHours(timeslot);
+                        var showDateTime = DateTime.SpecifyKind(date.AddHours(timeslot), DateTimeKind.Utc);
                         
-                        // Skip if the showtime would be in the past
-                        if (showDateTime <= DateTime.UtcNow)
-                            continue;
-
                         // Randomly select a movie for this timeslot
                         var movie = availableMovies[random.Next(availableMovies.Count)];
                         
@@ -92,6 +88,7 @@ namespace Selu383.SP25.P03.Api.Data
                             MovieId = movie.Id,
                             TheaterRoomId = room.Id,
                             StartTime = showDateTime,
+                            EndTime = DateTime.SpecifyKind(showDateTime.AddMinutes(movie.DurationMinutes), DateTimeKind.Utc),
                             BaseTicketPrice = finalPrice
                         };
 

@@ -3,10 +3,8 @@ import { useParams } from "react-router-dom";
 import {
   Box,
   Stack,
-  Group,
   Text,
   Title,
-  Badge,
   Center,
   Container,
   Loader,
@@ -27,7 +25,7 @@ export default function TheaterDetails() {
   const [rooms, setRooms] = useState<TheaterRoomDTO[]>([]);
   const [movies, setMovies] = useState<MovieDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTheaterDetails = async () => {

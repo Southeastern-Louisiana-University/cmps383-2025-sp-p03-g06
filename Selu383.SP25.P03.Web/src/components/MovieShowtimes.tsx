@@ -80,9 +80,7 @@ const MovieShowtimes = () => {
   const [sortByDistance, setSortByDistance] = useState(true);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [, setLocationLoading] = useState(false);
-  const [] = useState<TheaterShowtimes[]>(
-    []
-  );
+  const [] = useState<TheaterShowtimes[]>([]);
 
   useMantineColorScheme();
 
@@ -171,8 +169,9 @@ const MovieShowtimes = () => {
         }
 
         // Filter out any past showtimes
+        const nowUtc = Date.now();
         const futureShowtimes = showtimeData.filter(
-          (st) => new Date(st.startTime) > now
+          (st) => Date.parse(st.startTime) > nowUtc
         );
 
         if (futureShowtimes.length === 0) {
@@ -260,33 +259,41 @@ const MovieShowtimes = () => {
 
   // Filter showtimes based on view type
   const getFilteredShowtimes = (viewType: "by-theater" | "by-date") => {
+    const nowUtc = Date.now();
+    // Start of today (UTC)
     const now = new Date();
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfterTomorrow = new Date(tomorrow);
-    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+    const todayUtc = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    );
+    const tomorrowUtc = new Date(todayUtc);
+    tomorrowUtc.setUTCDate(todayUtc.getUTCDate() + 1);
+    const dayAfterTomorrowUtc = new Date(todayUtc);
+    dayAfterTomorrowUtc.setUTCDate(todayUtc.getUTCDate() + 2);
 
     if (viewType === "by-date") {
-      // For "By Date" view, show all future showtimes
-      return showtimes.filter((st) => new Date(st.startTime) > now);
+      // All future showtimes
+      return showtimes.filter((st) => Date.parse(st.startTime) > nowUtc);
     } else {
-      // For "By Theater" view, show today's remaining showtimes
-      // and if it's past 3 PM and few showtimes left, show tomorrow's too
+      // Today's remaining showtimes (from now to midnight UTC)
       const todayShowtimes = showtimes.filter((st) => {
         const showtime = new Date(st.startTime);
-        return showtime > now && showtime < tomorrow;
+        return (
+          showtime.getTime() >= nowUtc &&
+          showtime.getTime() < tomorrowUtc.getTime()
+        );
       });
 
-      const isPastThreePM = now.getHours() >= 15;
+      const isPastThreePM = now.getUTCHours() >= 15;
       const fewShowtimesLeft = todayShowtimes.length <= 2;
 
       if (isPastThreePM && fewShowtimesLeft) {
         // Show today's and tomorrow's showtimes
         return showtimes.filter((st) => {
           const showtime = new Date(st.startTime);
-          return showtime > now && showtime < dayAfterTomorrow;
+          return (
+            showtime.getTime() >= nowUtc &&
+            showtime.getTime() < dayAfterTomorrowUtc.getTime()
+          );
         });
       }
 
@@ -316,11 +323,14 @@ const MovieShowtimes = () => {
 
   const showtimesByDate = showtimes.reduce<Record<string, ShowtimeDTO[]>>(
     (acc, s) => {
-      const date = new Date(s.startTime).toISOString().split("T")[0];
-      if (!acc[date]) {
-        acc[date] = [];
+      const date = new Date(s.startTime);
+      const localDateString = `${date.getFullYear()}-${(date.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+      if (!acc[localDateString]) {
+        acc[localDateString] = [];
       }
-      acc[date].push(s);
+      acc[localDateString].push(s);
       return acc;
     },
     {}
@@ -329,8 +339,6 @@ const MovieShowtimes = () => {
   const sortedDates = Object.keys(showtimesByDate).sort(
     (a, b) => new Date(a).getTime() - new Date(b).getTime()
   );
-
-
 
   if (loading) {
     return (
@@ -448,91 +456,97 @@ const MovieShowtimes = () => {
                         Array.from(
                           getFilteredShowtimes("by-theater").reduce(
                             (acc, st) => {
-                              if (!theaters[st.theaterId]) return acc;
-                              if (!acc.has(st.theaterId)) {
-                                acc.set(st.theaterId, []);
-                              }
-                              acc.get(st.theaterId)?.push(st);
+                              const dateKey = new Date(st.startTime)
+                                .toISOString()
+                                .slice(0, 10); // 'YYYY-MM-DD'
+                              if (!acc.has(dateKey)) acc.set(dateKey, []);
+                              acc.get(dateKey)?.push(st);
                               return acc;
                             },
-                            new Map<number, ShowtimeDTO[]>()
+                            new Map<string, ShowtimeDTO[]>()
                           )
                         )
-                          .sort(([idA, _a], [idB, _b]) => {
-                            const theaterA = theaters[idA];
-                            const theaterB = theaters[idB];
-                            if (
-                              sortByDistance &&
-                              theaterA?.distance != null &&
-                              theaterB?.distance != null
-                            ) {
-                              return theaterA.distance - theaterB.distance;
-                            }
-                            return (
-                              theaterA?.name.localeCompare(
-                                theaterB?.name || ""
-                              ) || 0
-                            );
-                          })
-                          .map(([theaterId, theaterShowtimes]) => {
-                            const theater = theaters[theaterId];
-                            if (!theater) return null;
-
-                            return (
-                              <Paper
-                                key={theaterId}
-                                p="md"
-                                radius="md"
-                                withBorder
-                                mb="md"
-                              >
-                                <Group justify="space-between" mb="xs">
-                                  <Group>
-                                    <IconBuilding size={20} />
-                                    <Text fw={500}>{theater.name}</Text>
-                                    {theater.distance !== undefined && (
-                                      <Badge color="blue" variant="light">
-                                        {formatDistance(theater.distance)}
-                                      </Badge>
-                                    )}
-                                  </Group>
-                                </Group>
-                                <Text size="sm" c="dimmed" mb="md">
-                                  <IconCurrentLocation
-                                    size={16}
-                                    style={{
-                                      display: "inline",
-                                      verticalAlign: "text-bottom",
-                                    }}
-                                  />{" "}
-                                  {theater.address}
+                          .sort(
+                            ([a], [b]) =>
+                              new Date(a).getTime() - new Date(b).getTime()
+                          )
+                          .map(([dateKey, dateShowtimes]) => (
+                            <Paper
+                              withBorder
+                              p="lg"
+                              radius="md"
+                              mb="lg"
+                              key={dateKey}
+                            >
+                              <Group mb="md">
+                                <IconCalendar size={22} />
+                                <Text fw={600} size="lg">
+                                  {new Date(dateKey).toLocaleDateString(
+                                    undefined,
+                                    {
+                                      weekday: "long",
+                                      month: "long",
+                                      day: "numeric",
+                                    }
+                                  )}
                                 </Text>
-                                <Stack gap="xs">
-                                  {Array.from(
-                                    theaterShowtimes.reduce((acc, st) => {
-                                      const date = new Date(
-                                        st.startTime
-                                      ).toLocaleDateString(undefined, {
-                                        weekday: "short" as const,
-                                        month: "short" as const,
-                                        day: "numeric" as const,
-                                      });
-                                      if (!acc.has(date)) {
-                                        acc.set(date, []);
-                                      }
-                                      acc.get(date)?.push(st);
-                                      return acc;
-                                    }, new Map<string, ShowtimeDTO[]>())
-                                  ).map(([date, dateShowtimes]) => (
-                                    <div key={date}>
-                                      <Text size="sm" fw={500} mb="xs">
-                                        {date}
+                              </Group>
+                              <Divider mb="lg" />
+                              {Array.from(
+                                dateShowtimes.reduce((acc, st) => {
+                                  if (!theaters[st.theaterId]) return acc;
+                                  if (!acc.has(st.theaterId))
+                                    acc.set(st.theaterId, []);
+                                  acc.get(st.theaterId)?.push(st);
+                                  return acc;
+                                }, new Map<number, ShowtimeDTO[]>())
+                              )
+                                .sort(([idA, _a], [idB, _b]) => {
+                                  const theaterA = theaters[idA];
+                                  const theaterB = theaters[idB];
+                                  if (
+                                    sortByDistance &&
+                                    theaterA?.distance != null &&
+                                    theaterB?.distance != null
+                                  ) {
+                                    return (
+                                      theaterA.distance - theaterB.distance
+                                    );
+                                  }
+                                  return (
+                                    theaterA?.name.localeCompare(
+                                      theaterB?.name || ""
+                                    ) || 0
+                                  );
+                                })
+                                .map(([theaterId, theaterShowtimes]) => {
+                                  const theater = theaters[theaterId];
+                                  if (!theater) return null;
+                                  return (
+                                    <Box key={theaterId} mb="md">
+                                      <Group>
+                                        <IconBuilding size={20} />
+                                        <Text fw={500}>{theater.name}</Text>
+                                        {theater.distance !== undefined && (
+                                          <Badge color="blue" variant="light">
+                                            {formatDistance(theater.distance)}
+                                          </Badge>
+                                        )}
+                                      </Group>
+                                      <Text size="sm" c="dimmed" mb="md">
+                                        <IconCurrentLocation
+                                          size={16}
+                                          style={{
+                                            display: "inline",
+                                            verticalAlign: "text-bottom",
+                                          }}
+                                        />{" "}
+                                        {theater.address}
                                       </Text>
                                       {Array.from(
-                                        dateShowtimes.reduce((acc, st) => {
-                                          if (!acc.has(st.theaterRoomId)) {
+                                        theaterShowtimes.reduce((acc, st) => {
+                                          if (!acc.has(st.theaterRoomId))
                                             acc.set(st.theaterRoomId, []);
-                                          }
                                           acc.get(st.theaterRoomId)?.push(st);
                                           return acc;
                                         }, new Map<number, ShowtimeDTO[]>())
@@ -582,13 +596,11 @@ const MovieShowtimes = () => {
                                             </SimpleGrid>
                                           </Box>
                                         ))}
-                                    </div>
-                                  ))}
-                                </Stack>
-                              </Paper>
-                            );
-                          })
-                          .filter(Boolean)
+                                    </Box>
+                                  );
+                                })}
+                            </Paper>
+                          ))
                       )}
                     </Tabs.Panel>
 
@@ -600,35 +612,34 @@ const MovieShowtimes = () => {
                       ) : (
                         Array.from(
                           getFilteredShowtimes("by-date").reduce((acc, st) => {
-                            const date = new Date(
-                              st.startTime
-                            ).toLocaleDateString(undefined, {
-                              weekday: "short" as const,
-                              month: "short" as const,
-                              day: "numeric" as const,
-                            });
-                            if (!acc.has(date)) {
-                              acc.set(date, []);
+                            const dateKey = new Date(st.startTime)
+                              .toISOString()
+                              .slice(0, 10); // 'YYYY-MM-DD'
+                            if (!acc.has(dateKey)) {
+                              acc.set(dateKey, []);
                             }
-                            acc.get(date)?.push(st);
+                            acc.get(dateKey)?.push(st);
                             return acc;
                           }, new Map<string, ShowtimeDTO[]>())
-                        ).map(([date, dateShowtimes]) => (
+                        ).map(([dateKey, dateShowtimes]) => (
                           <Paper
                             withBorder
                             p="lg"
                             radius="md"
                             mb="lg"
-                            key={date}
+                            key={dateKey}
                           >
                             <Group mb="md">
                               <IconCalendar size={22} />
                               <Text fw={600} size="lg">
-                                {new Date(date).toLocaleDateString(undefined, {
-                                  weekday: "long",
-                                  month: "long",
-                                  day: "numeric",
-                                })}
+                                {new Date(dateKey).toLocaleDateString(
+                                  undefined,
+                                  {
+                                    weekday: "long",
+                                    month: "long",
+                                    day: "numeric",
+                                  }
+                                )}
                               </Text>
                             </Group>
                             <Divider mb="lg" />
@@ -660,8 +671,8 @@ const MovieShowtimes = () => {
                               })
                               .map(([theaterId, theaterShowtimes]) => {
                                 const theater = theaters[theaterId];
+                                console.log("By Date tab theater:", theater); // Debug log
                                 if (!theater) return null;
-
                                 return (
                                   <Box key={theaterId} mb="md">
                                     <Group>

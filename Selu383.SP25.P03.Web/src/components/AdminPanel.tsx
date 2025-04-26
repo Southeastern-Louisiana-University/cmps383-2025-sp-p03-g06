@@ -20,7 +20,7 @@ const AdminPanel = () => {
   return (
     <Container size="xl" py="xl">
       <Paper p="md" withBorder mb="xl">
-        <Title order={2}>Lions Den Cinema Admin Panel</Title>
+        <Title order={2}>Lions Den Cinemas Admin Panel</Title>
       </Paper>
 
       <Tabs value={activeTab} onChange={setActiveTab}>

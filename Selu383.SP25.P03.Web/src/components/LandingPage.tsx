@@ -10,7 +10,6 @@ import {
   Flex,
   Badge,
   Group,
-  Rating,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Carousel } from "@mantine/carousel";
@@ -65,16 +64,8 @@ const LandingPage = () => {
   };
 
   // Convert 0-10 rating to 0-5 stars for the rating component
-  const getRatingStars = (score: number | undefined) => {
-    if (typeof score !== "number") return 0;
-    return Math.max(0, Math.min(5, score / 2));
-  };
 
   // Format score for display
-  const formatScore = (score: number | undefined) => {
-    if (typeof score !== "number") return "N/A";
-    return score.toFixed(1);
-  };
 
   return (
     <Box

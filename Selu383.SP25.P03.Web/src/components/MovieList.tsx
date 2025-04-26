@@ -43,7 +43,7 @@ interface MovieCardProps {
 }
 
 const MovieCard = React.forwardRef<HTMLDivElement, MovieCardProps>(
-  ({ movie, onTrailerClick }, ref) => {
+  ({ movie, onTrailerClick }, _ref) => {
     const cardRef = useRef<HTMLDivElement>(null);
     const isInView = useInView(cardRef, { once: true, margin: "-100px" });
 
@@ -137,7 +137,12 @@ const MovieCard = React.forwardRef<HTMLDivElement, MovieCardProps>(
               <Group gap="xs" mt="xs" style={{ height: "24px" }}>
                 <IconCalendar size={16} />
                 <Text size="sm">
-                  Released: {new Date(movie.releaseDate).toLocaleDateString()}
+                  Released:{" "}
+                  {new Date(movie.releaseDate).toLocaleDateString(undefined, {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })}
                 </Text>
               </Group>
 
@@ -412,7 +417,7 @@ const MovieList: React.FC = () => {
           </Text>
         ) : (
           <Grid>
-            {filtered.map((movie, index) => (
+            {filtered.map((movie, _index) => (
               <Grid.Col key={movie.id} span={{ base: 12, sm: 6, md: 4 }}>
                 <MovieCard movie={movie} onTrailerClick={setSelectedTrailer} />
               </Grid.Col>

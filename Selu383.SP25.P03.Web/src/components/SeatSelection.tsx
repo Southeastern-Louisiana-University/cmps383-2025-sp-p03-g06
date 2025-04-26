@@ -33,7 +33,6 @@ import {
   IconArmchair2,
   IconWheelchair,
   IconInfoCircle,
-  IconCheckbox,
   IconArrowLeft,
   IconX,
 } from "@tabler/icons-react";
