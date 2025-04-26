@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -32,6 +32,8 @@ export default function SeatSelectionScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const seatPrice = 12.99; // 💵 each seat costs $12.99
+
     useEffect(() => {
         const fetchSeats = async () => {
             try {
@@ -53,6 +55,8 @@ export default function SeatSelectionScreen() {
             setSelectedSeats([...selectedSeats, seatId]);
         }
     };
+
+    const totalPrice = selectedSeats.length * seatPrice;
 
     if (loading) {
         return (
@@ -101,6 +105,16 @@ export default function SeatSelectionScreen() {
                         </View>
                     ))}
                 </View>
+
+                {/* ✅ Selected Seats Summary */}
+                <View style={styles.summary}>
+                    <Text style={styles.summaryText}>
+                        {selectedSeats.length} Seat{selectedSeats.length !== 1 ? 's' : ''} Selected
+                    </Text>
+                    <Text style={styles.summaryText}>
+                        Total: ${totalPrice.toFixed(2)}
+                    </Text>
+                </View>
             </ScrollView>
         </SafeAreaView>
     );
@@ -110,8 +124,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#121212',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     scrollContent: {
         paddingVertical: 20,
@@ -138,5 +150,17 @@ const styles = StyleSheet.create({
     },
     unavailableSeat: {
         backgroundColor: '#555',
+    },
+    summary: {
+        marginTop: 20,
+        padding: 16,
+        backgroundColor: '#1E1E1E',
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    summaryText: {
+        color: 'white',
+        fontSize: 16,
+        marginBottom: 4,
     },
 });
