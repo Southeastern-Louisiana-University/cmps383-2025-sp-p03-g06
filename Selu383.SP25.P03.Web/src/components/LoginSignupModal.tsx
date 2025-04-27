@@ -1,74 +1,68 @@
-// src/components/LoginSignupModal.tsx
-import {
-  Modal,
-  Tabs,
-  Button,
-  TextInput,
-  PasswordInput,
-  Stack,
-} from "@mantine/core";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Modal, useMantineTheme } from "@mantine/core";
+import Login from "./Login";
+import SignUp from "./SignUp";
 
-type Props = {
+interface LoginSignupModalProps {
   opened: boolean;
   onClose: () => void;
-};
+  onSuccess?: () => void;
+  initialView?: "login" | "signup";
+}
 
-//type LoginSignupModalProps = {
-//opened: boolean;
-//onClose: () => void;
-//};
+const LoginSignupModal = ({
+  opened,
+  onClose,
+  onSuccess,
+  initialView = "login",
+}: LoginSignupModalProps) => {
+  const [isLoginView, setIsLoginView] = useState(initialView === "login");
+  const theme = useMantineTheme();
 
-const LoginSignupModal = ({ opened, onClose }: Props) => {
-  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+  // Update view when initialView prop changes
+  useEffect(() => {
+    setIsLoginView(initialView === "login");
+  }, [initialView]);
+
+  const handleSuccess = () => {
+    if (onSuccess) {
+      onSuccess();
+    }
+    onClose();
+  };
 
   return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Welcome to Lion's Den"
-      size="md"
+      size="lg"
+      padding="xl"
       centered
+      withCloseButton={false}
       overlayProps={{
         backgroundOpacity: 0.55,
         blur: 3,
       }}
+      styles={{
+        content: {
+          backgroundColor: theme.colors.dark[7],
+        },
+        header: {
+          display: "none",
+        },
+      }}
     >
-      <Tabs value={activeTab} onChange={(val) => setActiveTab(val as any)}>
-        <Tabs.List grow>
-          <Tabs.Tab value="login">Login</Tabs.Tab>
-          <Tabs.Tab value="signup">Sign Up</Tabs.Tab>
-        </Tabs.List>
-
-        <Tabs.Panel value="login" pt="md">
-          <Stack>
-            <TextInput label="Email" placeholder="you@example.com" required />
-            <PasswordInput
-              label="Password"
-              placeholder="Your password"
-              required
-            />
-            <Button fullWidth color="brand">
-              Login
-            </Button>
-          </Stack>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="signup" pt="md">
-          <Stack>
-            <TextInput label="Name" placeholder="John Doe" required />
-            <TextInput label="Email" placeholder="you@example.com" required />
-            <PasswordInput
-              label="Password"
-              placeholder="Create a password"
-              required
-            />
-            <Button fullWidth color="brand">
-              Sign Up
-            </Button>
-          </Stack>
-        </Tabs.Panel>
-      </Tabs>
+      {isLoginView ? (
+        <Login
+          onSuccess={handleSuccess}
+          onSwitchToSignup={() => setIsLoginView(false)}
+        />
+      ) : (
+        <SignUp
+          onSuccess={handleSuccess}
+          onSwitchToLogin={() => setIsLoginView(true)}
+        />
+      )}
     </Modal>
   );
 };

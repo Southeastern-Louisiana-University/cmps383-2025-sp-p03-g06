@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Concessions;
+using Selu383.SP25.P03.Api.Features.OrderItems;
 using Selu383.SP25.P03.Api.Features.Reservations;
 using Selu383.SP25.P03.Api.Features.Users;
 
@@ -140,6 +141,7 @@ namespace Selu383.SP25.P03.Api.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<ConcessionOrderDTO>> GetOrder(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -193,15 +195,10 @@ namespace Selu383.SP25.P03.Api.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous] // Add this attribute to allow anonymous access
         public async Task<ActionResult<ConcessionOrderDTO>> CreateOrder(CreateConcessionOrderDTO orderDto)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
-                return Unauthorized();
-            }
-
-            // Validate reservation
+            // Validate reservation without requiring authentication
             var reservation = await _reservations
                 .Include(r => r.Showtime)
                 .FirstOrDefaultAsync(r => r.Id == orderDto.ReservationId);
@@ -211,11 +208,22 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Reservation not found");
             }
 
-            // Verify the reservation belongs to the current user
-            if (reservation.UserId != currentUser.Id && !User.IsInRole(UserRoleNames.Admin) && !User.IsInRole(UserRoleNames.Manager))
+            // Only check user authorization if they're authenticated
+            if (User.Identity?.IsAuthenticated == true)
             {
-                return Forbid();
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    return Unauthorized();
+                }
+
+                // Verify the reservation belongs to the current user
+                if (reservation.UserId != currentUser.Id && !User.IsInRole(UserRoleNames.Admin) && !User.IsInRole(UserRoleNames.Manager))
+                {
+                    return Forbid();
+                }
             }
+            // For guest users, don't perform user authorization - we're relying on knowledge of the reservation ID
 
             // Verify reservation status
             if (reservation.Status != "Confirmed")
@@ -229,14 +237,11 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Invalid reservation: missing showtime information");
             }
 
-            if (reservation.Showtime.StartTime.AddMinutes(-30) > DateTime.UtcNow)
+            // Verify the showtime hasn't started yet or is currently playing
+            var currentTime = DateTime.UtcNow;
+            if (currentTime > reservation.Showtime.StartTime.AddMinutes(30))
             {
-                return BadRequest("Cannot place concession orders more than 30 minutes before showtime");
-            }
-
-            if (reservation.Showtime.EndTime < DateTime.UtcNow)
-            {
-                return BadRequest("Cannot place concession orders after showtime has ended");
+                return BadRequest("Cannot place concession orders more than 30 minutes after the movie has started");
             }
 
             // Validate order items
@@ -294,8 +299,43 @@ namespace Selu383.SP25.P03.Api.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Return the completed order
-            return await GetOrder(order.Id);
+            // Modify GetOrder method to also be [AllowAnonymous] or create a special version for this case
+            return await GetOrderById(order.Id);
+        }
+
+        // Add this method if you don't want to modify the existing GetOrder method
+        [ApiExplorerSettings(IgnoreApi = true)]
+        private async Task<ActionResult<ConcessionOrderDTO>> GetOrderById(int id)
+        {
+            var order = await _orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.ConcessionItem)
+                .Where(o => o.Id == id)
+                .Select(o => new ConcessionOrderDTO
+                {
+                    Id = o.Id,
+                    ReservationId = o.ReservationId,
+                    OrderTime = o.OrderTime,
+                    TotalPrice = o.TotalPrice,
+                    Status = o.Status ?? "Unknown",
+                    Items = o.OrderItems.Select(oi => new OrderItemDTO
+                    {
+                        Id = oi.Id,
+                        ConcessionItemId = oi.ConcessionItemId,
+                        ItemName = oi.ConcessionItem == null ? string.Empty : oi.ConcessionItem.Name,
+                        Quantity = oi.Quantity,
+                        UnitPrice = oi.UnitPrice,
+                        SpecialInstructions = oi.SpecialInstructions ?? string.Empty
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            return order;
         }
 
         [HttpPut("{id}/status")]

@@ -1,8 +1,8 @@
-// src/components/Navbar.tsx - Updated with matching button colors
-import { useState, useEffect } from "react";
+// src/components/Navbar.tsx
+import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import LoginSignupModal from "./LoginSignupModal";
+// import LoginSignupModal from "./LoginSignupModal"; // Commented out since file doesn't exist yet
 
 import {
   Box,
@@ -14,7 +14,6 @@ import {
   Drawer,
   Stack,
   Avatar,
-  useMantineTheme,
 } from "@mantine/core";
 import {
   IconLogout,
@@ -24,39 +23,29 @@ import {
   IconMovie,
   IconHome,
   IconUserPlus,
+  IconSettings,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
-import ThemeToggle from "./ThemeToggle";
+import LoginSignupModal from "./LoginSignupModal";
+import AnimatedLion from "./AnimatedLion";
 
 const Navbar = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [modalOpened, modalHandlers] = useDisclosure(false);
-  const closeModal = modalHandlers.close;
+  const [modalOpened, { open: openModal, close: closeModal }] =
+    useDisclosure(false);
+  const [initialView, setInitialView] = useState<"login" | "signup">("login");
+
   const location = useLocation();
-  const theme = useMantineTheme();
-
   const [opened, { toggle, close }] = useDisclosure(false);
-  const [scrolled, setScrolled] = useState(false);
 
-  // Red color code to match landing page
+  // Remove scroll state since we'll keep it at the smaller size
   const redButtonColor = "#e03131";
-
-  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      const offset = window.scrollY;
-      setScrolled(offset > 50);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login");
+      navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -64,109 +53,137 @@ const Navbar = () => {
 
   const activeLink = (path: string) => location.pathname === path;
 
-  return (
-    <>
-      <Box
-        component="header"
-        h={64}
-        px="md"
-        style={{
-          backgroundColor: scrolled
-            ? "rgba(18, 18, 18, 0.95)"
-            : "rgba(18, 18, 18, 1)",
-          color: theme.colors.primary[0],
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          borderBottom: `1px solid ${theme.colors.dark[4]}`,
-          boxShadow: scrolled ? "0 4px 10px rgba(0, 0, 0, 0.1)" : "none",
+  const NavLink = ({ to, children, ...props }: any) => (
+    <Link to={to} {...props}>
+      {children}
+    </Link>
+  );
 
-          backdropFilter: "blur(8px)",
+  const handleOpenLogin = () => {
+    setInitialView("login");
+    openModal();
+  };
+
+  const handleOpenSignup = () => {
+    setInitialView("signup");
+    openModal();
+  };
+
+  return (
+    <Box>
+      <Box
+        style={{
+          height: 60,
+          backgroundColor: "rgba(18, 18, 18, 1)",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
         }}
       >
-        <Group justify="space-between" h="100%" wrap="nowrap">
-          <Group>
-            <Link
+        <Group
+          justify="space-between"
+          style={{
+            height: "100%",
+            padding: "0 80px",
+            maxWidth: 1800,
+            margin: "0 auto",
+          }}
+        >
+          {/* Logo and Brand */}
+          <Group style={{ flex: 1, marginLeft: "-40px" }}>
+            <NavLink
               to="/"
               style={{
                 textDecoration: "none",
-                color: theme.colors.primary[0],
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: "10px",
               }}
             >
-              <IconMovie
-                size={32}
-                color={theme.colors.primary[5]}
-                stroke={1.5}
+              <AnimatedLion
+                size={40}
+                primaryColor="#d4af37"
+                secondaryColor="#6B4226"
               />
-
               <Text
+                size="lg"
                 fw={700}
                 style={{
-                  color: theme.colors.primary[0],
-
-                  letterSpacing: "0.5px",
-                  fontFamily: "'Arial', sans-serif",
-                  fontSize: "1.25rem",
+                  color: "#ffffff",
                 }}
+                visibleFrom="xs"
               >
                 Lions Den Cinemas
               </Text>
-            </Link>
+            </NavLink>
           </Group>
 
           {/* Desktop menu */}
-          <Group visibleFrom="sm">
+          <Group
+            visibleFrom="sm"
+            style={{
+              flex: 2,
+              justifyContent: "flex-end",
+              marginRight: "-40px",
+            }}
+          >
             <Group gap="md">
-              <ThemeToggle />
-
               {isAuthenticated ? (
                 <>
-                  {/* Use color="primary" for consistent coloring */}
                   <Button
-                    component={Link}
+                    component={NavLink}
                     to="/"
                     variant={activeLink("/") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconHome size={18} />}
-                    style={{ color: "white" }} // This will make the text white
+                    style={{
+                      color: "white",
+                    }}
                   >
                     Home
                   </Button>
 
                   <Button
-                    component={Link}
+                    component={NavLink}
                     to="/movies"
                     variant={activeLink("/movies") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconMovie size={18} />}
-                    style={{ color: "white" }} // This changes the text color to white
+                    style={{
+                      color: "white",
+                    }}
                   >
                     Movies
                   </Button>
 
                   <Button
-                    component={Link}
+                    component={NavLink}
                     to="/theaters"
                     variant={activeLink("/theaters") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconTheater size={18} />}
-                    style={{ color: "white" }}
+                    style={{
+                      color: "white",
+                    }}
                   >
-                    Theaters
+                    Our Theaters
                   </Button>
 
                   <Button
-                    component={Link}
+                    component={NavLink}
                     to="/my-reservations"
                     variant={
                       activeLink("/my-reservations") ? "filled" : "subtle"
                     }
                     color="primary"
                     leftSection={<IconTicket size={18} />}
-                    style={{ color: "white" }}
+                    style={{
+                      color: "white",
+                    }}
                   >
                     My Tickets
                   </Button>
@@ -178,7 +195,12 @@ const Navbar = () => {
                         variant="subtle"
                         color="primary"
                         leftSection={
-                          <Avatar size="sm" color="primary" radius="xl">
+                          <Avatar
+                            size="sm"
+                            color="primary"
+                            radius="xl"
+                            style={{ backgroundColor: redButtonColor }}
+                          >
                             {user?.userName.charAt(0).toUpperCase()}
                           </Avatar>
                         }
@@ -190,8 +212,17 @@ const Navbar = () => {
 
                     <Menu.Dropdown>
                       <Menu.Label>Account</Menu.Label>
+                      {isAdmin && (
+                        <Menu.Item
+                          component={Link}
+                          to="/admin"
+                          leftSection={<IconSettings size={14} />}
+                        >
+                          Admin Panel
+                        </Menu.Item>
+                      )}
                       <Menu.Item
-                        color="primary"
+                        color="red"
                         leftSection={<IconLogout size={14} />}
                         onClick={handleLogout}
                       >
@@ -203,69 +234,69 @@ const Navbar = () => {
               ) : (
                 <>
                   <Button
-                    component={Link}
+                    component={NavLink}
+                    to="/"
+                    variant={activeLink("/") ? "filled" : "subtle"}
+                    color="primary"
+                    leftSection={<IconHome size={18} />}
+                    style={{
+                      color: "white",
+                    }}
+                  >
+                    Home
+                  </Button>
+
+                  <Button
+                    component={NavLink}
                     to="/movies"
                     variant={activeLink("/movies") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconMovie size={18} />}
-                    style={{ color: "white" }} // This changes the text color to white
+                    style={{
+                      color: "white",
+                    }}
                   >
                     Movies
                   </Button>
                   <Button
-                    component={Link}
+                    component={NavLink}
                     to="/theaters"
                     variant={activeLink("/theaters") ? "filled" : "subtle"}
                     color="primary"
                     leftSection={<IconTheater size={18} />}
-                    style={{ color: "white" }}
+                    style={{
+                      color: "white",
+                    }}
                   >
                     Our Theaters
                   </Button>
 
-                  {/* Sign up button - Match red color */}
-                  <Button
-                    component={Link}
-                    to="/signup"
-                    variant="outline"
-                    leftSection={<IconUserPlus size={18} />}
-                    style={{
-                      borderColor: redButtonColor,
-                      color: redButtonColor,
-                    }}
-                    styles={{
-                      root: {
-                        "&:hover": {
-                          backgroundColor: `${redButtonColor}10`,
+                  <Group gap="sm">
+                    <Button
+                      variant="subtle"
+                      color="primary"
+                      onClick={handleOpenLogin}
+                      styles={(theme) => ({
+                        root: {
+                          color: "white",
+                          "&:hover": {
+                            backgroundColor: theme.colors.red[6],
+                          },
                         },
-                      },
-                    }}
-                  >
-                    Sign Up
-                  </Button>
-
-                  {/* Login button - Match same red as landing page */}
-                  <Button
-                    component={Link}
-                    to="/login"
-                    style={{
-                      backgroundColor: redButtonColor,
-                      color: "white",
-                      fontWeight: 600,
-                    }}
-                    styles={{
-                      root: {
-                        "&:hover": {
-                          backgroundColor: "#c92a2a", // Slightly darker red on hover
-                        },
-                      },
-                      label: {
-                        color: "white",
-                      },
-                    }}
-                  >
-                    LOGIN
-                  </Button>
+                      })}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="filled"
+                      color="red"
+                      onClick={handleOpenSignup}
+                      leftSection={<IconUserPlus size={18} />}
+                      style={{}}
+                    >
+                      Sign Up
+                    </Button>
+                  </Group>
                 </>
               )}
             </Group>
@@ -276,12 +307,20 @@ const Navbar = () => {
             opened={opened}
             onClick={toggle}
             hiddenFrom="sm"
-            color={theme.colors.primary[0]}
+            color="#ffffff"
             size="sm"
           />
         </Group>
-        <LoginSignupModal opened={modalOpened} onClose={closeModal} />
       </Box>
+
+      {/* Fixed height spacing element */}
+      <Box style={{ height: 60 }} />
+
+      <LoginSignupModal
+        opened={modalOpened}
+        onClose={closeModal}
+        initialView={initialView}
+      />
 
       {/* Mobile drawer */}
       <Drawer
@@ -290,88 +329,83 @@ const Navbar = () => {
         size="xs"
         padding="md"
         title={
-          <Text fw={700} size="lg" c="primary">
-            Lions Den Cinemas
-          </Text>
+          <Group align="center" gap="sm">
+            <AnimatedLion
+              size={40}
+              primaryColor="#d4af37"
+              secondaryColor="#6B4226"
+            />
+            <Text
+              fw={700}
+              size="lg"
+              style={{
+                color: redButtonColor,
+              }}
+            >
+              Lions Den Cinemas
+            </Text>
+          </Group>
         }
         hiddenFrom="sm"
         withCloseButton
         position="right"
+        styles={{
+          body: { backgroundColor: "#1a1b1e" },
+          header: { backgroundColor: "#1a1b1e" },
+        }}
       >
-        {/* Similarly update colors in drawer content */}
         <Stack>
           {isAuthenticated ? (
-            // Similar color updates for mobile drawer
             <>
-              <Group mb="md">
-                <Avatar size="md" color="primary" radius="xl">
-                  {user?.userName.charAt(0).toUpperCase()}
-                </Avatar>
-                <div>
-                  <Text fw={500}>{user?.userName}</Text>
-                  <Text size="xs" c="dimmed">
-                    {user?.roles?.includes("Admin")
-                      ? "Administrator"
-                      : "Member"}
-                  </Text>
-                </div>
-              </Group>
-
               <Button
-                component={Link}
+                component={NavLink}
                 to="/"
-                variant="subtle"
+                variant={activeLink("/") ? "filled" : "subtle"}
                 color="primary"
-                fullWidth
                 leftSection={<IconHome size={18} />}
-                onClick={close}
+                fullWidth
               >
                 Home
               </Button>
 
               <Button
-                component={Link}
+                component={NavLink}
                 to="/movies"
                 variant={activeLink("/movies") ? "filled" : "subtle"}
                 color="primary"
                 leftSection={<IconMovie size={18} />}
-                style={{ color: "white" }} // This changes the text color to white
-              >
-                Theaters
-              </Button>
-
-              <Button
-                variant="subtle"
-                color="primary"
                 fullWidth
-                leftSection={<IconMovie size={18} />}
-                onClick={close}
               >
                 Movies
               </Button>
 
               <Button
-                variant="subtle"
+                component={NavLink}
+                to="/theaters"
+                variant={activeLink("/theaters") ? "filled" : "subtle"}
                 color="primary"
+                leftSection={<IconTheater size={18} />}
                 fullWidth
-                leftSection={<IconTicket size={18} />}
-                onClick={close}
               >
-                Tickets
+                Our Theaters
               </Button>
 
               <Button
-                variant="outline"
+                component={NavLink}
+                to="/my-reservations"
+                variant={activeLink("/my-reservations") ? "filled" : "subtle"}
+                color="primary"
+                leftSection={<IconTicket size={18} />}
                 fullWidth
+              >
+                My Tickets
+              </Button>
+
+              <Button
+                color="red"
                 leftSection={<IconLogout size={18} />}
-                onClick={() => {
-                  handleLogout();
-                  close();
-                }}
-                style={{
-                  borderColor: redButtonColor,
-                  color: redButtonColor,
-                }}
+                onClick={handleLogout}
+                fullWidth
               >
                 Logout
               </Button>
@@ -379,67 +413,41 @@ const Navbar = () => {
           ) : (
             <>
               <Button
-                component={Link}
-                to="/movies"
-                variant="subtle"
+                component={NavLink}
+                to="/"
+                variant={activeLink("/") ? "filled" : "subtle"}
                 color="primary"
+                leftSection={<IconHome size={18} />}
                 fullWidth
+              >
+                Home
+              </Button>
+
+              <Button
+                component={NavLink}
+                to="/movies"
+                variant={activeLink("/movies") ? "filled" : "subtle"}
+                color="primary"
                 leftSection={<IconMovie size={18} />}
-                onClick={close}
+                fullWidth
               >
                 Movies
               </Button>
 
               <Button
-                component={Link}
-                to="/signup"
-                variant="outline"
-                fullWidth
+                onClick={handleOpenLogin}
+                variant="filled"
+                style={{ backgroundColor: redButtonColor }}
                 leftSection={<IconUserPlus size={18} />}
-                onClick={close}
-                style={{
-                  borderColor: redButtonColor,
-                  color: redButtonColor,
-                }}
-                styles={{
-                  root: {
-                    "&:hover": {
-                      backgroundColor: `${redButtonColor}10`,
-                    },
-                  },
-                }}
-              >
-                Sign Up
-              </Button>
-
-              <Button
-                component={Link}
-                to="/login"
                 fullWidth
-                onClick={close}
-                style={{
-                  backgroundColor: redButtonColor,
-                  color: "white",
-                  fontWeight: 600,
-                }}
-                styles={{
-                  root: {
-                    "&:hover": {
-                      backgroundColor: "#c92a2a",
-                    },
-                  },
-                  label: {
-                    color: "white",
-                  },
-                }}
               >
-                LOGIN
+                Login
               </Button>
             </>
           )}
         </Stack>
       </Drawer>
-    </>
+    </Box>
   );
 };
 

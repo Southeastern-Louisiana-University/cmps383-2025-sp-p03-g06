@@ -5,11 +5,12 @@ import {
   Tooltip,
   Rating,
   useMantineColorScheme,
+  RatingProps,
 } from "@mantine/core";
 
-interface MovieRatingProps {
-  rating: string; // MPAA Rating like "PG", "R", etc.
-  score?: number; // Optional score out of 10
+interface MovieRatingProps extends Omit<RatingProps, "value"> {
+  rating?: string; // MPAA Rating like "PG", "R", etc.
+  score?: number | null;
   size?: "sm" | "md" | "lg";
   showTooltip?: boolean;
 }
@@ -19,6 +20,7 @@ const MovieRating = ({
   score,
   size = "md",
   showTooltip = true,
+  ...props
 }: MovieRatingProps) => {
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
@@ -58,7 +60,8 @@ const MovieRating = ({
   const currentSize = sizeValues[size];
 
   // Get badge color based on rating
-  const getBadgeColor = (rating: string) => {
+  const getBadgeColor = (rating: string | undefined) => {
+    if (!rating) return isDark ? "gray.6" : "gray.7";
     switch (rating) {
       case "G":
         return "green";
@@ -76,12 +79,15 @@ const MovieRating = ({
   };
 
   // Convert score to stars (0-10 scale to 0-5 stars)
-  const getStars = (score: number) => {
-    return score / 2;
+
+  // Format score for display
+  const formatScore = (score: number | undefined) => {
+    if (typeof score !== "number") return "N/A";
+    return score.toFixed(1);
   };
 
   // Render rating badge with optional tooltip
-  const ratingBadge = (
+  const ratingBadge = rating ? (
     <Box
       style={{
         display: "inline-block",
@@ -99,32 +105,47 @@ const MovieRating = ({
     >
       {rating}
     </Box>
-  );
+  ) : null;
+
+  if (score === undefined || score === null) {
+    return null;
+  }
+
+  // Convert score to a 0-5 scale if it's on a different scale
+  const normalizedScore = Math.min(5, Math.max(0, score));
 
   return (
-    <Group gap={score ? "sm" : "xs"} wrap="nowrap" align="center">
-      {showTooltip && ratingDescriptions[rating] ? (
-        <Tooltip label={ratingDescriptions[rating]} position="top" withArrow>
-          {ratingBadge}
-        </Tooltip>
-      ) : (
-        ratingBadge
-      )}
+    <Group gap={score !== undefined ? "sm" : "xs"} wrap="nowrap" align="center">
+      {rating &&
+        (showTooltip && ratingDescriptions.hasOwnProperty(rating) ? (
+          <Tooltip
+            label={
+              ratingDescriptions[rating as keyof typeof ratingDescriptions]
+            }
+            position="top"
+            withArrow
+          >
+            {ratingBadge}
+          </Tooltip>
+        ) : (
+          ratingBadge
+        ))}
 
       {score !== undefined && (
         <Group gap={4} wrap="nowrap" align="center">
           <Rating
-            value={getStars(score)}
+            value={normalizedScore}
             fractions={2}
             readOnly
             size={currentSize.ratingSize}
+            {...props}
           />
           <Text
             size={currentSize.fontSize}
             fw={500}
             c={isDark ? "gray.3" : "gray.7"}
           >
-            {score.toFixed(1)}/10
+            {formatScore(score)}/10
           </Text>
         </Group>
       )}

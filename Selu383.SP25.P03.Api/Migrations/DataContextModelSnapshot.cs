@@ -110,6 +110,51 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Authorization.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Authorization.UserRole", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Concessions.ConcessionCategory", b =>
                 {
                     b.Property<int>("Id")
@@ -172,6 +217,18 @@ namespace Selu383.SP25.P03.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("GuestEmail")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("GuestName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("GuestPhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<DateTime>("OrderTime")
                         .HasColumnType("datetime2");
 
@@ -179,10 +236,11 @@ namespace Selu383.SP25.P03.Api.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -190,39 +248,6 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.HasIndex("ReservationId");
 
                     b.ToTable("ConcessionOrders");
-                });
-
-            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Concessions.OrderItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ConcessionItemId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SpecialInstructions")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConcessionItemId");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Movies.Genre", b =>
@@ -265,6 +290,9 @@ namespace Selu383.SP25.P03.Api.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
+                    b.Property<double?>("RatingScore")
+                        .HasColumnType("float");
+
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("datetime2");
 
@@ -273,7 +301,12 @@ namespace Selu383.SP25.P03.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("TrailerUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Title");
 
                     b.ToTable("Movies");
                 });
@@ -293,6 +326,103 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.ToTable("MovieGenres");
                 });
 
+            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Movies.TheaterMovie", b =>
+                {
+                    b.Property<int>("MovieId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TheaterId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MovieId", "TheaterId");
+
+                    b.HasIndex("TheaterId");
+
+                    b.ToTable("TheaterMovies");
+                });
+
+            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.OrderItems.OrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConcessionItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SpecialInstructions")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConcessionItemId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderItems");
+                });
+
+            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Payments.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("ConcessionOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentDetails")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("PaymentTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReservationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConcessionOrderId");
+
+                    b.HasIndex("ReservationId");
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Reservations.Reservation", b =>
                 {
                     b.Property<int>("Id")
@@ -301,6 +431,18 @@ namespace Selu383.SP25.P03.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ConfirmationCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GuestEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GuestName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GuestPhone")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("ReservationTime")
                         .HasColumnType("datetime2");
 
@@ -308,6 +450,7 @@ namespace Selu383.SP25.P03.Api.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -318,7 +461,7 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -374,6 +517,8 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("MovieId");
+
+                    b.HasIndex("StartTime");
 
                     b.HasIndex("TheaterRoomId");
 
@@ -437,6 +582,8 @@ namespace Selu383.SP25.P03.Api.Migrations
 
                     b.HasIndex("ManagerId");
 
+                    b.HasIndex("Name");
+
                     b.ToTable("Theaters");
                 });
 
@@ -470,36 +617,6 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.ToTable("TheaterRooms");
                 });
 
-            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Users.Role", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
-
-                    b.ToTable("AspNetRoles", (string)null);
-                });
-
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Users.User", b =>
                 {
                     b.Property<int>("Id")
@@ -527,6 +644,9 @@ namespace Selu383.SP25.P03.Api.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -568,24 +688,9 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Users.UserRole", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetUserRoles", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("Selu383.SP25.P03.Api.Features.Users.Role", null)
+                    b.HasOne("Selu383.SP25.P03.Api.Features.Authorization.Role", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -619,6 +724,25 @@ namespace Selu383.SP25.P03.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Authorization.UserRole", b =>
+                {
+                    b.HasOne("Selu383.SP25.P03.Api.Features.Authorization.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Selu383.SP25.P03.Api.Features.Users.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Concessions.ConcessionItem", b =>
                 {
                     b.HasOne("Selu383.SP25.P03.Api.Features.Concessions.ConcessionCategory", "Category")
@@ -641,25 +765,6 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.Navigation("Reservation");
                 });
 
-            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Concessions.OrderItem", b =>
-                {
-                    b.HasOne("Selu383.SP25.P03.Api.Features.Concessions.ConcessionItem", "ConcessionItem")
-                        .WithMany("OrderItems")
-                        .HasForeignKey("ConcessionItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Selu383.SP25.P03.Api.Features.Concessions.ConcessionOrder", "Order")
-                        .WithMany("OrderItems")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ConcessionItem");
-
-                    b.Navigation("Order");
-                });
-
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Movies.MovieGenre", b =>
                 {
                     b.HasOne("Selu383.SP25.P03.Api.Features.Movies.Genre", "Genre")
@@ -679,6 +784,61 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.Navigation("Movie");
                 });
 
+            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Movies.TheaterMovie", b =>
+                {
+                    b.HasOne("Selu383.SP25.P03.Api.Features.Movies.Movie", "Movie")
+                        .WithMany("TheaterMovies")
+                        .HasForeignKey("MovieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Selu383.SP25.P03.Api.Features.Theaters.Theater", "Theater")
+                        .WithMany("TheaterMovies")
+                        .HasForeignKey("TheaterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Movie");
+
+                    b.Navigation("Theater");
+                });
+
+            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.OrderItems.OrderItem", b =>
+                {
+                    b.HasOne("Selu383.SP25.P03.Api.Features.Concessions.ConcessionItem", "ConcessionItem")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("ConcessionItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Selu383.SP25.P03.Api.Features.Concessions.ConcessionOrder", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ConcessionItem");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Payments.Payment", b =>
+                {
+                    b.HasOne("Selu383.SP25.P03.Api.Features.Concessions.ConcessionOrder", "ConcessionOrder")
+                        .WithMany()
+                        .HasForeignKey("ConcessionOrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Selu383.SP25.P03.Api.Features.Reservations.Reservation", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ConcessionOrder");
+
+                    b.Navigation("Reservation");
+                });
+
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Reservations.Reservation", b =>
                 {
                     b.HasOne("Selu383.SP25.P03.Api.Features.Showtimes.Showtime", "Showtime")
@@ -689,9 +849,7 @@ namespace Selu383.SP25.P03.Api.Migrations
 
                     b.HasOne("Selu383.SP25.P03.Api.Features.Users.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Showtime");
 
@@ -767,23 +925,9 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.Navigation("Theater");
                 });
 
-            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Users.UserRole", b =>
+            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Authorization.Role", b =>
                 {
-                    b.HasOne("Selu383.SP25.P03.Api.Features.Users.Role", "Role")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Selu383.SP25.P03.Api.Features.Users.User", "User")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
-
-                    b.Navigation("User");
+                    b.Navigation("UserRoles");
                 });
 
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Concessions.ConcessionCategory", b =>
@@ -811,6 +955,8 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.Navigation("MovieGenres");
 
                     b.Navigation("Showtimes");
+
+                    b.Navigation("TheaterMovies");
                 });
 
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Reservations.Reservation", b =>
@@ -833,6 +979,8 @@ namespace Selu383.SP25.P03.Api.Migrations
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Theaters.Theater", b =>
                 {
                     b.Navigation("Rooms");
+
+                    b.Navigation("TheaterMovies");
                 });
 
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Theaters.TheaterRoom", b =>
@@ -840,11 +988,6 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.Navigation("Seats");
 
                     b.Navigation("Showtimes");
-                });
-
-            modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Users.Role", b =>
-                {
-                    b.Navigation("UserRoles");
                 });
 
             modelBuilder.Entity("Selu383.SP25.P03.Api.Features.Users.User", b =>

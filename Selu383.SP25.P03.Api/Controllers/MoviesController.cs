@@ -10,6 +10,7 @@ namespace Selu383.SP25.P03.Api.Controllers
 {
     [Route("api/movies")]
     [ApiController]
+    [AllowAnonymous]
     public class MoviesController(DataContext context) : ControllerBase
     {
         private readonly DataContext _context = context;
@@ -29,7 +30,9 @@ namespace Selu383.SP25.P03.Api.Controllers
                     DurationMinutes = m.DurationMinutes,
                     Rating = m.Rating,
                     PosterImageUrl = m.PosterImageUrl,
+                    TrailerUrl = m.TrailerUrl,
                     ReleaseDate = m.ReleaseDate,
+                    RatingScore = m.RatingScore,
                     Genres = new List<string>()
                 })
                 .ToListAsync();
@@ -77,7 +80,9 @@ namespace Selu383.SP25.P03.Api.Controllers
                     DurationMinutes = m.DurationMinutes,
                     Rating = m.Rating,
                     PosterImageUrl = m.PosterImageUrl,
+                    TrailerUrl = m.TrailerUrl,
                     ReleaseDate = m.ReleaseDate,
+                    RatingScore = m.RatingScore,
                     Genres = new List<string>()
                 })
                 .FirstOrDefaultAsync();
@@ -113,7 +118,9 @@ namespace Selu383.SP25.P03.Api.Controllers
                 DurationMinutes = movieDto.DurationMinutes,
                 Rating = movieDto.Rating,
                 PosterImageUrl = movieDto.PosterImageUrl,
-                ReleaseDate = movieDto.ReleaseDate
+                TrailerUrl = movieDto.TrailerUrl,
+                ReleaseDate = movieDto.ReleaseDate,
+                RatingScore = movieDto.RatingScore
             };
 
             _movies.Add(movie);
@@ -148,7 +155,9 @@ namespace Selu383.SP25.P03.Api.Controllers
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
                 PosterImageUrl = movie.PosterImageUrl,
+                TrailerUrl = movie.TrailerUrl,
                 ReleaseDate = movie.ReleaseDate,
+                RatingScore = movie.RatingScore,
                 Genres = movieDto.Genres ?? []
             });
         }
@@ -176,7 +185,9 @@ namespace Selu383.SP25.P03.Api.Controllers
             movie.DurationMinutes = movieDto.DurationMinutes;
             movie.Rating = movieDto.Rating;
             movie.PosterImageUrl = movieDto.PosterImageUrl;
+            movie.TrailerUrl = movieDto.TrailerUrl;
             movie.ReleaseDate = movieDto.ReleaseDate;
+            movie.RatingScore = movieDto.RatingScore;
 
             if (movieDto.Genres != null)
             {
@@ -267,7 +278,9 @@ namespace Selu383.SP25.P03.Api.Controllers
                     DurationMinutes = m.DurationMinutes,
                     Rating = m.Rating,
                     PosterImageUrl = m.PosterImageUrl,
+                    TrailerUrl = m.TrailerUrl,
                     ReleaseDate = m.ReleaseDate,
+                    RatingScore = m.RatingScore,
                     Genres = new List<string>()
                 })
                 .FirstOrDefaultAsync();

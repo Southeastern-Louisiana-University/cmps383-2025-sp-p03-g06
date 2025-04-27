@@ -10,10 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@chakra-ui/react": "^3.16.1",
     "@emotion/react": "^11.14.0",
-    "@mantine/core": "^7.17.2",
+    "@emotion/styled": "^11.14.0",
+    "@mantine/core": "^7.17.4",
     "@mantine/form": "^7.17.2",
-    "@mantine/hooks": "^7.17.2",
+    "@mantine/hooks": "^7.17.4",
+    "@mantine/styles": "^6.0.22",
+    "framer-motion": "^12.9.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^6.22.3"

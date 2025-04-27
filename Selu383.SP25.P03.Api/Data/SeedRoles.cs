@@ -1,6 +1,7 @@
 ﻿// Data/SeedRoles.cs
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Selu383.SP25.P03.Api.Features.Authorization;
 using Selu383.SP25.P03.Api.Features.Users;
 
 namespace Selu383.SP25.P03.Api.Data
@@ -20,6 +21,7 @@ namespace Selu383.SP25.P03.Api.Data
                 await roleManager.CreateAsync(new Role { Name = UserRoleNames.Admin });
                 await roleManager.CreateAsync(new Role { Name = UserRoleNames.Manager });
                 await roleManager.CreateAsync(new Role { Name = UserRoleNames.User });
+                await roleManager.CreateAsync(new Role { Name = UserRoleNames.Guest });
                 context.SaveChanges();
             }
         }

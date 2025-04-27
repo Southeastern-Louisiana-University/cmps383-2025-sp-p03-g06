@@ -1,20 +1,33 @@
+// src/components/LandingPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Box, Button, Text, useMantineColorScheme, Flex } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Text,
+  useMantineColorScheme,
+  Flex,
+  Badge,
+  Group,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { Carousel } from "@mantine/carousel";
 import "@mantine/carousel/styles.css";
 import { movieApi, MovieDTO } from "../services/api";
-
+import { IconClock, IconMovie, IconTicket } from "@tabler/icons-react";
+import MovieRating from "./MovieRating";
+import LoginSignupModal from "./LoginSignupModal";
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
-
   const { isAuthenticated } = useAuth();
   const [movies, setMovies] = useState<MovieDTO[]>([]);
-
+  const [modalOpened, { open: openModal, close: closeModal }] =
+    useDisclosure(false);
+  const [initialView, setInitialView] = useState<"login" | "signup">("signup");
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -25,8 +38,6 @@ const LandingPage = () => {
         console.error("Failed to fetch movies", error);
       }
     };
-
-
     fetchMovies();
   }, []);
 
@@ -34,8 +45,13 @@ const LandingPage = () => {
     navigate(`/movies/${movie.id}/showtimes`);
   };
 
-  const handleJoinClick = () => {
-    navigate("/signup");
+  const handleSuccess = () => {
+    closeModal();
+  };
+
+  const handleJoinNow = () => {
+    setInitialView("signup");
+    openModal();
   };
 
   const formatReleaseDate = (dateString: string) => {
@@ -47,69 +63,113 @@ const LandingPage = () => {
     });
   };
 
+  // Convert 0-10 rating to 0-5 stars for the rating component
+
+  // Format score for display
 
   return (
-    <Box>
+    <Box
+      style={{
+        backgroundColor: "var(--background-darker)",
+        minHeight: "100vh",
+      }}
+    >
+      {/* Carousel section */}
       <Box
         style={{
-
           position: "relative",
-          padding: "30px 0",
+          padding: "40px 0",
           overflow: "hidden",
-          background: isDark ? "#1a1b1e" : "#f8f9fa",
+          backgroundColor: "var(--background-darker)", // ← matched to footer/navbar
+          width: "100%",
         }}
       >
         <Carousel
-          slideSize={{ base: "70%", sm: "40%", md: "30%", lg: "20%" }}
-
-          slideGap="md"
-          containScroll="trimSnaps"
+          slideSize="20%"
           slidesToScroll={1}
-          withControls
+          align="start"
+          slideGap="md"
+          controlsOffset="sm"
           loop
-
-          controlsOffset="xs"
+          withControls
+          withIndicators
           styles={{
+            root: {
+              width: "100vw",
+              maxWidth: "100%",
+            },
+            viewport: {
+              padding: "5px 0",
+            },
             container: {
-              gap: "10px",
               padding: "0 20px",
             },
-            slide: {
-              // Transition applied directly in CSS
-              transition: "transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
-              willChange: "transform",
+            control: {
+              width: 80,
+              height: 80,
+              backgroundColor: "#e03131",
+              color: "white",
+              borderRadius: "12px",
+              border: "3px solid black",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+              transition: "all 0.2s ease",
+              outline: "none",
+              "& svg": {
+                width: 40,
+                height: 40,
+              },
               "&:hover": {
-                transform: "scale(1.05)",
-                zIndex: 10,
+                backgroundColor: "#c92a2a",
+                color: "white",
+                boxShadow: "0 6px 16px rgba(0, 0, 0, 0.4)",
+                transform: "scale(1.1)",
+                border: "3px solid black",
+              },
+              "&:active": {
+                transform: "scale(0.95)",
               },
             },
-            control: {
-              backgroundColor: isDark
-                ? "rgba(255, 255, 255, 0.2)"
-                : "rgba(0, 0, 0, 0.2)",
-              color: isDark ? "white" : "black",
-              "&:hover": {
-                backgroundColor: isDark
-                  ? "rgba(255, 255, 255, 0.3)"
-                  : "rgba(0, 0, 0, 0.3)",
+            controls: {
+              padding: "0 40px",
+              justifyContent: "space-between",
+              width: "100%",
+            },
+            indicators: {
+              bottom: "-30px",
+            },
+            indicator: {
+              width: 16,
+              height: 16,
+              backgroundColor: "#e03131",
+              borderRadius: "50%",
+              transition: "all 0.2s ease",
+              "&[data-active]": {
+                backgroundColor: "#c92a2a",
+                transform: "scale(1.2)",
               },
             },
           }}
         >
           {movies.map((movie) => (
             <Carousel.Slide key={movie.id}>
-              <Flex direction="column" gap="xs">
-                {/* Movie Poster */}
+              <Flex direction="column" gap="xs" style={{ padding: "0 10px" }}>
                 <Box
                   style={{
                     width: "100%",
                     height: "auto",
                     position: "relative",
-                    paddingBottom: "150%", // 2:3 aspect ratio typical for movie posters
+                    paddingBottom: "150%",
                     overflow: "hidden",
                     borderRadius: "8px",
-                    boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                    boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
+                    cursor: "pointer",
+                    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                    ":hover": {
+                      transform: "scale(1.03)",
+                      boxShadow: "0 8px 16px rgba(0,0,0,0.4)",
+                    },
                   }}
+                  onClick={() => handleMovieClick(movie)}
                 >
                   <div
                     style={{
@@ -118,32 +178,46 @@ const LandingPage = () => {
                       left: 0,
                       width: "100%",
                       height: "100%",
-                      backgroundImage: `url(${movie.posterImageUrl})`,
+                      backgroundImage: `url(${
+                        movie.posterImageUrl || "/images/default-movie.jpg"
+                      })`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                     }}
                   />
                 </Box>
 
-                {/* Movie Info Below Poster */}
                 <Flex
                   direction="column"
-                  gap={4}
+                  gap={8}
                   justify="center"
                   align="center"
+                  style={{ padding: "10px", minHeight: "150px" }}
                 >
                   <Text size="md" fw={700} lineClamp={1} ta="center">
                     {movie.title}
                   </Text>
-                  <Text size="xs" c="dimmed" ta="center">
-                    {movie.durationMinutes} MIN{" "}
-                    {movie.rating && `| ${movie.rating}`}
-                  </Text>
+
+                  <Group gap={10} style={{ justifyContent: "center" }}>
+                    <Badge color={isDark ? "gray" : "dark"}>
+                      <Group gap={5}>
+                        <IconClock size={14} />
+                        <Text size="xs">{movie.durationMinutes} min</Text>
+                      </Group>
+                    </Badge>
+
+                    <MovieRating
+                      rating={movie.rating}
+                      score={movie.ratingScore}
+                      size="sm"
+                      showTooltip={true}
+                    />
+                  </Group>
+
                   <Text size="xs" c="dimmed" ta="center" mb={5}>
                     Released {formatReleaseDate(movie.releaseDate)}
                   </Text>
 
-                  {/* Red button with white text */}
                   <Button
                     fullWidth
                     color="red"
@@ -153,7 +227,7 @@ const LandingPage = () => {
                       color: "white",
                       fontWeight: 600,
                       borderRadius: "4px",
-                      marginTop: "4px",
+                      marginTop: "8px",
                     }}
                     styles={{
                       root: {
@@ -165,29 +239,32 @@ const LandingPage = () => {
                         color: "white",
                       },
                     }}
+                    leftSection={<IconTicket size={16} />}
                   >
                     GET TICKETS
                   </Button>
                 </Flex>
               </Flex>
-
             </Carousel.Slide>
           ))}
         </Carousel>
       </Box>
 
-
-      {/* Membership Section - Only show if not authenticated */}
+      {/* Membership Section */}
       {!isAuthenticated && (
         <Box
           style={{
             textAlign: "center",
             padding: "40px 20px",
-            backgroundColor: isDark ? "#141517" : "#f1f3f5",
+            backgroundColor: "var(--background-darker)", // ← match footer/navbar
           }}
         >
-          <Text size="xl" fw={700} mb={10}>
-
+          <Text
+            size="xl"
+            fw={700}
+            mb={10}
+            style={{ color: isDark ? "white" : "black" }}
+          >
             Become a Member
           </Text>
           <Text c="dimmed" mb={20}>
@@ -195,14 +272,12 @@ const LandingPage = () => {
             more.
           </Text>
           <Button
-
             color="red"
             size="md"
-            onClick={handleJoinClick}
+            onClick={handleJoinNow}
             style={{
               backgroundColor: "#e03131",
               color: "white",
-              fontWeight: 600,
             }}
             styles={{
               root: {
@@ -214,12 +289,19 @@ const LandingPage = () => {
                 color: "white",
               },
             }}
-
+            leftSection={<IconMovie size={18} />}
           >
             JOIN NOW
           </Button>
         </Box>
       )}
+
+      <LoginSignupModal
+        opened={modalOpened}
+        onClose={closeModal}
+        onSuccess={handleSuccess}
+        initialView={initialView}
+      />
     </Box>
   );
 };

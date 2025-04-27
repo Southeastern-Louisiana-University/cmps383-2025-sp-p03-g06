@@ -2,6 +2,7 @@
 // Data/SeedConcessions.cs
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Features.Concessions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Selu383.SP25.P03.Api.Data
 {
@@ -38,47 +39,51 @@ namespace Selu383.SP25.P03.Api.Data
             // Add concession items
             var items = new List<ConcessionItem>
     {
-        // Snacks
-        new()
-        {
-            Name = "Small Popcorn",
-            Description = "Freshly popped popcorn, small size",
-            Price = 5.99m,
-            CategoryId = snacksCategory.Id,  // Use the actual ID
-            IsAvailable = true
-        },
-        new()
-        {
-            Name = "Large Popcorn",
-            Description = "Freshly popped popcorn, large size with free refill",
-            Price = 8.99m,
-            CategoryId = snacksCategory.Id,  // Use the actual ID
-            IsAvailable = true
-        },
-        new()
-        {
-            Name = "Nachos",
-            Description = "Crispy nachos with cheese sauce",
-            Price = 6.99m,
-            CategoryId = snacksCategory.Id,  // Use the actual ID
-            IsAvailable = true
-        },
-        new()
-        {
-            Name = "Hot Dog",
-            Description = "Classic hot dog with your choice of condiments",
-            Price = 7.49m,
-            CategoryId = snacksCategory.Id,  // Use the actual ID
-            IsAvailable = true
-        },
-
+// Snacks
+new()
+{
+    Name = "Small Popcorn",
+    Description = "Freshly popped popcorn, small size",
+    Price = 5.99m,
+    ImageUrl = "/images/food/popcorn.jpg",
+    CategoryId = snacksCategory.Id,
+    IsAvailable = true
+},
+new()
+{
+    Name = "Large Popcorn",
+    Description = "Freshly popped popcorn, large size",
+    Price = 7.99m,
+    ImageUrl = "/images/food/popcorn.jpg",
+    CategoryId = snacksCategory.Id,
+    IsAvailable = true
+},
+new()
+{
+    Name = "Nachos",
+    Description = "Crispy tortilla chips with warm cheese sauce",
+    Price = 6.99m,
+    ImageUrl = "/images/food/nachos.jpg",
+    CategoryId = snacksCategory.Id,
+    IsAvailable = true
+},
+new()
+{
+    Name = "Hot Dog",
+    Description = "Classic hot dog with your choice of condiments",
+    Price = 7.49m,
+    ImageUrl = "/images/food/hot-dog.jpg",
+    CategoryId = snacksCategory.Id,
+    IsAvailable = true
+},
         // Beverages
         new()
         {
             Name = "Small Soda",
             Description = "Small fountain drink, your choice of flavor",
             Price = 4.49m,
-            CategoryId = beveragesCategory.Id,  // Use the actual ID
+            ImageUrl = "/images/food/soda.jpg",
+            CategoryId = beveragesCategory.Id,
             IsAvailable = true
         },
         new()
@@ -86,7 +91,8 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Large Soda",
             Description = "Large fountain drink with free refill",
             Price = 6.49m,
-            CategoryId = beveragesCategory.Id,  // Use the actual ID
+            ImageUrl = "/images/food/soda.jpg",
+            CategoryId = beveragesCategory.Id,
             IsAvailable = true
         },
         new()
@@ -94,7 +100,8 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Bottled Water",
             Description = "16oz bottled water",
             Price = 3.99m,
-            CategoryId = beveragesCategory.Id,  // Use the actual ID
+            ImageUrl = "/images/food/water.jpg",
+            CategoryId = beveragesCategory.Id,
             IsAvailable = true
         },
         new()
@@ -102,7 +109,8 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Coffee",
             Description = "Freshly brewed coffee",
             Price = 4.99m,
-            CategoryId = beveragesCategory.Id,  // Use the actual ID
+            ImageUrl = "/images/food/coffee.jpg",
+            CategoryId = beveragesCategory.Id,
             IsAvailable = true
         },
 
@@ -112,6 +120,7 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Popcorn & Soda Combo",
             Description = "Large popcorn and large soda with free refills",
             Price = 13.99m,
+            ImageUrl = "/images/food/soda-pop.jpg",
             CategoryId = comboDealsCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -120,6 +129,7 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Family Pack",
             Description = "2 large popcorns, 4 large sodas, and 2 candy items",
             Price = 29.99m,
+            ImageUrl = "/images/food/fam.jpg",
             CategoryId = comboDealsCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -128,6 +138,7 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Hot Dog Combo",
             Description = "Hot dog, small popcorn, and small soda",
             Price = 15.99m,
+            ImageUrl = "/images/food/hotdog-combo.jpg",
             CategoryId = comboDealsCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -138,6 +149,7 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Chocolate Bar",
             Description = "Classic chocolate bar",
             Price = 3.99m,
+            ImageUrl = "/images/food/choc.jpg",
             CategoryId = dessertsCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -146,6 +158,7 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Ice Cream",
             Description = "Premium vanilla ice cream cup",
             Price = 5.99m,
+            ImageUrl = "/images/food/icecream.jpg",
             CategoryId = dessertsCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -154,6 +167,7 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Cookie",
             Description = "Freshly baked chocolate chip cookie",
             Price = 3.49m,
+            ImageUrl = "/images/food/cookie.jpg",
             CategoryId = dessertsCategory.Id,  // Use the actual ID
             IsAvailable = true
         },
@@ -162,6 +176,7 @@ namespace Selu383.SP25.P03.Api.Data
             Name = "Candy Pack",
             Description = "Assorted movie theater candy",
             Price = 4.99m,
+            ImageUrl = "/images/food/candy.jpg",
             CategoryId = dessertsCategory.Id,  // Use the actual ID
             IsAvailable = true
         }

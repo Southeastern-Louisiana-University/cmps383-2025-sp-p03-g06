@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
+using Selu383.SP25.P03.Api.Features.Authorization;
 using Selu383.SP25.P03.Api.Features.Users;
+using Selu383.SP25.P03.Api.Services;
 
 namespace Selu383.SP25.P03.Api
 {
@@ -13,9 +15,43 @@ namespace Selu383.SP25.P03.Api
 
             // Add services to the container.
             builder.Services.AddDbContext<DataContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DataContext") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
+            {
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("DataContext") ?? throw new InvalidOperationException("Connection string 'DataContext' not found."),
+                    sqlOptions =>
+                    {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 3,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorNumbersToAdd: null);
+                        sqlOptions.CommandTimeout(30);
+                    });
+            });
 
             builder.Services.AddControllers();
+
+            // Add memory cache
+            builder.Services.AddMemoryCache(options =>
+            {
+                options.SizeLimit = 1024 * 1024 * 50; // 50MB limit
+                options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
+            });
+
+            // Register services
+            builder.Services.AddScoped<ICacheService, CacheService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
+
+            // Add CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.WithOrigins("http://localhost:5173", "https://localhost:7027")
+                           .AllowAnyMethod()
+                           .AllowAnyHeader()
+                           .AllowCredentials();
+                });
+            });
 
             // Configure OpenAPI/Swagger - standard configuration
             builder.Services.AddEndpointsApiExplorer();
@@ -80,6 +116,7 @@ namespace Selu383.SP25.P03.Api
                 SeedTheaterRooms.Initialize(scope.ServiceProvider);
                 SeedSeats.Initialize(scope.ServiceProvider);
                 SeedMovies.Initialize(scope.ServiceProvider);
+                SeedTheaterMovies.Initialize(scope.ServiceProvider);
                 SeedShowtimes.Initialize(scope.ServiceProvider);
                 SeedConcessions.Initialize(scope.ServiceProvider);
             }
@@ -93,8 +130,8 @@ namespace Selu383.SP25.P03.Api
             //Swagger UI
             app.UseSwagger();
             app.UseSwaggerUI();
-
             app.UseHttpsRedirection();
+            app.UseCors();
             app.UseAuthentication();
             app.UseRouting()
                .UseAuthorization()

@@ -29,7 +29,7 @@ namespace Selu383.SP25.P03.Api.Data
                     },
                     new Theater
                     {
-                        Name = "Lions den 3",
+                        Name = "Lions Den 3",
                         Address = "Los Angeles: 4020 Marlton Ave, Los Angeles, CA 90008",
                         SeatCount = 300
                     }

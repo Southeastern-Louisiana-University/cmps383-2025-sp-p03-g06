@@ -79,6 +79,14 @@ export interface TheaterDTO {
   managerId: number | null;
 }
 
+export interface TheaterRoomDTO {
+  id: number;
+  name: string;
+  theaterId: number;
+  seatCount: number;
+  screenType: string;
+}
+
 export interface CreateUserRequest {
   username: string;
   password: string;
@@ -91,10 +99,17 @@ export interface MovieDTO {
   description: string;
   durationMinutes: number;
   rating: string;
-  posterImageUrl: string;
   releaseDate: string;
-  genres: string[];
+  posterImageUrl?: string;
+  trailerUrl?: string;
   ratingScore?: number;
+  genres: string[];
+  theaters: { id: number; name: string }[];
+}
+
+export interface TheaterMovieDTO {
+  movieId: number;
+  theaterId: number;
 }
 
 export interface ShowtimeDTO {
@@ -143,11 +158,6 @@ export interface ReservationDTO {
   seats: ReservationSeatDTO[];
 }
 
-export interface CreateReservationRequest {
-  showtimeId: number;
-  seatIds: number[];
-}
-
 // Concession
 export interface ConcessionItemDTO {
   id: number;
@@ -174,6 +184,7 @@ export interface CreateOrderItemDTO {
 export interface CreateConcessionOrderDTO {
   reservationId: number;
   items: CreateOrderItemDTO[];
+  guestInfo?: GuestUserInfo;
 }
 
 export interface OrderItemDTO {
@@ -194,6 +205,22 @@ export interface ConcessionOrderDTO {
   items: OrderItemDTO[];
 }
 
+// Add these new interfaces
+export interface GuestUserInfo {
+  email: string;
+  phoneNumber?: string;
+}
+
+// Update your CreateReservationRequest interface
+export interface CreateReservationRequest {
+  showtimeId: number;
+  seatIds: number[];
+  guestInfo?: {
+    email: string;
+    phoneNumber?: string;
+  };
+}
+
 // Custom error class for API errors
 export class ApiError extends Error {
   statusCode: number;
@@ -211,24 +238,41 @@ export class ApiError extends Error {
 
 // Shared error handling function
 const handleApiError = (error: any, customMessage: string): never => {
-  console.error(customMessage, error);
+  console.error("API Error Details:", {
+    message: customMessage,
+    error: error,
+    response: error?.response?.data,
+    status: error?.response?.status,
+  });
 
   if (axios.isAxiosError<string | object>(error)) {
-    // Handle Axios-specific errors with proper typing
     const axiosError = error as AxiosError;
     const statusCode = axiosError.response?.status || 500;
     const errorMessage = axiosError.response?.data || customMessage;
+
+    // Log the full error details
+    console.error("Full API Error:", {
+      status: statusCode,
+      message: errorMessage,
+      url: axiosError.config?.url,
+      method: axiosError.config?.method,
+      data: axiosError.config?.data,
+    });
+
     throw new ApiError(
-      typeof errorMessage === "string" ? errorMessage : customMessage,
+      typeof errorMessage === "string"
+        ? errorMessage
+        : JSON.stringify(errorMessage),
       statusCode
     );
   }
 
   if (ApiError.isApiError(error)) {
-    // Use the specific error message if it's an API error
-    throw new Error(error.message || customMessage);
+    console.error("API Error:", error);
+    throw error;
   }
 
+  console.error("Unknown Error:", error);
   throw new Error(customMessage);
 };
 
@@ -239,28 +283,45 @@ async function axiosWithRetry<T>(
   retryDelay: number = 1000
 ): Promise<T> {
   try {
+    console.log("Making API request:", {
+      url: config.url,
+      method: config.method,
+      data: config.data,
+    });
+
     const response = await axiosInstance(config);
+    console.log("API response:", {
+      status: response.status,
+      data: response.data,
+    });
+
     return response.data;
   } catch (error) {
-    // Don't retry authentication failures (401)
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      throw new ApiError("Not authenticated", 401);
-    }
+    if (axios.isAxiosError(error)) {
+      console.error("API Request Failed:", {
+        url: config.url,
+        method: config.method,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
 
-    // Don't retry client errors (4xx) except for 429 (rate limit)
-    if (
-      axios.isAxiosError(error) &&
-      error.response?.status &&
-      error.response.status >= 400 &&
-      error.response.status < 500 &&
-      error.response.status !== 429
-    ) {
-      throw new ApiError(
-        typeof error.response.data === "string"
-          ? error.response.data
-          : "Client error",
-        error.response.status
-      );
+      if (error.response?.status === 401) {
+        throw new ApiError("Not authenticated", 401);
+      }
+
+      if (
+        error.response?.status &&
+        error.response.status >= 400 &&
+        error.response.status < 500 &&
+        error.response.status !== 429
+      ) {
+        throw new ApiError(
+          typeof error.response.data === "string"
+            ? error.response.data
+            : JSON.stringify(error.response.data),
+          error.response.status
+        );
+      }
     }
 
     if (retries > 0) {
@@ -287,7 +348,6 @@ export const authApi = {
       });
 
       console.log("Login successful");
-      // Invalidate any user-related caches after login
       apiCache.invalidate(/^user|^theater/);
       return data;
     } catch (error) {
@@ -296,7 +356,6 @@ export const authApi = {
   },
 
   getCurrentUser: async (): Promise<UserDTO> => {
-    // Check cache first
     const cachedUser = apiCache.get<UserDTO>("currentUser");
     if (cachedUser) return cachedUser;
 
@@ -306,17 +365,13 @@ export const authApi = {
         method: "GET",
       });
 
-      // Cache user data for 30 minutes
       apiCache.set("currentUser", data, 30 * 60 * 1000);
       return data;
     } catch (error) {
-      // Don't propagate authentication errors, just return null
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         console.log("User not authenticated");
         return Promise.reject(new Error("Not authenticated"));
       }
-
-      // For other errors, use the standard error handler
       return handleApiError(error, "Failed to get current user information");
     }
   },
@@ -328,10 +383,27 @@ export const authApi = {
         method: "POST",
       });
 
-      // Clear all cache on logout
       apiCache.clear();
     } catch (error) {
       return handleApiError(error, "Logout failed. Please try again.");
+    }
+  },
+
+  /**
+   * Create a temporary guest user (for anonymous reservations).
+   */
+  createGuestUser: async (guestInfo: GuestUserInfo): Promise<UserDTO> => {
+    try {
+      const data = await axiosWithRetry<UserDTO>({
+        url: `/guest/create`,
+        method: "POST",
+        data: guestInfo,
+      });
+
+      apiCache.set("currentUser", data, 30 * 60 * 1000);
+      return data;
+    } catch (error) {
+      return handleApiError(error, "Failed to create guest session");
     }
   },
 };
@@ -364,7 +436,6 @@ export const userApi = {
 // Theater API calls
 export const theaterApi = {
   getAllTheaters: async (): Promise<TheaterDTO[]> => {
-    // Check cache first
     const cachedTheaters = apiCache.get<TheaterDTO[]>("theaters");
     if (cachedTheaters) return cachedTheaters;
 
@@ -374,7 +445,6 @@ export const theaterApi = {
         method: "GET",
       });
 
-      // Cache theaters for 5 minutes
       apiCache.set("theaters", data, 5 * 60 * 1000);
       return data;
     } catch (error) {
@@ -385,8 +455,22 @@ export const theaterApi = {
     }
   },
 
+  getTheaterRoomsById: async (theaterId: number): Promise<TheaterRoomDTO[]> => {
+    try {
+      const data = await axiosWithRetry<TheaterRoomDTO[]>({
+        url: `/theater-rooms/theater/${theaterId}`,
+        method: "GET",
+      });
+      return data;
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch theater rooms. Please try again later."
+      );
+    }
+  },
+
   getTheaterById: async (id: number): Promise<TheaterDTO> => {
-    // Check cache first
     const cachedTheater = apiCache.get<TheaterDTO>(`theater_${id}`);
     if (cachedTheater) return cachedTheater;
 
@@ -396,7 +480,6 @@ export const theaterApi = {
         method: "GET",
       });
 
-      // Cache individual theater for 5 minutes
       apiCache.set(`theater_${id}`, data, 5 * 60 * 1000);
       return data;
     } catch (error) {
@@ -417,7 +500,6 @@ export const theaterApi = {
         data: theater,
       });
 
-      // Invalidate theaters cache
       apiCache.invalidate(/^theaters/);
       return data;
     } catch (error) {
@@ -430,20 +512,31 @@ export const theaterApi = {
 
   updateTheater: async (
     id: number,
-    theater: Omit<TheaterDTO, "id">
+    theater: Partial<TheaterDTO>
   ): Promise<TheaterDTO> => {
     try {
+      // Make sure we're sending the complete theater object with the ID
+      const updateData = {
+        id,
+        name: theater.name,
+        address: theater.address,
+        seatCount: theater.seatCount,
+        managerId: theater.managerId,
+      };
+
+      console.log("Updating theater with data:", updateData);
+
       const data = await axiosWithRetry<TheaterDTO>({
         url: `/theaters/${id}`,
         method: "PUT",
-        data: { ...theater, id },
+        data: updateData,
       });
 
-      // Invalidate specific theater and theaters list cache
       apiCache.invalidate(/^theaters/);
       apiCache.invalidate(new RegExp(`^theater_${id}$`));
       return data;
     } catch (error) {
+      console.error("Theater update error:", error);
       return handleApiError(
         error,
         "Failed to update theater. Please check your inputs and try again."
@@ -458,7 +551,6 @@ export const theaterApi = {
         method: "DELETE",
       });
 
-      // Invalidate specific theater and theaters list cache
       apiCache.invalidate(/^theaters/);
       apiCache.invalidate(new RegExp(`^theater_${id}$`));
     } catch (error) {
@@ -466,6 +558,95 @@ export const theaterApi = {
         error,
         "Failed to delete theater. Please try again later."
       );
+    }
+  },
+
+  getMoviesByTheater: async (theaterId: number): Promise<number[]> => {
+    try {
+      return await axiosWithRetry<number[]>({
+        url: `/theater-movies/theater/${theaterId}`,
+        method: "GET",
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch movies for this theater. Please try again later."
+      );
+    }
+  },
+  assignMovieToTheater: async (data: TheaterMovieDTO): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/theater-movies/assign`,
+        method: "POST",
+        data,
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to assign movie to theater. Please try again later."
+      );
+    }
+  },
+
+  unassignMovieFromTheater: async (data: TheaterMovieDTO): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/theater-movies/unassign`,
+        method: "DELETE",
+        data,
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to unassign movie from theater. Please try again later."
+      );
+    }
+  },
+
+  // Theater Room methods
+  createTheaterRoom: async (
+    room: Omit<TheaterRoomDTO, "id">
+  ): Promise<TheaterRoomDTO> => {
+    try {
+      const data = await axiosWithRetry<TheaterRoomDTO>({
+        url: `/theater-rooms`,
+        method: "POST",
+        data: room,
+      });
+      return data;
+    } catch (error) {
+      return handleApiError(error, "Failed to create theater room");
+    }
+  },
+
+  updateTheaterRoom: async (
+    id: number,
+    room: Partial<TheaterRoomDTO>
+  ): Promise<TheaterRoomDTO> => {
+    try {
+      const data = await axiosWithRetry<TheaterRoomDTO>({
+        url: `/theater-rooms/${id}`,
+        method: "PUT",
+        data: {
+          ...room,
+          id,
+        },
+      });
+      return data;
+    } catch (error) {
+      return handleApiError(error, "Failed to update theater room");
+    }
+  },
+
+  deleteTheaterRoom: async (id: number): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/theater-rooms/${id}`,
+        method: "DELETE",
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to delete theater room");
     }
   },
 };
@@ -482,7 +663,7 @@ export const movieApi = {
         method: "GET",
       });
 
-      apiCache.set("movies", data, 5 * 60 * 1000); // Cache for 5 minutes
+      apiCache.set("movies", data, 5 * 60 * 1000);
       return data;
     } catch (error) {
       return handleApiError(
@@ -502,7 +683,7 @@ export const movieApi = {
         method: "GET",
       });
 
-      apiCache.set(`movie_${id}`, data, 5 * 60 * 1000); // Cache for 5 minutes
+      apiCache.set(`movie_${id}`, data, 5 * 60 * 1000);
       return data;
     } catch (error) {
       return handleApiError(
@@ -511,36 +692,168 @@ export const movieApi = {
       );
     }
   },
+
+  createMovie: async (movie: Omit<MovieDTO, "id">): Promise<MovieDTO> => {
+    try {
+      const data = await axiosWithRetry<MovieDTO>({
+        url: `/movies`,
+        method: "POST",
+        data: movie,
+      });
+
+      apiCache.invalidate(/^movies/);
+      return data;
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to create movie. Please try again later."
+      );
+    }
+  },
+
+  updateMovie: async (
+    id: number,
+    movie: Partial<MovieDTO>
+  ): Promise<MovieDTO> => {
+    try {
+      const data = await axiosWithRetry<MovieDTO>({
+        url: `/movies/${id}`,
+        method: "PUT",
+        data: {
+          ...movie,
+          id, // Include the ID in the request body
+        },
+      });
+
+      apiCache.invalidate(/^movies/);
+      apiCache.invalidate(new RegExp(`^movie_${id}$`));
+      return data;
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to update movie. Please try again later."
+      );
+    }
+  },
+
+  deleteMovie: async (id: number): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/movies/${id}`,
+        method: "DELETE",
+      });
+
+      apiCache.invalidate(/^movies/);
+      apiCache.invalidate(new RegExp(`^movie_${id}$`));
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to delete movie. Please try again later."
+      );
+    }
+  },
+
+  getTheatersByMovie: async (movieId: number): Promise<number[]> => {
+    try {
+      return await axiosWithRetry<number[]>({
+        url: `/theater-movies/movie/${movieId}`,
+        method: "GET",
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch theaters for this movie. Please try again later."
+      );
+    }
+  },
+
+  assignTheaterToMovie: async (
+    movieId: number,
+    theaterId: number
+  ): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/theater-movies/assign`,
+        method: "POST",
+        data: { movieId, theaterId },
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to assign theater to movie. Please try again later."
+      );
+    }
+  },
+
+  unassignTheaterFromMovie: async (
+    movieId: number,
+    theaterId: number
+  ): Promise<void> => {
+    try {
+      await axiosWithRetry<void>({
+        url: `/theater-movies/unassign`,
+        method: "DELETE",
+        data: { movieId, theaterId },
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to unassign theater from movie. Please try again later."
+      );
+    }
+  },
 };
 
 // Showtime API methods
 export const showtimeApi = {
   getAllShowtimes: async (): Promise<ShowtimeDTO[]> => {
+    console.log("Starting getAllShowtimes request");
     const cachedShowtimes = apiCache.get<ShowtimeDTO[]>("showtimes");
-    if (cachedShowtimes) return cachedShowtimes;
+    if (cachedShowtimes) {
+      console.log("Returning cached showtimes");
+      return cachedShowtimes;
+    }
 
     try {
+      console.log("Making API request to fetch showtimes");
       const data = await axiosWithRetry<ShowtimeDTO[]>({
         url: `/showtimes`,
         method: "GET",
       });
 
-      apiCache.set("showtimes", data, 5 * 60 * 1000); // Cache for 5 minutes
+      console.log("Received showtimes response:", {
+        dataLength: data?.length,
+      });
+
+      // Cache showtimes for 5 minutes
+      apiCache.set("showtimes", data, 5 * 60 * 1000);
       return data;
     } catch (error) {
-      return handleApiError(
-        error,
-        "Failed to fetch showtimes. Please try again later."
-      );
+      console.error("Error in getAllShowtimes:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("API Error Details:", {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+        });
+      }
+      throw error;
     }
   },
 
   getUpcomingShowtimes: async (): Promise<ShowtimeDTO[]> => {
+    const cachedUpcoming = apiCache.get<ShowtimeDTO[]>("upcoming_showtimes");
+    if (cachedUpcoming) return cachedUpcoming;
+
     try {
-      return await axiosWithRetry<ShowtimeDTO[]>({
+      const data = await axiosWithRetry<ShowtimeDTO[]>({
         url: `/showtimes/upcoming`,
         method: "GET",
       });
+
+      // Cache upcoming showtimes for 5 minutes
+      apiCache.set("upcoming_showtimes", data, 5 * 60 * 1000);
+      return data;
     } catch (error) {
       return handleApiError(
         error,
@@ -550,11 +863,19 @@ export const showtimeApi = {
   },
 
   getShowtimesByMovie: async (movieId: number): Promise<ShowtimeDTO[]> => {
+    const cacheKey = `movie_showtimes_${movieId}`;
+    const cachedShowtimes = apiCache.get<ShowtimeDTO[]>(cacheKey);
+    if (cachedShowtimes) return cachedShowtimes;
+
     try {
-      return await axiosWithRetry<ShowtimeDTO[]>({
+      const data = await axiosWithRetry<ShowtimeDTO[]>({
         url: `/showtimes/movie/${movieId}`,
         method: "GET",
       });
+
+      // Cache movie showtimes for 5 minutes
+      apiCache.set(cacheKey, data, 5 * 60 * 1000);
+      return data;
     } catch (error) {
       return handleApiError(
         error,
@@ -564,15 +885,129 @@ export const showtimeApi = {
   },
 
   getShowtimeById: async (id: number): Promise<ShowtimeDTO> => {
+    const cacheKey = `showtime_${id}`;
+    const cachedShowtime = apiCache.get<ShowtimeDTO>(cacheKey);
+    if (cachedShowtime) return cachedShowtime;
+
     try {
-      return await axiosWithRetry<ShowtimeDTO>({
+      const data = await axiosWithRetry<ShowtimeDTO>({
         url: `/showtimes/${id}`,
         method: "GET",
       });
+
+      if (!data) {
+        throw new Error("Showtime not found");
+      }
+
+      // Cache individual showtime for 5 minutes
+      apiCache.set(cacheKey, data, 5 * 60 * 1000);
+      return data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new Error("Showtime not found");
+      }
+      throw new Error(
+        error.response?.data ||
+          "Failed to fetch showtime details. Please try again later."
+      );
+    }
+  },
+
+  createShowtime: async (
+    showtime: Omit<
+      ShowtimeDTO,
+      "id" | "movieTitle" | "theaterRoomName" | "theaterName" | "endTime"
+    >
+  ): Promise<ShowtimeDTO> => {
+    try {
+      const data = await axiosWithRetry<ShowtimeDTO>({
+        url: `/showtimes`,
+        method: "POST",
+        data: showtime,
+      });
+
+      // Clear showtimes cache
+      apiCache.invalidate(/^showtimes/);
+      return data;
     } catch (error) {
       return handleApiError(
         error,
-        "Failed to fetch showtime details. Please try again later."
+        "Failed to create showtime. Please try again later."
+      );
+    }
+  },
+
+  updateShowtime: async (
+    id: number,
+    showtime: ShowtimeDTO
+  ): Promise<ShowtimeDTO> => {
+    console.log(`Attempting to update showtime ${id} with data:`, showtime);
+    try {
+      const data = await axiosWithRetry<ShowtimeDTO>({
+        url: `/showtimes/${id}`,
+        method: "PUT",
+        data: showtime,
+      });
+      console.log(`Successfully updated showtime ${id}`);
+      apiCache.invalidate(/^showtimes/);
+      return data;
+    } catch (error) {
+      console.error(`Error updating showtime ${id}:`, error);
+      if (axios.isAxiosError(error)) {
+        console.error("Update error details:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          config: error.config,
+        });
+      }
+      throw new Error(
+        error instanceof Error ? error.message : "Failed to update showtime"
+      );
+    }
+  },
+
+  deleteShowtime: async (id: number): Promise<void> => {
+    console.log(`Attempting to delete showtime ${id}`);
+    try {
+      await axiosWithRetry<void>({
+        url: `/showtimes/${id}`,
+        method: "DELETE",
+      });
+      console.log(`Successfully deleted showtime ${id}`);
+      apiCache.invalidate(/^showtimes/);
+    } catch (error) {
+      console.error(`Error deleting showtime ${id}:`, error);
+      if (axios.isAxiosError(error)) {
+        console.error("Delete error details:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          config: error.config,
+        });
+      }
+      throw new Error(
+        error instanceof Error ? error.message : "Failed to delete showtime"
+      );
+    }
+  },
+
+  getShowtimesByTheater: async (theaterId: number): Promise<ShowtimeDTO[]> => {
+    const cacheKey = `theater_showtimes_${theaterId}`;
+    const cachedShowtimes = apiCache.get<ShowtimeDTO[]>(cacheKey);
+    if (cachedShowtimes) return cachedShowtimes;
+
+    try {
+      const data = await axiosWithRetry<ShowtimeDTO[]>({
+        url: `/showtimes/theater/${theaterId}`,
+        method: "GET",
+      });
+
+      // Cache theater showtimes for 5 minutes
+      apiCache.set(cacheKey, data, 5 * 60 * 1000);
+      return data;
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch theater showtimes. Please try again later."
       );
     }
   },
@@ -641,10 +1076,9 @@ export const reservationApi = {
       );
     }
   },
-
   cancelReservation: async (id: number): Promise<void> => {
     try {
-      await axiosWithRetry<void>({
+      await axiosWithRetry({
         url: `/reservations/${id}`,
         method: "DELETE",
       });
@@ -653,6 +1087,20 @@ export const reservationApi = {
         error,
         "Failed to cancel reservation. Please try again later."
       );
+    }
+  },
+
+  lookupReservationsByEmail: async (
+    email: string
+  ): Promise<ReservationDTO[]> => {
+    try {
+      return await axiosWithRetry<ReservationDTO[]>({
+        url: `/reservations/lookup`,
+        method: "GET",
+        params: { email },
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to look up reservations");
     }
   },
 };
@@ -670,6 +1118,44 @@ export const concessionApi = {
     }
   },
 
+  createCategory: async (name: string): Promise<ConcessionCategoryDTO> => {
+    try {
+      return await axiosWithRetry<ConcessionCategoryDTO>({
+        url: `/concession-categories`,
+        method: "POST",
+        data: { name },
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to create concession category.");
+    }
+  },
+
+  updateCategory: async (
+    id: number,
+    name: string
+  ): Promise<ConcessionCategoryDTO> => {
+    try {
+      return await axiosWithRetry<ConcessionCategoryDTO>({
+        url: `/concession-categories/${id}`,
+        method: "PUT",
+        data: { name },
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to update concession category.");
+    }
+  },
+
+  deleteCategory: async (id: number): Promise<void> => {
+    try {
+      await axiosWithRetry({
+        url: `/concession-categories/${id}`,
+        method: "DELETE",
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to delete concession category.");
+    }
+  },
+
   getItems: async (): Promise<ConcessionItemDTO[]> => {
     try {
       return await axiosWithRetry<ConcessionItemDTO[]>({
@@ -678,6 +1164,57 @@ export const concessionApi = {
       });
     } catch (error) {
       return handleApiError(error, "Failed to fetch concession items.");
+    }
+  },
+
+  getAllItems: async (): Promise<ConcessionItemDTO[]> => {
+    try {
+      return await axiosWithRetry<ConcessionItemDTO[]>({
+        url: `/concession-items`,
+        method: "GET",
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to fetch all concession items.");
+    }
+  },
+
+  createItem: async (
+    item: Omit<ConcessionItemDTO, "id" | "categoryName">
+  ): Promise<ConcessionItemDTO> => {
+    try {
+      return await axiosWithRetry<ConcessionItemDTO>({
+        url: `/concession-items`,
+        method: "POST",
+        data: item,
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to create concession item.");
+    }
+  },
+
+  updateItem: async (
+    id: number,
+    item: Partial<ConcessionItemDTO>
+  ): Promise<ConcessionItemDTO> => {
+    try {
+      return await axiosWithRetry<ConcessionItemDTO>({
+        url: `/concession-items/${id}`,
+        method: "PUT",
+        data: item,
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to update concession item.");
+    }
+  },
+
+  deleteItem: async (id: number): Promise<void> => {
+    try {
+      await axiosWithRetry({
+        url: `/concession-items/${id}`,
+        method: "DELETE",
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to delete concession item.");
     }
   },
 
@@ -697,6 +1234,33 @@ export const concessionApi = {
     }
   },
 
+  getOrderById: async (id: number): Promise<ConcessionOrderDTO> => {
+    try {
+      return await axiosWithRetry<ConcessionOrderDTO>({
+        url: `/concession-orders/${id}`,
+        method: "GET",
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to fetch concession order.");
+    }
+  },
+
+  getOrdersByReservation: async (
+    reservationId: number
+  ): Promise<ConcessionOrderDTO[]> => {
+    try {
+      return await axiosWithRetry<ConcessionOrderDTO[]>({
+        url: `/concession-orders/reservation/${reservationId}`,
+        method: "GET",
+      });
+    } catch (error) {
+      return handleApiError(
+        error,
+        "Failed to fetch concession orders for this reservation."
+      );
+    }
+  },
+
   createOrder: async (
     order: CreateConcessionOrderDTO
   ): Promise<ConcessionOrderDTO> => {
@@ -708,6 +1272,21 @@ export const concessionApi = {
       });
     } catch (error) {
       return handleApiError(error, "Failed to create concession order.");
+    }
+  },
+
+  updateOrderStatus: async (
+    id: number,
+    status: string
+  ): Promise<ConcessionOrderDTO> => {
+    try {
+      return await axiosWithRetry<ConcessionOrderDTO>({
+        url: `/concession-orders/${id}/status`,
+        method: "PUT",
+        data: { status },
+      });
+    } catch (error) {
+      return handleApiError(error, "Failed to update concession order status.");
     }
   },
 };

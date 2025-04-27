@@ -240,7 +240,7 @@ const AnimatedLion = ({
           strokeLinecap="round"
         />
 
-        {/* Eyebrows - reacts to mouse movement */}
+        {/* Left eyebrow - reacts to mouse movement */}
         <path
           d={`M37 ${Math.max(43 + eyePosition.y * 0.3, 41)} C40 ${Math.max(
             42 + eyePosition.y * 0.3,
@@ -254,8 +254,15 @@ const AnimatedLion = ({
           strokeLinecap="round"
         />
 
+        {/* Right eyebrow - reacts to mouse movement */}
         <path
-          d="M53 ${Math.max(43 + eyePosition.y * 0.3, 41)}C56 ${Math.max(42 + eyePosition.y * 0.3, 40)} 60 ${Math.max(42 + eyePosition.y * 0.3, 40)} 63 ${Math.max(43 + eyePosition.y * 0.3, 41)}"
+          d={`M53 ${Math.max(43 + eyePosition.y * 0.3, 41)} C56 ${Math.max(
+            42 + eyePosition.y * 0.3,
+            40
+          )} 60 ${Math.max(42 + eyePosition.y * 0.3, 40)} 63 ${Math.max(
+            43 + eyePosition.y * 0.3,
+            41
+          )}`}
           stroke={secondaryColor}
           strokeWidth="1"
           strokeLinecap="round"

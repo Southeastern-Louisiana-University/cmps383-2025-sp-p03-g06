@@ -1,12 +1,12 @@
 // src/components/ConcessionSelection.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+  Box,
   Container,
   Title,
   Text,
   Button,
-  Group,
   Paper,
   Grid,
   Card,
@@ -19,6 +19,8 @@ import {
   Tabs,
   TextInput,
   useMantineColorScheme,
+  Group,
+  Stack,
 } from "@mantine/core";
 import {
   IconAlertCircle,
@@ -30,20 +32,22 @@ import {
   IconBrandCashapp,
 } from "@tabler/icons-react";
 
+import { useAuth } from "../contexts/AuthContext";
 import {
-  concessionApi,
   ConcessionItemDTO,
   ConcessionCategoryDTO,
   CreateOrderItemDTO,
-  reservationApi,
   ReservationDTO,
+  reservationApi,
+  concessionApi,
 } from "../services/api";
 
 const ConcessionSelection = () => {
-  const { id } = useParams<{ id: string }>(); // Reservation ID
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
+  const { isGuest, guestInfo } = useAuth();
 
   const [reservation, setReservation] = useState<ReservationDTO | null>(null);
   const [categories, setCategories] = useState<ConcessionCategoryDTO[]>([]);
@@ -57,47 +61,38 @@ const ConcessionSelection = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  // Fetch reservation, categories, and items
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (!id) throw new Error("Reservation ID is required");
+        const res = await reservationApi.getReservationById(parseInt(id));
+        setReservation(res);
 
-        const [reservationData, categoriesData, itemsData] = await Promise.all([
-          reservationApi.getReservationById(parseInt(id)),
-          concessionApi.getCategories(),
-          concessionApi.getItems(),
-        ]);
-
-        setReservation(reservationData);
-        setCategories(categoriesData);
-        setItems(itemsData);
-
-        if (categoriesData.length > 0) {
-          setActiveCategory(categoriesData[0].id.toString());
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        const cats = await concessionApi.getCategories();
+        const its = await concessionApi.getItems();
+        setCategories(cats);
+        setItems(its);
+        if (cats.length > 0) setActiveCategory(cats[0].id.toString());
+      } catch (err) {
+        console.error(err);
         setError("Failed to load concession data. Please try again.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [id]);
 
   const handleQuantityChange = (itemId: number, quantity: number) => {
     if (quantity === 0) {
-      setCart(cart.filter((item) => item.concessionItemId !== itemId));
+      setCart(cart.filter((i) => i.concessionItemId !== itemId));
       return;
     }
-
-    const existingItem = cart.find((item) => item.concessionItemId === itemId);
-    if (existingItem) {
+    const existing = cart.find((i) => i.concessionItemId === itemId);
+    if (existing) {
       setCart(
-        cart.map((item) =>
-          item.concessionItemId === itemId ? { ...item, quantity } : item
+        cart.map((i) =>
+          i.concessionItemId === itemId ? { ...i, quantity } : i
         )
       );
     } else {
@@ -106,85 +101,64 @@ const ConcessionSelection = () => {
   };
 
   const handleSpecialInstructionsChange = (itemId: number, text: string) => {
-    setSpecialInstructions({
-      ...specialInstructions,
-      [itemId]: text,
-    });
-
-    // Update cart item if it exists
-    const existingItemIndex = cart.findIndex(
-      (item) => item.concessionItemId === itemId
+    setSpecialInstructions({ ...specialInstructions, [itemId]: text });
+    setCart(
+      cart.map((ci) =>
+        ci.concessionItemId === itemId
+          ? { ...ci, specialInstructions: text }
+          : ci
+      )
     );
-    if (existingItemIndex >= 0) {
-      const updatedCart = [...cart];
-      updatedCart[existingItemIndex] = {
-        ...updatedCart[existingItemIndex],
-        specialInstructions: text,
-      };
-      setCart(updatedCart);
-    }
   };
 
-  const getItemQuantity = (itemId: number): number => {
-    const item = cart.find((item) => item.concessionItemId === itemId);
-    return item ? item.quantity : 0;
-  };
+  const getItemQuantity = (itemId: number) =>
+    cart.find((ci) => ci.concessionItemId === itemId)?.quantity || 0;
 
-  const calculateTotal = (): number => {
-    return cart.reduce((total, cartItem) => {
-      const item = items.find((i) => i.id === cartItem.concessionItemId);
-      if (item) {
-        return total + item.price * cartItem.quantity;
-      }
-      return total;
+  const calculateTotal = () =>
+    cart.reduce((sum, ci) => {
+      const item = items.find((i) => i.id === ci.concessionItemId);
+      return item ? sum + item.price * ci.quantity : sum;
     }, 0);
-  };
 
   const handleSubmitOrder = async () => {
     if (!reservation) return;
     if (cart.length === 0) {
-      // Skip concessions
-      navigate(`/my-reservations`);
+      navigate("/my-reservations");
       return;
     }
-
     setOrderLoading(true);
     setError(null);
-
     try {
-      // Update cart items with special instructions
-      const finalCart = cart.map((item) => ({
-        ...item,
-        specialInstructions: specialInstructions[item.concessionItemId] || "",
-      }));
-
-      // Create the order
       await concessionApi.createOrder({
         reservationId: reservation.id,
-        items: finalCart,
+        items: cart.map((ci) => ({
+          ...ci,
+          specialInstructions: specialInstructions[ci.concessionItemId] || "",
+        })),
+        guestInfo:
+          isGuest && guestInfo
+            ? {
+                email: guestInfo.email,
+                phoneNumber: guestInfo.phoneNumber,
+              }
+            : undefined,
       });
-
-      // Navigate to reservations page
-      navigate(`/my-reservations`);
-    } catch (error) {
-      console.error("Error creating order:", error);
-      setError("Failed to create your order. Please try again.");
+      navigate("/my-reservations");
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to create your order. Please try again.");
+      }
     } finally {
       setOrderLoading(false);
     }
   };
 
-  const handleSkip = () => {
-    navigate(`/my-reservations`);
-  };
-
-  const filteredItems = activeCategory
-    ? items.filter((item) => item.categoryId === parseInt(activeCategory))
-    : items;
-
   if (loading) {
     return (
-      <Center my="xl">
+      <Center style={{ margin: "40px 0" }}>
         <Loader size="lg" />
       </Center>
     );
@@ -197,7 +171,7 @@ const ConcessionSelection = () => {
           icon={<IconAlertCircle size={16} />}
           title="Error"
           color="red"
-          my="xl"
+          style={{ margin: "20px 0" }}
         >
           {error}
         </Alert>
@@ -212,200 +186,319 @@ const ConcessionSelection = () => {
   }
 
   return (
-    <Container size="xl" py="xl">
-      <Title order={2} mb="md" ta="center">
-        Add Concessions
-      </Title>
-
-      <Paper shadow="sm" p="lg" radius="md" withBorder mb="xl">
-        <Group mb="md">
-          <IconShoppingCart size={20} />
-          <Text fw={500}>
-            Would you like to add food and drinks to your order?
-          </Text>
-        </Group>
-
-        {reservation && (
-          <Alert color="red" mb="md">
-            <Text>
-              Your seats for "{reservation.movieTitle}" at{" "}
-              {new Date(reservation.showtimeStartTime).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}{" "}
-              have been reserved.
-            </Text>
-          </Alert>
-        )}
-
-        <Tabs value={activeCategory} onChange={setActiveCategory}>
-          <Tabs.List mb="md">
-            {categories.map((category) => (
-              <Tabs.Tab key={category.id} value={category.id.toString()}>
-                {category.name}
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-
-          <Grid gutter="md">
-            {filteredItems.map((item) => (
-              <Grid.Col key={item.id} span={{ base: 12, sm: 6, md: 4 }}>
-                <Card shadow="sm" padding="md" radius="md" withBorder>
-                  {item.imageUrl && (
-                    <Card.Section>
-                      <Image
-                        src={item.imageUrl}
-                        height={120}
-                        alt={item.name}
-                        fallbackSrc="https://placehold.co/400x200/gray/white?text=Food+Item"
-                      />
-                    </Card.Section>
-                  )}
-
-                  <Group justify="apart" mt="md" mb="xs">
-                    <Text fw={500}>{item.name}</Text>
-                    <Badge color={isDark ? "secondary" : "primary"}>
-                      ${item.price.toFixed(2)}
-                    </Badge>
-                  </Group>
-
-                  <Text size="sm" c="dimmed" mb="md" lineClamp={2}>
-                    {item.description || "No description available"}
-                  </Text>
-
-                  <Group justify="apart" mt="md">
-                    <Group>
-                      <Button
-                        size="xs"
-                        variant="subtle"
-                        onClick={() =>
-                          handleQuantityChange(
-                            item.id,
-                            Math.max(0, getItemQuantity(item.id) - 1)
-                          )
-                        }
-                        leftSection={<IconMinus size={14} />}
-                      />
-
-                      <Text fw={500}>{getItemQuantity(item.id)}</Text>
-
-                      <Button
-                        size="xs"
-                        variant="subtle"
-                        onClick={() =>
-                          handleQuantityChange(
-                            item.id,
-                            getItemQuantity(item.id) + 1
-                          )
-                        }
-                        leftSection={<IconPlus size={14} />}
-                      />
-                    </Group>
-
-                    {getItemQuantity(item.id) > 0 && (
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        color="red"
-                        onClick={() => handleQuantityChange(item.id, 0)}
-                        leftSection={<IconTrash size={14} />}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </Group>
-
-                  {getItemQuantity(item.id) > 0 && (
-                    <TextInput
-                      mt="xs"
-                      size="xs"
-                      placeholder="Any special instructions?"
-                      value={specialInstructions[item.id] || ""}
-                      onChange={(e) =>
-                        handleSpecialInstructionsChange(item.id, e.target.value)
-                      }
-                    />
-                  )}
-                </Card>
-              </Grid.Col>
-            ))}
-
-            {filteredItems.length === 0 && (
-              <Grid.Col span={12}>
-                <Text ta="center" c="dimmed">
-                  No items available in this category
-                </Text>
-              </Grid.Col>
-            )}
-          </Grid>
-        </Tabs>
-      </Paper>
-
-      <Paper shadow="sm" p="lg" radius="md" withBorder mb="xl">
-        <Title order={4} mb="md">
-          Your Order Summary
+    <Box
+      style={{ backgroundColor: "#000", padding: "40px 0", minHeight: "100vh" }}
+    >
+      <Container size="lg">
+        <Title
+          order={1}
+          style={{
+            color: "#fff",
+            fontSize: 32,
+            textAlign: "center",
+            marginBottom: 32,
+          }}
+        >
+          Add Concessions
         </Title>
+        <Grid gutter="xl">
+          <Grid.Col span={{ base: 12, md: 8 }}>
+            <Paper
+              style={{
+                backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                padding: 24,
+                boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+                borderRadius: 8,
+                marginBottom: 24,
+              }}
+            >
+              <Group mb={24}>
+                <IconShoppingCart size={24} color="#e03131" />
+                <Text fw={600} c="#e03131">
+                  What tasty treats can we get for you?
+                </Text>
+              </Group>
 
-        {cart.length === 0 ? (
-          <Text c="dimmed" mb="md">
-            Your cart is empty. Add items from the categories above.
-          </Text>
-        ) : (
-          <>
-            {cart.map((cartItem) => {
-              const item = items.find(
-                (i) => i.id === cartItem.concessionItemId
-              );
-              if (!item) return null;
+              {reservation && (
+                <Alert color="red" radius="md" mb={24}>
+                  <Text>
+                    Seats reserved for "{reservation.movieTitle}" at{" "}
+                    {new Date(reservation.showtimeStartTime).toLocaleTimeString(
+                      [],
+                      { hour: "2-digit", minute: "2-digit" }
+                    )}
+                    .
+                  </Text>
+                </Alert>
+              )}
 
-              return (
-                <Paper key={item.id} p="xs" mb="xs" withBorder>
-                  <Group justify="apart">
-                    <Group>
-                      <Text>{item.name}</Text>
-                      <Badge>{cartItem.quantity}x</Badge>
-                    </Group>
-                    <Text>${(item.price * cartItem.quantity).toFixed(2)}</Text>
-                  </Group>
+              <Tabs
+                value={activeCategory}
+                onChange={(value: SetStateAction<string | null>) =>
+                  setActiveCategory(value)
+                }
+                mb={24}
+              >
+                <Tabs.List>
+                  {categories.map((cat) => (
+                    <Tabs.Tab key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
+                    </Tabs.Tab>
+                  ))}
+                </Tabs.List>
+              </Tabs>
 
-                  {specialInstructions[item.id] && (
-                    <Text size="xs" c="dimmed" ml="md">
-                      Note: {specialInstructions[item.id]}
+              <Grid gutter="lg">
+                {items
+                  .filter((i) =>
+                    activeCategory ? i.categoryId === +activeCategory : true
+                  )
+                  .map((item) => (
+                    <Grid.Col key={item.id} span={{ base: 12, sm: 6, md: 4 }}>
+                      <Card
+                        padding="md"
+                        radius="md"
+                        style={{
+                          backgroundColor: isDark ? "#2a2a2a" : "#fafafa",
+                          height: "100%",
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
+                        <Card.Section>
+                          <Image
+                            src={item.imageUrl || undefined}
+                            height={160}
+                            alt={item.name}
+                            fallbackSrc="https://placehold.co/400x200/gray/white?text=Food+Item"
+                            style={{ objectFit: "cover" }}
+                          />
+                        </Card.Section>
+
+                        <Group justify="space-between" mt="md" mb="xs">
+                          <Text fw={500} c={isDark ? "#fff" : "#000"} size="lg">
+                            {item.name}
+                          </Text>
+                          <Badge color="red" variant="filled" size="lg">
+                            ${item.price.toFixed(2)}
+                          </Badge>
+                        </Group>
+
+                        <Text c="dimmed" size="sm" mb="md" style={{ flex: 1 }}>
+                          {item.description || "No description available."}
+                        </Text>
+
+                        <Group justify="space-between" align="center">
+                          <Group gap="xs">
+                            <Button
+                              size="sm"
+                              variant="filled"
+                              color="red"
+                              radius="md"
+                              style={{
+                                width: 32,
+                                height: 32,
+                                padding: 0,
+                              }}
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.id,
+                                  Math.max(0, getItemQuantity(item.id) - 1)
+                                )
+                              }
+                            >
+                              <IconMinus size={16} />
+                            </Button>
+                            <Text
+                              fw={500}
+                              w={30}
+                              ta="center"
+                              c={isDark ? "#fff" : "#000"}
+                            >
+                              {getItemQuantity(item.id)}
+                            </Text>
+                            <Button
+                              size="sm"
+                              variant="filled"
+                              color="red"
+                              radius="md"
+                              style={{
+                                width: 32,
+                                height: 32,
+                                padding: 0,
+                              }}
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.id,
+                                  getItemQuantity(item.id) + 1
+                                )
+                              }
+                            >
+                              <IconPlus size={16} />
+                            </Button>
+                          </Group>
+
+                          {getItemQuantity(item.id) > 0 && (
+                            <Button
+                              size="sm"
+                              variant="subtle"
+                              color="red"
+                              radius="md"
+                              onClick={() => handleQuantityChange(item.id, 0)}
+                              style={{
+                                width: 32,
+                                height: 32,
+                                padding: 0,
+                              }}
+                            >
+                              <IconTrash size={16} />
+                            </Button>
+                          )}
+                        </Group>
+
+                        {getItemQuantity(item.id) > 0 && (
+                          <TextInput
+                            placeholder="Special instructions..."
+                            value={specialInstructions[item.id] || ""}
+                            onChange={(e) =>
+                              handleSpecialInstructionsChange(
+                                item.id,
+                                e.currentTarget.value
+                              )
+                            }
+                            mt="md"
+                            size="sm"
+                            radius="md"
+                          />
+                        )}
+                      </Card>
+                    </Grid.Col>
+                  ))}
+              </Grid>
+            </Paper>
+          </Grid.Col>
+
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Paper
+              style={{
+                backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                padding: 24,
+                boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+                borderRadius: 8,
+                position: "sticky",
+                top: 24,
+              }}
+            >
+              <Title order={4} c={isDark ? "#fff" : "#000"} mb="xl">
+                Your Order
+              </Title>
+
+              {cart.length === 0 ? (
+                <Text c="dimmed" ta="center" mb="xl">
+                  No items yet. Add some popcorn!
+                </Text>
+              ) : (
+                <Stack gap="md">
+                  {cart.map((ci) => {
+                    const item = items.find(
+                      (i) => i.id === ci.concessionItemId
+                    );
+                    if (!item) return null;
+                    return (
+                      <Group
+                        key={item.id}
+                        justify="space-between"
+                        wrap="nowrap"
+                        align="center"
+                      >
+                        <Group gap="xs" wrap="nowrap" style={{ flex: 1 }}>
+                          <Text c={isDark ? "#fff" : "#000"} lineClamp={1}>
+                            {item.name}
+                          </Text>
+                          <Group gap={4}>
+                            <Button
+                              size="xs"
+                              variant="subtle"
+                              color="red"
+                              p={0}
+                              style={{ minWidth: 22, height: 22 }}
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.id,
+                                  Math.max(0, getItemQuantity(item.id) - 1)
+                                )
+                              }
+                            >
+                              <IconMinus size={12} />
+                            </Button>
+                            <Badge color="red" variant="light">
+                              {ci.quantity}×
+                            </Badge>
+                            <Button
+                              size="xs"
+                              variant="subtle"
+                              color="red"
+                              p={0}
+                              style={{ minWidth: 22, height: 22 }}
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.id,
+                                  getItemQuantity(item.id) + 1
+                                )
+                              }
+                            >
+                              <IconPlus size={12} />
+                            </Button>
+                          </Group>
+                        </Group>
+                        <Group gap="xs" wrap="nowrap">
+                          <Text c={isDark ? "#fff" : "#000"} fw={500}>
+                            ${(item.price * ci.quantity).toFixed(2)}
+                          </Text>
+                          <Button
+                            size="xs"
+                            variant="subtle"
+                            color="red"
+                            p={0}
+                            style={{ minWidth: 22, height: 22 }}
+                            onClick={() => handleQuantityChange(item.id, 0)}
+                          >
+                            <IconTrash size={12} />
+                          </Button>
+                        </Group>
+                      </Group>
+                    );
+                  })}
+
+                  <Divider my="md" />
+
+                  <Group justify="space-between">
+                    <Text c={isDark ? "#fff" : "#000"} fw={700} size="lg">
+                      Total:
                     </Text>
-                  )}
-                </Paper>
-              );
-            })}
+                    <Text c={isDark ? "#fff" : "#000"} fw={700} size="lg">
+                      ${calculateTotal().toFixed(2)}
+                    </Text>
+                  </Group>
+                </Stack>
+              )}
 
-            <Divider my="md" />
-
-            <Group justify="apart">
-              <Text fw={700}>Total:</Text>
-              <Text fw={700}>${calculateTotal().toFixed(2)}</Text>
-            </Group>
-          </>
-        )}
-      </Paper>
-
-      <Group justify="apart">
-        <Button
-          variant="outline"
-          onClick={handleSkip}
-          leftSection={<IconArrowLeft size={16} />}
-        >
-          Skip Concessions
-        </Button>
-
-        <Button
-          onClick={handleSubmitOrder}
-          color={isDark ? "secondary" : "primary"}
-          loading={orderLoading}
-          leftSection={<IconBrandCashapp size={16} />}
-        >
-          {cart.length > 0 ? "Add to My Order" : "Continue"}
-        </Button>
-      </Group>
-    </Container>
+              <Button
+                color="red"
+                onClick={handleSubmitOrder}
+                loading={orderLoading}
+                leftSection={<IconBrandCashapp size={16} />}
+                fullWidth
+                size="lg"
+                mt="xl"
+              >
+                {cart.length > 0 ? "Place Order" : "Continue to My Tickets"}
+              </Button>
+            </Paper>
+          </Grid.Col>
+        </Grid>
+      </Container>
+    </Box>
   );
 };
 
