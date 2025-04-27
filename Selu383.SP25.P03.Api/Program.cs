@@ -37,8 +37,9 @@ namespace Selu383.SP25.P03.Api
                 options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
             });
 
-            // Register cache service
+            // Register services
             builder.Services.AddScoped<ICacheService, CacheService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
 
             // Add CORS
             builder.Services.AddCors(options =>

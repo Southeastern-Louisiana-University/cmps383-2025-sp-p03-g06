@@ -7,6 +7,7 @@ using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Reservations;
 using Selu383.SP25.P03.Api.Features.Showtimes;
 using Selu383.SP25.P03.Api.Features.Users;
+using Selu383.SP25.P03.Api.Services;
 using System.Security.Cryptography;
 
 namespace Selu383.SP25.P03.Api.Controllers
@@ -14,13 +15,28 @@ namespace Selu383.SP25.P03.Api.Controllers
     [Route("api/reservations")]
     [ApiController]
     [Authorize]
-    public class ReservationsController(DataContext context, UserManager<User> userManager, SignInManager<User> signInManager) : ControllerBase
+    public class ReservationsController : ControllerBase
     {
-        private readonly DataContext _context = context;
-        private readonly DbSet<Reservation> _reservations = context.Set<Reservation>();
-        private readonly DbSet<Showtime> _showtimes = context.Set<Showtime>();
-        private readonly UserManager<User> _userManager = userManager;
-        private readonly SignInManager<User> _signInManager = signInManager;
+        private readonly DataContext _context;
+        private readonly DbSet<Reservation> _reservations;
+        private readonly DbSet<Showtime> _showtimes;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
+        private readonly IEmailService _emailService;
+
+        public ReservationsController(
+            DataContext context,
+            UserManager<User> userManager,
+            SignInManager<User> signInManager,
+            IEmailService emailService)
+        {
+            _context = context;
+            _reservations = context.Set<Reservation>();
+            _showtimes = context.Set<Showtime>();
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _emailService = emailService;
+        }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ReservationDTO>>> GetMyReservations()
@@ -248,35 +264,33 @@ namespace Selu383.SP25.P03.Api.Controllers
             // Validate showtime exists
             var showtime = await _showtimes
                 .Include(s => s.Movie)
-                .Include(s => s.TheaterRoom).ThenInclude(tr => tr!.Theater)
+                .Include(s => s.TheaterRoom)
+                    .ThenInclude(tr => tr!.Theater)
                 .FirstOrDefaultAsync(s => s.Id == dto.ShowtimeId);
 
             if (showtime == null)
-                return BadRequest("Showtime not found");
-            if (showtime.StartTime < DateTime.UtcNow)
-                return BadRequest("Cannot book tickets for past showtimes");
+                return NotFound("Showtime not found");
 
-            // Validate seat selection
-            var selectedSeatIds = dto.SeatIds;
-            if (!selectedSeatIds.Any())
-                return BadRequest("At least one seat must be selected");
-
+            // Validate seats
             var seats = await _context.Seats
-                .Where(s => selectedSeatIds.Contains(s.Id) && s.TheaterRoomId == showtime.TheaterRoomId)
+                .Where(s => dto.SeatIds.Contains(s.Id))
                 .ToListAsync();
-            if (seats.Count != selectedSeatIds.Count)
-                return BadRequest("One or more selected seats are invalid");
 
-            // Check if seats are already booked
-            var bookedSeatIds = await _context.ReservationSeats
-                .Where(rs => rs.Reservation!.ShowtimeId == dto.ShowtimeId && selectedSeatIds.Contains(rs.SeatId))
+            if (seats.Count != dto.SeatIds.Count)
+                return BadRequest("One or more seats not found");
+
+            // Check if seats are available
+            var reservedSeats = await _context.ReservationSeats
+                .Include(rs => rs.Reservation)
+                .Where(rs => dto.SeatIds.Contains(rs.SeatId) && rs.Reservation!.ShowtimeId == dto.ShowtimeId)
                 .Select(rs => rs.SeatId)
                 .ToListAsync();
-            if (bookedSeatIds.Any())
-                return BadRequest("One or more selected seats are already booked");
+
+            if (reservedSeats.Any())
+                return BadRequest("One or more seats are already reserved");
 
             // Calculate total price
-            decimal totalPrice = 0m;
+            decimal totalPrice = 0;
             foreach (var seat in seats)
             {
                 var seatPrice = showtime.BaseTicketPrice;
@@ -319,42 +333,29 @@ namespace Selu383.SP25.P03.Api.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Return full reservation details
-            var result = await _reservations
-                .Include(r => r.User)
-                .Include(r => r.Showtime).ThenInclude(s => s!.Movie)
-                .Include(r => r.Showtime).ThenInclude(s => s!.TheaterRoom).ThenInclude(tr => tr!.Theater)
-                .Include(r => r.ReservationSeats).ThenInclude(rs => rs.Seat)
-                .Where(r => r.Id == reservation.Id)
-                .Select(r => new ReservationDTO
-                {
-                    Id = r.Id,
-                    UserId = r.UserId,
-                    UserName = r.User!.UserName ?? string.Empty,
-                    ShowtimeId = r.ShowtimeId,
-                    ShowtimeStartTime = r.Showtime!.StartTime,
-                    MovieTitle = r.Showtime!.Movie!.Title ?? string.Empty,
-                    TheaterName = r.Showtime!.TheaterRoom!.Theater!.Name ?? string.Empty,
-                    RoomName = r.Showtime!.TheaterRoom!.Name ?? string.Empty,
-                    ReservationTime = r.ReservationTime,
-                    TotalPrice = r.TotalPrice,
-                    Status = r.Status ?? string.Empty,
-                    TicketCode = r.TicketCode ?? string.Empty,
-                    Seats = r.ReservationSeats.Select(rs => new ReservationSeatDTO
-                    {
-                        SeatId = rs.SeatId,
-                        Row = rs.Seat!.Row,
-                        Number = rs.Seat!.Number,
-                        SeatType = rs.Seat!.SeatType ?? string.Empty,
-                        Price = rs.Price
-                    }).ToList()
-                })
-                .FirstOrDefaultAsync();
+            // Send confirmation email
+            var emailBody = $@"
+                <h2>Reservation Confirmation</h2>
+                <p>Thank you for your reservation!</p>
+                <p><strong>Movie:</strong> {showtime.Movie!.Title}</p>
+                <p><strong>Theater:</strong> {showtime.TheaterRoom!.Theater!.Name}</p>
+                <p><strong>Room:</strong> {showtime.TheaterRoom.Name}</p>
+                <p><strong>Showtime:</strong> {showtime.StartTime:g}</p>
+                <p><strong>Ticket Code:</strong> {reservation.TicketCode}</p>
+                <p><strong>Total Price:</strong> ${reservation.TotalPrice:F2}</p>
+                <p><strong>Seats:</strong></p>
+                <ul>
+                    {string.Join("", seats.Select(s => $"<li>Row {s.Row}, Seat {s.Number} ({s.SeatType})</li>"))}
+                </ul>
+                <p>Please present your ticket code at the theater.</p>";
 
-            if (result == null)
-                return StatusCode(500, "Reservation was created but details could not be retrieved");
+            await _emailService.SendEmailAsync(
+                currentUser.Email!,
+                "Movie Reservation Confirmation",
+                emailBody
+            );
 
-            return Ok(result);
+            return Ok(reservation.ToDto());
         }
 
         [HttpDelete("{id}")]
