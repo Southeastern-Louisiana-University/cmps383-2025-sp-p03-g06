@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - mobile_v
+      - mobile_dev
 jobs:
   update:
     runs-on: ubuntu-latest
