@@ -9,6 +9,6 @@ namespace Selu383.SP25.P03.Api.Features.Users
         /// Navigation property for the roles this user belongs to.
         /// </summary>
         public string? Name { get; set; }
-        public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public virtual ICollection<UserRole>? UserRoles { get; set; }
     }
 }

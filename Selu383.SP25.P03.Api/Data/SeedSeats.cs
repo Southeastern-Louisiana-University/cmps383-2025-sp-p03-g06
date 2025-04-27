@@ -30,7 +30,6 @@ namespace Selu383.SP25.P03.Api.Data
                 {
                     // Standard theaters
                     // Create a standard layout based on room size
-                    int rowCount = 8; // Fixed number of rows
                     int seatsPerRow = 12; // Fixed number of seats per row
 
                     for (char row = 'A'; row <= 'H'; row++)
