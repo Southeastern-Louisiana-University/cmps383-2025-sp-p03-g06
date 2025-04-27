@@ -1,33 +1,23 @@
 import React from "react";
 import { Stack } from "expo-router";
-import { View, SafeAreaView, StyleSheet } from "react-native";
 import { TopNavBar } from "../navigation/TopNavBar";
 import { BottomNavBar } from "../navigation/BottomNavBar";
 
-export default function RootLayout() {
+export default function Layout() {
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <>
       <TopNavBar />
-
-      <View style={styles.content}>
-        <Stack
-          screenOptions={{
-            headerShown: false, // Hide native headers
-          }}
-        />
-      </View>
-
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen name="movies" />
+        <Stack.Screen name="reservations" />
+        <Stack.Screen name="theaters" />
+        <Stack.Screen name="concessions" />
+      </Stack>
       <BottomNavBar />
-    </SafeAreaView>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#121212", // for dark theme
-  },
-  content: {
-    flex: 1,
-  },
-});
