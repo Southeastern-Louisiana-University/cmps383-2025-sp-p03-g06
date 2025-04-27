@@ -26,7 +26,7 @@ env:
 
 on:
   push:
-    branches: ["mobile-dev"]
+    branches: ["fin_web_mobile"]
 
   workflow_dispatch:
 
