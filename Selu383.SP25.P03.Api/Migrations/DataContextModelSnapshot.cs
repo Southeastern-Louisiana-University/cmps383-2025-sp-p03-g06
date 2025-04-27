@@ -235,6 +235,10 @@ namespace Selu383.SP25.P03.Api.Migrations
                     b.Property<int>("ReservationId")
                         .HasColumnType("int");
 
+                    b.Property<string>("SeatNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

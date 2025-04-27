@@ -8,6 +8,7 @@ namespace Selu383.SP25.P03.Api.Features.Concessions
         public DateTime OrderTime { get; set; }
         public decimal TotalPrice { get; set; }
         public string? Status { get; set; }
+        public string? SeatNumber { get; set; } 
         public List<OrderItemDTO> Items { get; set; } = new List<OrderItemDTO>();
         public GuestUserInfo? GuestInfo { get; set; }
     }
