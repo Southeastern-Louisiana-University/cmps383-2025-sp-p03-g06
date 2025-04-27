@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - master
+      - mobile_dev
 jobs:
   update:
     runs-on: ubuntu-latest

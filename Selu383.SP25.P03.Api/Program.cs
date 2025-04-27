@@ -44,7 +44,15 @@ namespace Selu383.SP25.P03.Api
 
             // Configure OpenAPI/Swagger - standard configuration
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "Lions Den Cinemas API",
+                    Version = "v1",
+                    Description = "API for Lions Den Cinemas mobile app"
+                });
+            });
 
             builder.Services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DataContext>()
@@ -91,7 +99,35 @@ namespace Selu383.SP25.P03.Api
                 options.SlidingExpiration = true;
             });
 
+            //This is only for testing mobile in the browser for expo at port 8081
+            // CORS: Only enabled during development for local testing (Expo Web, Vite)
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddCors(options =>
+                {
+                    options.AddDefaultPolicy(policy =>
+                    {
+                        policy.WithOrigins(
+                            "http://localhost:8081", // Expo Web
+                            "http://localhost:5173"  // Vite (optional)
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                    });
+                });
+            }
+
+
             var app = builder.Build();
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Lions Den API v1");
+                });
+            }
 
             using (var scope = app.Services.CreateScope())
             {
@@ -110,6 +146,12 @@ namespace Selu383.SP25.P03.Api
                 SeedConcessions.Initialize(scope.ServiceProvider);
             }
 
+            // CORS for mobile app testing in the browser
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseCors(); // Only active in dev
+            }
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -123,6 +165,7 @@ namespace Selu383.SP25.P03.Api
             app.UseCors();
             app.UseAuthentication();
             app.UseRouting()
+
                .UseAuthorization()
                .UseEndpoints(x =>
                {
