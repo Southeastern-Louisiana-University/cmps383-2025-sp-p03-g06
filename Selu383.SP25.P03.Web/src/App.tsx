@@ -34,39 +34,38 @@ import "./styles/animations.css";
 import "./App.css";
 import TheaterDetails from "./components/TheaterDetails";
 
-// Page transition component
+// Component to animate page transitions
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const [displayLocation, setDisplayLocation] = useState(location);
-  const [transitionStage, setTransitionStage] = useState("fadeIn");
+  const [stage, setStage] = useState("fadeIn");
 
   useEffect(() => {
     if (location.pathname !== displayLocation.pathname) {
-      setTransitionStage("fadeOut");
-      setTimeout(() => {
+      setStage("fadeOut");
+      const timeout = setTimeout(() => {
         setDisplayLocation(location);
-        setTransitionStage("fadeIn");
+        setStage("fadeIn");
       }, 300);
+      return () => clearTimeout(timeout);
     }
   }, [location, displayLocation]);
 
-  return <div className={`page-transition ${transitionStage}`}>{children}</div>;
+  return <div className={`page-transition ${stage}`}>{children}</div>;
 };
 
-// Protected route component
+// Route wrapper handling auth & loading
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   const [showLoader, setShowLoader] = useState(false);
   const [, { open: openLogin, close: closeLogin }] = useDisclosure(false);
 
-  // Add a delay before showing the loader to prevent flicker
   useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => setShowLoader(true), 300);
       return () => clearTimeout(timer);
-    } else {
-      setShowLoader(false);
     }
+    setShowLoader(false);
   }, [loading]);
 
   if (showLoader) {
@@ -90,19 +89,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Admin route component
+// Admin-only route
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, loading } = useAuth();
-  const [showLoader, setShowLoader] = useState(loading);
+  const [showLoader, setShowLoader] = useState(false);
 
-  // Add a delay before showing the loader to prevent flicker
   useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => setShowLoader(true), 300);
       return () => clearTimeout(timer);
-    } else {
-      setShowLoader(false);
     }
+    setShowLoader(false);
   }, [loading]);
 
   if (showLoader) {
@@ -112,84 +109,45 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       </Center>
     );
   }
-
-  if (!isAdmin) {
-    return <Navigate to="/theaters" replace />;
-  }
-
-  return <>{children}</>;
+  return isAdmin ? <>{children}</> : <Navigate to="/theaters" replace />;
 };
 
-// Enhanced theme
+// Unified red palette theme
 const theme = createTheme({
   colors: {
-    brand: [
-      "#ffeaef", // primary-light
-      "#ffbfcd",
-      "#ff94ab",
-      "#ff698a",
-      "#ff3d68",
-      "#ff1147",
-      "#c70036", // primary-color (client's requested color)
-      "#a10029", // primary-dark
-      "#7a001f",
-      "#540015",
+    primary: [
+      "#ffe5e8",
+      "#ffc2c8",
+      "#ff9eaa",
+      "#ff7574",
+      "#ff4d58",
+      "#ff1a3c",
+      "#c70036",
+      "#a8002c",
+      "#860022",
+      "#600018",
     ],
-    secondary: [
-      "#e6e6e6", // secondary-light
-      "#cccccc",
-      "#b3b3b3",
-      "#999999",
-      "#808080",
-      "#666666",
-      "#2d2d2d", // secondary-color (dark)
-      "#1f1f1f", // secondary-dark
-      "#121212",
-      "#0a0a0a",
+    dark: [
+      "#c1c2c5",
+      "#a6a7ab",
+      "#909296",
+      "#5c5f66",
+      "#373a40",
+      "#2c2e33",
+      "#25262b",
+      "#1a1b1e",
+      "#141517",
+      "#101113",
     ],
   },
-  primaryColor: "brand",
-  primaryShade: 9,
+  primaryColor: "primary",
+  primaryShade: 6,
+  defaultRadius: "md",
   fontFamily: "Poppins, sans-serif",
-  headings: {
-    fontFamily: "Poppins, sans-serif",
-  },
-  components: {
-    Button: {
-      defaultProps: {
-        radius: "md",
-        color: "brand",
-      },
-    },
-    Card: {
-      defaultProps: {
-        radius: "md",
-      },
-    },
-    Paper: {
-      defaultProps: {
-        radius: "md",
-      },
-    },
-    TextInput: {
-      defaultProps: {
-        radius: "md",
-      },
-    },
-    PasswordInput: {
-      defaultProps: {
-        radius: "md",
-      },
-    },
-    NumberInput: {
-      defaultProps: {
-        radius: "md",
-      },
-    },
-  },
+  headings: { fontFamily: "Poppins, sans-serif" },
 });
 
-// Main component with animation
+// Main app layout with forced dark mode
 const AppContent = () => {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
@@ -198,6 +156,8 @@ const AppContent = () => {
   const [previousPath, setPreviousPath] = useState<string | null>(null);
 
   useEffect(() => {
+    document.documentElement.setAttribute("data-color-scheme", "dark");
+    document.documentElement.classList.add("dark-mode");
     setVisible(true);
   }, []);
 
@@ -235,12 +195,8 @@ const AppContent = () => {
                 {/* These routes should be accessible without authentication */}
                 <Route path="/movies" element={<MovieList />} />
                 <Route
-                  path="/theaters"
-                  element={
-                    <ProtectedRoute>
-                      <TheaterList />
-                    </ProtectedRoute>
-                  }
+                  path="/movies/:id/showtimes"
+                  element={<MovieShowtimes />}
                 />
                 <Route path="/theaters" element={<TheaterList />} />
                 <Route path="/theaters/:id" element={<TheaterDetails />} />
@@ -254,7 +210,6 @@ const AppContent = () => {
                     </AdminRoute>
                   }
                 />
-
                 <Route
                   path="/theaters/edit/:id"
                   element={
@@ -323,33 +278,16 @@ const AppContent = () => {
   );
 };
 
-// Root App component with providers
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
-      <MantineProvider
-        theme={{
-          ...theme,
-          components: {
-            ActionIcon: {
-              defaultProps: {
-                color: "brand",
-              },
-            },
-          },
-        }}
-        defaultColorScheme="auto"
-      >
+      <MantineProvider theme={theme} defaultColorScheme="dark">
         <ModalsProvider>
-          <ColorSchemeProvider>
-            <AuthProvider>
-              <AppContent />
-            </AuthProvider>
-          </ColorSchemeProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
         </ModalsProvider>
       </MantineProvider>
     </BrowserRouter>
   );
 }
-
-export default App;
