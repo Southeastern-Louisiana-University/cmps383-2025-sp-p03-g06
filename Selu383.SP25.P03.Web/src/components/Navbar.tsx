@@ -14,6 +14,7 @@ import {
   Drawer,
   Stack,
   Avatar,
+  useMantineTheme,
 } from "@mantine/core";
 import {
   IconLogout,
@@ -132,8 +133,11 @@ const Navbar = () => {
             }}
           >
             <Group gap="md">
+              <ThemeToggle />
+
               {isAuthenticated ? (
                 <>
+                  {/* Use color="primary" for consistent coloring */}
                   <Button
                     component={NavLink}
                     to="/"
@@ -195,12 +199,7 @@ const Navbar = () => {
                         variant="subtle"
                         color="primary"
                         leftSection={
-                          <Avatar
-                            size="sm"
-                            color="primary"
-                            radius="xl"
-                            style={{ backgroundColor: redButtonColor }}
-                          >
+                          <Avatar size="sm" color="primary" radius="xl">
                             {user?.userName.charAt(0).toUpperCase()}
                           </Avatar>
                         }
@@ -222,7 +221,7 @@ const Navbar = () => {
                         </Menu.Item>
                       )}
                       <Menu.Item
-                        color="red"
+                        color="primary"
                         leftSection={<IconLogout size={14} />}
                         onClick={handleLogout}
                       >
@@ -307,7 +306,7 @@ const Navbar = () => {
             opened={opened}
             onClick={toggle}
             hiddenFrom="sm"
-            color="#ffffff"
+            color={theme.colors.brand[0]}
             size="sm"
           />
         </Group>
@@ -354,8 +353,10 @@ const Navbar = () => {
           header: { backgroundColor: "#1a1b1e" },
         }}
       >
+        {/* Similarly update colors in drawer content */}
         <Stack>
           {isAuthenticated ? (
+            // Similar color updates for mobile drawer
             <>
               <Button
                 component={NavLink}

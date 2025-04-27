@@ -26,7 +26,8 @@ env:
 
 on:
   push:
-    branches: ["master"]
+    branches: ["fin_web_mobile"]
+
   workflow_dispatch:
 
 permissions:

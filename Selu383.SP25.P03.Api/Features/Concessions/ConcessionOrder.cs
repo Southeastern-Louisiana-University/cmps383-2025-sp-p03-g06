@@ -21,6 +21,8 @@ public class ConcessionOrder
     public string? GuestEmail { get; set; }
     [MaxLength(20)]
     public string? GuestPhone { get; set; }
+    [MaxLength(50)]
+    public string? SeatNumber { get; set; }
 
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
@@ -31,8 +33,8 @@ public class ConcessionOrder
         {
             return false;
         }
-        
+
         // Allow orders at any time
         return true;
     }
-} 
+}
