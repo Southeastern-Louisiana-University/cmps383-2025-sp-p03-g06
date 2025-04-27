@@ -26,7 +26,7 @@ env:
 
 on:
   push:
-    branches: ["fin_dev"]
+    branches: ["final_dev"]
 
   workflow_dispatch:
 
