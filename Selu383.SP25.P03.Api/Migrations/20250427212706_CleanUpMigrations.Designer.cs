@@ -12,8 +12,8 @@ using Selu383.SP25.P03.Api.Data;
 namespace Selu383.SP25.P03.Api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250427164232_EnsureUpToDate")]
-    partial class EnsureUpToDate
+    [Migration("20250427212706_CleanUpMigrations")]
+    partial class CleanUpMigrations
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
