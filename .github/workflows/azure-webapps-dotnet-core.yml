@@ -26,7 +26,7 @@ env:
 
 on:
   push:
-    branches: ["fin_web_mobile"]
+    branches: ["fin_dev"]
 
   workflow_dispatch:
 

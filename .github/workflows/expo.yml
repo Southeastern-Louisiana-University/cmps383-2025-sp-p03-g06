@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - fin_web_mobile
+      - master
 jobs:
   update:
     runs-on: ubuntu-latest
