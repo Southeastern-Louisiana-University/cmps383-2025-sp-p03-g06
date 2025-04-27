@@ -50,6 +50,25 @@ namespace Selu383.SP25.P03.Api.Data
         {
             base.OnModelCreating(builder);
 
+            // Add indexes for frequently queried columns
+            builder.Entity<Movie>()
+                .HasIndex(m => m.Title);
+            
+            builder.Entity<Showtime>()
+                .HasIndex(s => s.StartTime);
+            
+            builder.Entity<Theater>()
+                .HasIndex(t => t.Name);
+            
+            builder.Entity<TheaterRoom>()
+                .HasIndex(r => r.TheaterId);
+            
+            builder.Entity<Reservation>()
+                .HasIndex(r => r.UserId);
+            
+            builder.Entity<Reservation>()
+                .HasIndex(r => r.ShowtimeId);
+
             // UserRole configuration
             builder.Entity<Features.Authorization.UserRole>().HasKey(x => new { x.UserId, x.RoleId });
             builder.Entity<User>()

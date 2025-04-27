@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Data;
 using Selu383.SP25.P03.Api.Features.Authorization;
 using Selu383.SP25.P03.Api.Features.Users;
+using Selu383.SP25.P03.Api.Services;
 
 namespace Selu383.SP25.P03.Api
 {
@@ -14,9 +15,30 @@ namespace Selu383.SP25.P03.Api
 
             // Add services to the container.
             builder.Services.AddDbContext<DataContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DataContext") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
+            {
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("DataContext") ?? throw new InvalidOperationException("Connection string 'DataContext' not found."),
+                    sqlOptions =>
+                    {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 3,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorNumbersToAdd: null);
+                        sqlOptions.CommandTimeout(30);
+                    });
+            });
 
             builder.Services.AddControllers();
+
+            // Add memory cache
+            builder.Services.AddMemoryCache(options =>
+            {
+                options.SizeLimit = 1024 * 1024 * 50; // 50MB limit
+                options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
+            });
+
+            // Register cache service
+            builder.Services.AddScoped<ICacheService, CacheService>();
 
             // Add CORS
             builder.Services.AddCors(options =>
