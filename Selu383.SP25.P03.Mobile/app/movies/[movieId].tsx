@@ -17,9 +17,10 @@ export default function MovieScreen() {
     const router = useRouter();
     const [selectedTheaterId, setSelectedTheaterId] = useState<number | null>(null);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
-    const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false); // 🆕
+    const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
     const [movie, setMovie] = useState<Movie | null>(null);
     const [showtimes, setShowtimes] = useState<Showtime[]>([]);
+    const [availableDates, setAvailableDates] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -41,16 +42,18 @@ export default function MovieScreen() {
                     showtimeData.map(st => new Date(st.startTime).toISOString().split('T')[0])
                 )].sort();
 
+                setAvailableDates(dates);
+
                 const today = new Date().toISOString().split('T')[0];
                 const defaultDate = dates.includes(today) ? today : dates[0];
                 setSelectedDate(defaultDate);
 
                 if (showtimeData.length > 0) {
-                    const filteredShowtimes = showtimeData.filter(
+                    const showtimesForDate = showtimeData.filter(
                         st => new Date(st.startTime).toISOString().split('T')[0] === defaultDate
                     );
-                    if (filteredShowtimes.length > 0) {
-                        setSelectedTheaterId(filteredShowtimes[0].theaterId);
+                    if (showtimesForDate.length > 0) {
+                        setSelectedTheaterId(showtimesForDate[0].theaterId);
                     } else {
                         setSelectedTheaterId(showtimeData[0].theaterId);
                     }
@@ -76,10 +79,6 @@ export default function MovieScreen() {
             ])
         ).values()
     );
-
-    const availableDates = [...new Set(
-        showtimes.map(st => new Date(st.startTime).toISOString().split('T')[0])
-    )].sort();
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
@@ -119,7 +118,7 @@ export default function MovieScreen() {
 
     return (
         <ScrollView contentContainerStyle={[styles.container, { flexGrow: 1 }]}>
-            {/* Movie Details */}
+           
             <Text style={styles.title}>{movie.title}</Text>
             <Text style={styles.rating}>Rated {movie.rating}</Text>
             <Text style={styles.details}>
@@ -128,7 +127,6 @@ export default function MovieScreen() {
             <Text style={styles.details}>Genres: {movie.genres.join(", ")}</Text>
             <Text style={styles.description}>{movie.description}</Text>
 
-            {/* Fake Dropdown for Date */}
             <Text style={styles.sectionTitle}>Select Date</Text>
             <TouchableOpacity
                 style={styles.fakeDropdownButton}
@@ -156,7 +154,6 @@ export default function MovieScreen() {
                 </View>
             )}
 
-            {/* Theater Selection */}
             <Text style={styles.sectionTitle}>Select Theater</Text>
             <View style={styles.theaterTabs}>
                 {uniqueTheaters.map((theater) => (
@@ -177,10 +174,8 @@ export default function MovieScreen() {
                 ))}
             </View>
 
-            {/* Divider */}
             <View style={styles.divider} />
 
-            {/* Showtimes */}
             <View style={styles.showtimeRow}>
                 {showtimes
                     .filter(
