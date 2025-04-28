@@ -11,6 +11,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { moviesApi } from "@/services/api/moviesApi";
 import { showtimesApi, Showtime } from "@/services/api/showtimesApi";
 import { Movie } from "@/services/api/moviesApi";
+import { Ionicons } from '@expo/vector-icons'; 
 
 export default function MovieScreen() {
     const { movieId } = useLocalSearchParams();
@@ -100,6 +101,12 @@ export default function MovieScreen() {
         }
     };
 
+    const filteredShowtimes = showtimes.filter(
+        (s) =>
+            new Date(s.startTime).toISOString().split('T')[0] === selectedDate &&
+            s.theaterId === selectedTheaterId
+    );
+
     if (loading) {
         return (
             <View style={styles.loader}>
@@ -118,7 +125,7 @@ export default function MovieScreen() {
 
     return (
         <ScrollView contentContainerStyle={[styles.container, { flexGrow: 1 }]}>
-            
+ 
             <Text style={styles.title}>{movie.title}</Text>
             <Text style={styles.rating}>Rated {movie.rating}</Text>
             <Text style={styles.details}>
@@ -177,13 +184,8 @@ export default function MovieScreen() {
             <View style={styles.divider} />
 
             <View style={styles.showtimeRow}>
-                {showtimes
-                    .filter(
-                        (s) =>
-                            new Date(s.startTime).toISOString().split('T')[0] === selectedDate &&
-                            s.theaterId === selectedTheaterId
-                    )
-                    .map((s) => (
+                {filteredShowtimes.length > 0 ? (
+                    filteredShowtimes.map((s) => (
                         <TouchableOpacity
                             key={s.id}
                             style={styles.showtimeButton}
@@ -195,11 +197,19 @@ export default function MovieScreen() {
                                     minute: "2-digit",
                                 })}
                             </Text>
-                            {s.baseTicketPrice < 12 && ( 
+                            {s.baseTicketPrice < 12 && (
                                 <Text style={styles.discountText}>25% OFF</Text>
                             )}
                         </TouchableOpacity>
-                    ))}
+                    ))
+                ) : (
+                    <View style={styles.noShowtimesContainer}>
+                        <Ionicons name="calendar-outline" size={28} color="#666" />
+                        <Text style={styles.noShowtimesText}>
+                            No showtimes available for this selection
+                        </Text>
+                    </View>
+                )}
             </View>
         </ScrollView>
     );
@@ -302,7 +312,7 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         marginRight: 8,
         marginBottom: 8,
-        alignItems: "center", 
+        alignItems: "center",
     },
     showtimeText: {
         color: "#ffffff",
@@ -313,6 +323,18 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: "bold",
         marginTop: 4,
+    },
+    noShowtimesContainer: {
+        backgroundColor: "#222",
+        padding: 20,
+        borderRadius: 8,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    noShowtimesText: {
+        color: "#999",
+        marginTop: 8,
+        textAlign: "center",
     },
     divider: {
         height: 1,
