@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP25.P03.Api.Features.Users;
+using Selu383.SP25.P03.Api.Features.Authorization;
 
 namespace Selu383.SP25.P03.Api.Data
 {
@@ -18,6 +19,26 @@ namespace Selu383.SP25.P03.Api.Data
             }
 
             var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
+            var roleManager = serviceProvider.GetRequiredService<RoleManager<Role>>();
+
+            // Ensure roles exist
+            if (!await roleManager.RoleExistsAsync(UserRoleNames.Admin))
+            {
+                await roleManager.CreateAsync(new Role { Name = UserRoleNames.Admin, NormalizedName = UserRoleNames.Admin.ToUpper() });
+            }
+            if (!await roleManager.RoleExistsAsync(UserRoleNames.Manager))
+            {
+                await roleManager.CreateAsync(new Role { Name = UserRoleNames.Manager, NormalizedName = UserRoleNames.Manager.ToUpper() });
+            }
+            if (!await roleManager.RoleExistsAsync(UserRoleNames.User))
+            {
+                await roleManager.CreateAsync(new Role { Name = UserRoleNames.User, NormalizedName = UserRoleNames.User.ToUpper() });
+            }
+            if (!await roleManager.RoleExistsAsync(UserRoleNames.Guest))
+            {
+                await roleManager.CreateAsync(new Role { Name = UserRoleNames.Guest, NormalizedName = UserRoleNames.Guest.ToUpper() });
+            }
+
             await CreateAdminUser(userManager, "galkadi", "Password123!");
             await CreateManagerUser(userManager, "manager", "Password123!");
             await CreateRegularUser(userManager, "bob", "Password123!");
