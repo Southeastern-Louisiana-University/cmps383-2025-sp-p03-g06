@@ -17,6 +17,7 @@ export default function MovieScreen() {
     const router = useRouter();
     const [selectedTheaterId, setSelectedTheaterId] = useState<number | null>(null);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
+    const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false); // 🆕
     const [movie, setMovie] = useState<Movie | null>(null);
     const [showtimes, setShowtimes] = useState<Showtime[]>([]);
     const [loading, setLoading] = useState(true);
@@ -36,7 +37,6 @@ export default function MovieScreen() {
                 const showtimeData = await showtimesApi.getByMovie(numericId);
                 setShowtimes(showtimeData);
 
-                // Extract dates
                 const dates = [...new Set(
                     showtimeData.map(st => new Date(st.startTime).toISOString().split('T')[0])
                 )].sort();
@@ -77,6 +77,30 @@ export default function MovieScreen() {
         ).values()
     );
 
+    const availableDates = [...new Set(
+        showtimes.map(st => new Date(st.startTime).toISOString().split('T')[0])
+    )].sort();
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        if (date.toDateString() === today.toDateString()) {
+            return "Today";
+        } else if (date.toDateString() === tomorrow.toDateString()) {
+            return "Tomorrow";
+        } else {
+            return date.toLocaleDateString(undefined, {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+            });
+        }
+    };
+
     if (loading) {
         return (
             <View style={styles.loader}>
@@ -95,6 +119,7 @@ export default function MovieScreen() {
 
     return (
         <ScrollView contentContainerStyle={[styles.container, { flexGrow: 1 }]}>
+            {/* Movie Details */}
             <Text style={styles.title}>{movie.title}</Text>
             <Text style={styles.rating}>Rated {movie.rating}</Text>
             <Text style={styles.details}>
@@ -103,13 +128,42 @@ export default function MovieScreen() {
             <Text style={styles.details}>Genres: {movie.genres.join(", ")}</Text>
             <Text style={styles.description}>{movie.description}</Text>
 
+            {/* Fake Dropdown for Date */}
+            <Text style={styles.sectionTitle}>Select Date</Text>
+            <TouchableOpacity
+                style={styles.fakeDropdownButton}
+                onPress={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
+            >
+                <Text style={styles.fakeDropdownButtonText}>
+                    {selectedDate ? formatDate(selectedDate) : "Select a date"}
+                </Text>
+            </TouchableOpacity>
+
+            {isDateDropdownOpen && (
+                <View style={styles.dropdownOptions}>
+                    {availableDates.map((date) => (
+                        <TouchableOpacity
+                            key={date}
+                            style={styles.dropdownOption}
+                            onPress={() => {
+                                setSelectedDate(date);
+                                setIsDateDropdownOpen(false);
+                            }}
+                        >
+                            <Text style={styles.dropdownOptionText}>{formatDate(date)}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            )}
+
+            {/* Theater Selection */}
             <Text style={styles.sectionTitle}>Select Theater</Text>
             <View style={styles.theaterTabs}>
                 {uniqueTheaters.map((theater) => (
                     <TouchableOpacity
                         key={theater.id}
                         onPress={() => setSelectedTheaterId(theater.id)}
-                        style={[styles.theaterButton]}
+                        style={styles.theaterButton}
                     >
                         <Text
                             style={[
@@ -123,11 +177,17 @@ export default function MovieScreen() {
                 ))}
             </View>
 
+            {/* Divider */}
             <View style={styles.divider} />
 
+            {/* Showtimes */}
             <View style={styles.showtimeRow}>
                 {showtimes
-                    .filter((s) => s.theaterId === selectedTheaterId)
+                    .filter(
+                        (s) =>
+                            new Date(s.startTime).toISOString().split('T')[0] === selectedDate &&
+                            s.theaterId === selectedTheaterId
+                    )
                     .map((s) => (
                         <TouchableOpacity
                             key={s.id}
@@ -184,7 +244,33 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "bold",
         color: "#ffffff",
+        marginVertical: 12,
+    },
+    fakeDropdownButton: {
+        backgroundColor: "#2b2b2b",
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 8,
         marginBottom: 8,
+    },
+    fakeDropdownButtonText: {
+        color: "#ffffff",
+        fontSize: 16,
+    },
+    dropdownOptions: {
+        backgroundColor: "#2b2b2b",
+        borderRadius: 8,
+        marginBottom: 16,
+    },
+    dropdownOption: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "#444",
+    },
+    dropdownOptionText: {
+        color: "#ffffff",
+        fontSize: 16,
     },
     theaterTabs: {
         flexDirection: "row",
