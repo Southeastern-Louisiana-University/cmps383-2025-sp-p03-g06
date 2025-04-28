@@ -118,7 +118,7 @@ export default function MovieScreen() {
 
     return (
         <ScrollView contentContainerStyle={[styles.container, { flexGrow: 1 }]}>
-           
+            
             <Text style={styles.title}>{movie.title}</Text>
             <Text style={styles.rating}>Rated {movie.rating}</Text>
             <Text style={styles.details}>
@@ -195,6 +195,9 @@ export default function MovieScreen() {
                                     minute: "2-digit",
                                 })}
                             </Text>
+                            {s.baseTicketPrice < 12 && ( 
+                                <Text style={styles.discountText}>25% OFF</Text>
+                            )}
                         </TouchableOpacity>
                     ))}
             </View>
@@ -299,10 +302,17 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         marginRight: 8,
         marginBottom: 8,
+        alignItems: "center", 
     },
     showtimeText: {
         color: "#ffffff",
         fontWeight: "bold",
+    },
+    discountText: {
+        color: "#FFD700",
+        fontSize: 12,
+        fontWeight: "bold",
+        marginTop: 4,
     },
     divider: {
         height: 1,
