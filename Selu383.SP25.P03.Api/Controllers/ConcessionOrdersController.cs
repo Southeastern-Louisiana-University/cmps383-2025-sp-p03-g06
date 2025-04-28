@@ -199,7 +199,7 @@ namespace Selu383.SP25.P03.Api.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous] // Add this attribute to allow anonymous access
+        [AllowAnonymous] // Allow anonymous access
         public async Task<ActionResult<ConcessionOrderDTO>> CreateOrder(CreateConcessionOrderDTO orderDto)
         {
             // Validate reservation without requiring authentication
@@ -227,7 +227,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                     return Forbid();
                 }
             }
-            // For guest users, don't perform user authorization - we're relying on knowledge of the reservation ID
 
             // Verify reservation status
             if (reservation.Status != "Confirmed")
@@ -241,44 +240,14 @@ namespace Selu383.SP25.P03.Api.Controllers
                 return BadRequest("Invalid reservation: missing showtime information");
             }
 
-            // Verify the showtime hasn't started yet or is currently playing
-            var currentTime = DateTime.UtcNow;
-            if (currentTime > reservation.Showtime.StartTime.AddMinutes(30))
-            {
-                return BadRequest("Cannot place concession orders more than 30 minutes after the movie has started");
-            }
-
-            // Validate order items
-            if (orderDto.Items == null || orderDto.Items.Count == 0)
-            {
-                return BadRequest("Order must contain at least one item");
-            }
-
-            // Calculate total price and validate items
-            decimal totalPrice = 0;
-            foreach (var item in orderDto.Items)
-            {
-                var concessionItem = await _items.FindAsync(item.ConcessionItemId);
-                if (concessionItem == null || !concessionItem.IsAvailable)
-                {
-                    return BadRequest($"Item with ID {item.ConcessionItemId} is not available");
-                }
-
-                if (item.Quantity <= 0)
-                {
-                    return BadRequest("Item quantity must be greater than zero");
-                }
-
-                totalPrice += concessionItem.Price * item.Quantity;
-            }
-
-            // Create order
+            // Create the order
             var order = new ConcessionOrder
             {
                 ReservationId = orderDto.ReservationId,
                 OrderTime = DateTime.UtcNow,
-                TotalPrice = totalPrice,
                 Status = "Pending",
+                GuestEmail = orderDto.GuestInfo?.Email,
+                GuestPhone = orderDto.GuestInfo?.PhoneNumber,
                 SeatNumber = orderDto.SeatNumber
             };
 
@@ -286,61 +255,52 @@ namespace Selu383.SP25.P03.Api.Controllers
             await _context.SaveChangesAsync();
 
             // Add order items
-            foreach (var itemDto in orderDto.Items)
+            decimal totalPrice = 0;
+            foreach (var item in orderDto.Items)
             {
-                var concessionItem = await _items.FindAsync(itemDto.ConcessionItemId);
-                if (concessionItem != null)
+                var concession = await _items.FindAsync(item.ConcessionItemId);
+                if (concession == null)
                 {
-                    _context.OrderItems.Add(new OrderItem
-                    {
-                        OrderId = order.Id,
-                        ConcessionItemId = itemDto.ConcessionItemId,
-                        Quantity = itemDto.Quantity,
-                        UnitPrice = concessionItem.Price,
-                        SpecialInstructions = itemDto.SpecialInstructions
-                    });
+                    return BadRequest($"Concession with ID {item.ConcessionItemId} not found");
                 }
+
+                var orderItem = new OrderItem
+                {
+                    OrderId = order.Id,
+                    ConcessionItemId = item.ConcessionItemId,
+                    Quantity = item.Quantity,
+                    UnitPrice = concession.Price,
+                    SpecialInstructions = item.SpecialInstructions
+                };
+
+                _context.OrderItems.Add(orderItem);
+                totalPrice += concession.Price * item.Quantity;
             }
 
+            order.TotalPrice = totalPrice;
             await _context.SaveChangesAsync();
 
-            // Modify GetOrder method to also be [AllowAnonymous] or create a special version for this case
-            return await GetOrderById(order.Id);
-        }
-
-        // Add this method if you don't want to modify the existing GetOrder method
-        [ApiExplorerSettings(IgnoreApi = true)]
-        private async Task<ActionResult<ConcessionOrderDTO>> GetOrderById(int id)
-        {
-            var order = await _orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.ConcessionItem)
-                .Where(o => o.Id == id)
-                .Select(o => new ConcessionOrderDTO
-                {
-                    Id = o.Id,
-                    ReservationId = o.ReservationId,
-                    OrderTime = o.OrderTime,
-                    TotalPrice = o.TotalPrice,
-                    Status = o.Status ?? "Unknown",
-                    Items = o.OrderItems.Select(oi => new OrderItemDTO
-                    {
-                        Id = oi.Id,
-                        ConcessionItemId = oi.ConcessionItemId,
-                        ItemName = oi.ConcessionItem == null ? string.Empty : oi.ConcessionItem.Name,
-                        Quantity = oi.Quantity,
-                        UnitPrice = oi.UnitPrice,
-                        SpecialInstructions = oi.SpecialInstructions ?? string.Empty
-                    }).ToList()
-                })
-                .FirstOrDefaultAsync();
-
-            if (order == null)
+            // Convert to DTO
+            var resultDto = new ConcessionOrderDTO
             {
-                return NotFound();
-            }
+                Id = order.Id,
+                ReservationId = order.ReservationId,
+                OrderTime = order.OrderTime,
+                TotalPrice = order.TotalPrice,
+                Status = order.Status,
+                SeatNumber = order.SeatNumber,
+                Items = order.OrderItems.Select(oi => new OrderItemDTO
+                {
+                    Id = oi.Id,
+                    ConcessionItemId = oi.ConcessionItemId,
+                    ItemName = oi.ConcessionItem?.Name,
+                    Quantity = oi.Quantity,
+                    UnitPrice = oi.UnitPrice,
+                    SpecialInstructions = oi.SpecialInstructions
+                }).ToList()
+            };
 
-            return order;
+            return Ok(resultDto);
         }
 
         [HttpPut("{id}/status")]
@@ -419,6 +379,7 @@ namespace Selu383.SP25.P03.Api.Controllers
         public int ReservationId { get; set; }
         public List<CreateOrderItemDTO> Items { get; set; } = [];
         public string? SeatNumber { get; set; }
+        public GuestInfoDTO? GuestInfo { get; set; }
     }
 
     public class CreateOrderItemDTO

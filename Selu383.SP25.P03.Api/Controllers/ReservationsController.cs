@@ -233,6 +233,7 @@ namespace Selu383.SP25.P03.Api.Controllers
             }
             else if (dto.GuestInfo != null)
             {
+                // Create a simple guest user without email verification
                 string guestUsername = $"guest_{Guid.NewGuid():N}".Substring(0, 8);
                 string tempPassword = $"{Guid.NewGuid():N}".Substring(0, 12) + "!A9";
 
@@ -240,7 +241,8 @@ namespace Selu383.SP25.P03.Api.Controllers
                 {
                     UserName = guestUsername,
                     Email = dto.GuestInfo.Email,
-                    PhoneNumber = dto.GuestInfo.PhoneNumber
+                    PhoneNumber = dto.GuestInfo.PhoneNumber,
+                    EmailConfirmed = true // Skip email verification
                 };
 
                 var createResult = await _userManager.CreateAsync(guestUser, tempPassword);
@@ -251,10 +253,7 @@ namespace Selu383.SP25.P03.Api.Controllers
                 if (!roleResult.Succeeded)
                     return BadRequest($"Failed to assign guest role: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
 
-                // Set the current user to the guest user
                 currentUser = guestUser;
-
-                // Skip sign-in for guests - we'll use the user ID directly
             }
             else
             {
@@ -308,7 +307,6 @@ namespace Selu383.SP25.P03.Api.Controllers
                 TotalPrice = totalPrice,
                 Status = "Confirmed",
                 TicketCode = GenerateTicketCode(),
-                // Store guest information if available
                 GuestEmail = dto.GuestInfo?.Email,
                 GuestPhone = dto.GuestInfo?.PhoneNumber
             };
@@ -332,28 +330,6 @@ namespace Selu383.SP25.P03.Api.Controllers
             }
 
             await _context.SaveChangesAsync();
-
-            // Send confirmation email
-            var emailBody = $@"
-                <h2>Reservation Confirmation</h2>
-                <p>Thank you for your reservation!</p>
-                <p><strong>Movie:</strong> {showtime.Movie!.Title}</p>
-                <p><strong>Theater:</strong> {showtime.TheaterRoom!.Theater!.Name}</p>
-                <p><strong>Room:</strong> {showtime.TheaterRoom.Name}</p>
-                <p><strong>Showtime:</strong> {showtime.StartTime:g}</p>
-                <p><strong>Ticket Code:</strong> {reservation.TicketCode}</p>
-                <p><strong>Total Price:</strong> ${reservation.TotalPrice:F2}</p>
-                <p><strong>Seats:</strong></p>
-                <ul>
-                    {string.Join("", seats.Select(s => $"<li>Row {s.Row}, Seat {s.Number} ({s.SeatType})</li>"))}
-                </ul>
-                <p>Please present your ticket code at the theater.</p>";
-
-            await _emailService.SendEmailAsync(
-                currentUser.Email!,
-                "Movie Reservation Confirmation",
-                emailBody
-            );
 
             return Ok(reservation.ToDto());
         }
