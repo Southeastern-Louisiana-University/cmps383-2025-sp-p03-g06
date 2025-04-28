@@ -107,9 +107,15 @@ export default function SeatSelectionScreen() {
             <View style={styles.pageContent}>
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     <View style={styles.movieInfoHeader}>
-                        <Text style={styles.movieTitle}>Movie Title</Text>
-                        <Text style={styles.theaterText}>Theater Name</Text>
-                        <Text style={styles.timeText}>Date • Time</Text>
+                        <Text style={styles.movieTitle}>{movie?.title || "Loading..."}</Text>
+                        <Text style={styles.theaterText}>{theater?.name || "Loading..."}</Text>
+                        <Text style={styles.timeText}>
+                            {showtime ? new Date(showtime.startTime).toLocaleDateString() : ""} •{" "}
+                            {showtime ? new Date(showtime.startTime).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            }) : ""}
+                        </Text>
                     </View>
 
                     <View style={styles.seatMap}>
